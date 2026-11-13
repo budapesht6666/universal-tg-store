@@ -1,0 +1,23 @@
+{
+  "name": "@store/schema",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Формат каталога, заказов и настроек магазина: zod-схемы, типы, парсер, деньги",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p . --noEmit",
+    "test": "vitest run",
+    "schema:gen": "node scripts/gen-json-schema.ts"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

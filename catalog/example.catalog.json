@@ -1,0 +1,511 @@
+{
+  "$schema": "./catalog.schema.json",
+  "version": 1,
+  "settings": {
+    "shop": {
+      "name": "Universal Store",
+      "description": "Одежда, аксессуары и мелочи для дома",
+      "greeting": "Привет! Здесь одежда и аксессуары на каждый день. Открывайте магазин — доставим за 1–2 дня.",
+      "locale": "ru-RU",
+      "currency": "RUB"
+    },
+    "features": {
+      "categories": true,
+      "search": true,
+      "sort": true,
+      "gallery": true,
+      "discounts": true,
+      "badges": true,
+      "stock": true
+    },
+    "catalog": {
+      "defaultView": "grid"
+    },
+    "checkout": {
+      "phoneFromTelegramOnly": false,
+      "maxQtyPerItem": 100
+    },
+    "orders": {
+      "customerCanCancel": true
+    },
+    "delivery": {
+      "assignment": "manual",
+      "shopPhone": "+7 495 000-00-00"
+    }
+  },
+  "attributes": [
+    {
+      "key": "material",
+      "label": "Материал",
+      "type": "select",
+      "options": [
+        "Хлопок",
+        "Смесовая ткань",
+        "Шерсть",
+        "Канвас",
+        "Полиэстер",
+        "Кожа",
+        "Керамика",
+        "Тритан"
+      ],
+      "showInSpecs": true
+    },
+    {
+      "key": "density",
+      "label": "Плотность",
+      "type": "number",
+      "integer": true,
+      "min": 40,
+      "max": 600,
+      "unit": "г/м²",
+      "hint": "От 40 до 600"
+    },
+    {
+      "key": "fit",
+      "label": "Посадка",
+      "type": "select",
+      "options": ["Прямая", "Оверсайз", "Приталенная"]
+    },
+    {
+      "key": "organic",
+      "label": "Органический хлопок",
+      "type": "boolean",
+      "showInCard": true
+    },
+    {
+      "key": "volume",
+      "label": "Объём",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "unit": "мл"
+    },
+    {
+      "key": "care",
+      "label": "Уход",
+      "type": "textarea",
+      "maxLength": 300
+    }
+  ],
+  "categories": [
+    {
+      "id": "wear",
+      "title": "Одежда",
+      "sort": 10
+    },
+    {
+      "id": "acc",
+      "title": "Аксессуары",
+      "sort": 20
+    },
+    {
+      "id": "home",
+      "title": "Для дома",
+      "sort": 30
+    },
+    {
+      "id": "paper",
+      "title": "Канцелярия",
+      "sort": 40
+    }
+  ],
+  "products": [
+    {
+      "id": "tee-base",
+      "sku": "TB-001",
+      "title": "Футболка «Base» из плотного хлопка",
+      "shortDescription": "Прямой крой, 180 г/м², не садится после стирки",
+      "description": "Базовая футболка на каждый день из чесаного хлопка. Плотное полотно держит форму и не просвечивает.\n\nГорловина обработана двойной лентой, швы не натирают. **Прямой силуэт** — берите свой обычный размер.",
+      "price": 199000,
+      "compareAtPrice": 249000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/tee-base-1/800/800",
+          "alt": "Футболка «Base» из плотного хлопка"
+        },
+        {
+          "url": "https://picsum.photos/seed/tee-base-2/800/800",
+          "alt": "Футболка «Base» из плотного хлопка"
+        },
+        {
+          "url": "https://picsum.photos/seed/tee-base-3/800/800",
+          "alt": "Футболка «Base» из плотного хлопка"
+        }
+      ],
+      "categoryIds": ["wear"],
+      "badges": ["Хит"],
+      "stock": 12,
+      "isActive": true,
+      "sort": 1,
+      "attributes": {
+        "material": "Хлопок",
+        "density": 180,
+        "fit": "Прямая",
+        "organic": true,
+        "care": "Стирка при 30 °C, не отбеливать"
+      },
+      "createdAt": "2026-10-20T09:00:00Z",
+      "updatedAt": "2026-10-20T09:00:00Z"
+    },
+    {
+      "id": "hoodie-oversize",
+      "sku": "HD-002",
+      "title": "Худи оверсайз с начёсом",
+      "shortDescription": "Тёплое и мягкое, с глубоким капюшоном и карманом-кенгуру",
+      "description": "Свободный крой, плотный футер с мягким начёсом внутри.",
+      "price": 499000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/hoodie-oversize-1/800/800",
+          "alt": "Худи оверсайз с начёсом"
+        },
+        {
+          "url": "https://picsum.photos/seed/hoodie-oversize-2/800/800",
+          "alt": "Худи оверсайз с начёсом"
+        },
+        {
+          "url": "https://picsum.photos/seed/hoodie-oversize-3/800/800",
+          "alt": "Худи оверсайз с начёсом"
+        }
+      ],
+      "categoryIds": ["wear"],
+      "badges": ["Новинка"],
+      "stock": 3,
+      "isActive": true,
+      "sort": 3,
+      "attributes": {
+        "material": "Смесовая ткань",
+        "density": 320,
+        "fit": "Оверсайз",
+        "care": "Стирка при 30 °C наизнанку"
+      },
+      "createdAt": "2026-11-08T09:00:00Z",
+      "updatedAt": "2026-11-08T09:00:00Z"
+    },
+    {
+      "id": "longsleeve-stripe",
+      "sku": "LS-003",
+      "title": "Лонгслив в полоску",
+      "shortDescription": "Тонкий хлопок, классическая морская полоска",
+      "description": "Лёгкий лонгслив для межсезонья. Полоска вплетена в полотно и не выцветает.",
+      "price": 249000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/longsleeve-stripe-1/800/800",
+          "alt": "Лонгслив в полоску"
+        }
+      ],
+      "categoryIds": ["wear"],
+      "badges": [],
+      "stock": 20,
+      "isActive": true,
+      "sort": 9,
+      "attributes": {
+        "material": "Хлопок",
+        "density": 160,
+        "fit": "Приталенная"
+      },
+      "createdAt": "2026-09-15T09:00:00Z",
+      "updatedAt": "2026-09-15T09:00:00Z"
+    },
+    {
+      "id": "cap-cotton",
+      "sku": "CP-004",
+      "title": "Кепка из хлопка",
+      "shortDescription": "Регулируемый ремешок, изогнутый козырёк",
+      "description": "Шесть панелей, вентиляционные отверстия, металлическая застёжка.",
+      "price": 149000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/cap-cotton-1/800/800",
+          "alt": "Кепка из хлопка"
+        }
+      ],
+      "categoryIds": ["wear", "acc"],
+      "badges": [],
+      "stock": 0,
+      "isActive": true,
+      "sort": 12,
+      "attributes": {
+        "material": "Хлопок"
+      },
+      "createdAt": "2026-08-01T09:00:00Z",
+      "updatedAt": "2026-08-01T09:00:00Z"
+    },
+    {
+      "id": "mug-ceramic",
+      "sku": "MG-005",
+      "title": "Кружка керамическая, 350 мл",
+      "shortDescription": "Матовая глазурь, можно в посудомойку и микроволновку",
+      "description": "Толстые стенки дольше держат тепло. Удобная ручка на три пальца.",
+      "price": 89000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/mug-ceramic-1/800/800",
+          "alt": "Кружка керамическая, 350 мл"
+        }
+      ],
+      "categoryIds": ["home"],
+      "badges": [],
+      "stock": 40,
+      "isActive": true,
+      "sort": 2,
+      "attributes": {
+        "material": "Керамика",
+        "volume": 350,
+        "care": "Можно в посудомоечную машину"
+      },
+      "createdAt": "2026-10-01T09:00:00Z",
+      "updatedAt": "2026-10-01T09:00:00Z"
+    },
+    {
+      "id": "candle-cedar",
+      "sku": "CN-006",
+      "title": "Свеча «Кедр», 200 г",
+      "shortDescription": "Соевый воск, хлопковый фитиль, 40 часов горения",
+      "description": "Тёплый древесный аромат без резкости. Банка из толстого стекла подходит для повторного использования.",
+      "price": 159000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/candle-cedar-1/800/800",
+          "alt": "Свеча «Кедр», 200 г"
+        }
+      ],
+      "categoryIds": ["home"],
+      "badges": ["Новинка"],
+      "stock": 9,
+      "isActive": true,
+      "sort": 8,
+      "attributes": {
+        "volume": 200
+      },
+      "createdAt": "2026-11-10T09:00:00Z",
+      "updatedAt": "2026-11-10T09:00:00Z"
+    },
+    {
+      "id": "blanket-wool",
+      "sku": "BL-007",
+      "title": "Плед из шерсти мериноса",
+      "shortDescription": "130 × 170 см, мягкий и не колется",
+      "description": "Тонкая шерсть мериноса греет и не колется. Подходит для дивана и для пикника.",
+      "price": 799000,
+      "compareAtPrice": 949000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/blanket-wool-1/800/800",
+          "alt": "Плед из шерсти мериноса"
+        }
+      ],
+      "categoryIds": ["home"],
+      "badges": [],
+      "stock": 2,
+      "isActive": true,
+      "sort": 10,
+      "attributes": {
+        "material": "Шерсть"
+      },
+      "createdAt": "2026-09-01T09:00:00Z",
+      "updatedAt": "2026-09-01T09:00:00Z"
+    },
+    {
+      "id": "backpack-city",
+      "sku": "BP-008",
+      "title": "Рюкзак городской водоотталкивающий с отделением для ноутбука 15″",
+      "shortDescription": "20 л, светоотражающие вставки, скрытый карман для документов и бутылки",
+      "description": "Ткань с водоотталкивающей пропиткой, мягкая спинка и регулируемые лямки.",
+      "price": 649000,
+      "compareAtPrice": 799000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/backpack-city-1/800/800",
+          "alt": "Рюкзак городской водоотталкивающий с отделением для ноутбука 15″"
+        },
+        {
+          "url": "https://picsum.photos/seed/backpack-city-2/800/800",
+          "alt": "Рюкзак городской водоотталкивающий с отделением для ноутбука 15″"
+        },
+        {
+          "url": "https://picsum.photos/seed/backpack-city-3/800/800",
+          "alt": "Рюкзак городской водоотталкивающий с отделением для ноутбука 15″"
+        }
+      ],
+      "categoryIds": ["acc"],
+      "badges": ["Хит"],
+      "stock": 7,
+      "isActive": true,
+      "sort": 4,
+      "attributes": {
+        "material": "Полиэстер",
+        "volume": 20000
+      },
+      "createdAt": "2026-10-05T09:00:00Z",
+      "updatedAt": "2026-10-05T09:00:00Z"
+    },
+    {
+      "id": "tote-canvas",
+      "sku": "TT-009",
+      "title": "Шоппер из канваса",
+      "shortDescription": "Плотный, с внутренним карманом",
+      "description": "Вмещает ноутбук и продукты на неделю.",
+      "price": 119000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/tote-canvas-1/800/800",
+          "alt": "Шоппер из канваса"
+        }
+      ],
+      "categoryIds": ["acc"],
+      "badges": [],
+      "stock": 0,
+      "isActive": true,
+      "sort": 6,
+      "attributes": {
+        "material": "Канвас"
+      },
+      "createdAt": "2026-09-20T09:00:00Z",
+      "updatedAt": "2026-09-20T09:00:00Z"
+    },
+    {
+      "id": "bottle-tritan",
+      "sku": "BT-010",
+      "title": "Бутылка для воды 750 мл",
+      "shortDescription": "Тритан без BPA, крышка-поилка",
+      "description": "Лёгкая и прочная, не впитывает запахи.",
+      "price": 129000,
+      "compareAtPrice": 149000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/bottle-tritan-1/800/800",
+          "alt": "Бутылка для воды 750 мл"
+        }
+      ],
+      "categoryIds": ["acc"],
+      "badges": [],
+      "stock": 15,
+      "isActive": true,
+      "sort": 7,
+      "attributes": {
+        "material": "Тритан",
+        "volume": 750
+      },
+      "createdAt": "2026-10-10T09:00:00Z",
+      "updatedAt": "2026-10-10T09:00:00Z"
+    },
+    {
+      "id": "wallet-leather",
+      "sku": "WL-011",
+      "title": "Кошелёк из натуральной кожи",
+      "shortDescription": "Шесть отделений для карт, монетница на кнопке",
+      "description": "Растительное дубление — кожа со временем становится только красивее.",
+      "price": 349000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/wallet-leather-1/800/800",
+          "alt": "Кошелёк из натуральной кожи"
+        }
+      ],
+      "categoryIds": ["acc"],
+      "badges": [],
+      "stock": null,
+      "isActive": true,
+      "sort": 11,
+      "attributes": {
+        "material": "Кожа"
+      },
+      "createdAt": "2026-07-10T09:00:00Z",
+      "updatedAt": "2026-07-10T09:00:00Z"
+    },
+    {
+      "id": "notebook-dot",
+      "sku": "NB-012",
+      "title": "Блокнот в точку A5",
+      "shortDescription": "120 листов, бумага 100 г/м², раскрывается на 180°",
+      "description": "Плотная бумага не пропускает чернила, переплёт позволяет блокноту лежать раскрытым.",
+      "price": 59000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/notebook-dot-1/800/800",
+          "alt": "Блокнот в точку A5"
+        }
+      ],
+      "categoryIds": ["paper"],
+      "badges": ["Новинка"],
+      "stock": 25,
+      "isActive": true,
+      "sort": 5,
+      "attributes": {
+        "density": 100
+      },
+      "createdAt": "2026-11-05T09:00:00Z",
+      "updatedAt": "2026-11-05T09:00:00Z"
+    },
+    {
+      "id": "cards-set",
+      "sku": "CS-013",
+      "title": "Набор открыток, 12 шт.",
+      "shortDescription": "Крафтовая бумага, конверты в комплекте",
+      "description": "Двенадцать сюжетов на разные поводы.",
+      "price": 45000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/cards-set-1/800/800",
+          "alt": "Набор открыток, 12 шт."
+        }
+      ],
+      "categoryIds": ["paper"],
+      "badges": [],
+      "stock": 60,
+      "isActive": true,
+      "sort": 13,
+      "attributes": {},
+      "createdAt": "2026-06-01T09:00:00Z",
+      "updatedAt": "2026-06-01T09:00:00Z"
+    },
+    {
+      "id": "pen-gel",
+      "sku": "PN-014",
+      "title": "Гелевая ручка, набор из 3 шт.",
+      "shortDescription": "Чёрная, синяя и красная, стержень 0,5 мм",
+      "description": "Ровная линия без пропусков, быстро сохнет — не размазывается левшами.",
+      "price": 39000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/pen-gel-1/800/800",
+          "alt": "Гелевая ручка, набор из 3 шт."
+        }
+      ],
+      "categoryIds": ["paper"],
+      "badges": [],
+      "stock": 100,
+      "isActive": true,
+      "sort": 14,
+      "attributes": {},
+      "createdAt": "2026-06-15T09:00:00Z",
+      "updatedAt": "2026-06-15T09:00:00Z"
+    },
+    {
+      "id": "planner-2027",
+      "sku": "PL-015",
+      "title": "Ежедневник на 2027 год",
+      "shortDescription": "Датированный, твёрдая обложка, ляссе",
+      "description": "Планер в формате A5: неделя на развороте, страницы для заметок и целей на год.",
+      "price": 129000,
+      "images": [
+        {
+          "url": "https://picsum.photos/seed/planner-2027-1/800/800",
+          "alt": "Ежедневник на 2027 год"
+        }
+      ],
+      "categoryIds": ["paper"],
+      "badges": [],
+      "stock": 0,
+      "isActive": false,
+      "sort": 15,
+      "attributes": {
+        "density": 80
+      },
+      "createdAt": "2026-11-12T09:00:00Z",
+      "updatedAt": "2026-11-12T09:00:00Z"
+    }
+  ]
+}

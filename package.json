@@ -12,7 +12,8 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "lint": "biome check .",
-    "format": "biome check --write ."
+    "format": "biome check --write .",
+    "schema:gen": "pnpm --filter @store/schema schema:gen"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",

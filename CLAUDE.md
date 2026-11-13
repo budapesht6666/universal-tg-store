@@ -19,7 +19,15 @@ pnpm install          # корень
 pnpm dev              # все приложения параллельно
 pnpm typecheck && pnpm lint && pnpm test
 pnpm format           # biome check --write
+pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест сверяет, что она актуальна)
 ```
+
+## packages/schema — как устроено
+
+- Пакет без сборки: `exports` указывает на `src/index.ts`, импорты внутри — с расширением `.ts` (`allowImportingTsExtensions` + `erasableSyntaxOnly`). Поэтому скрипты запускаются прямо `node file.ts` (Node 24, type stripping): без enum, namespace и parameter properties.
+- zod импортируем только из `src/zod.ts`: там включены русская локаль и свои понятные сообщения (`src/errors.ts`). Настройка глобальная.
+- Объекты каталога — `z.strictObject`: опечатка в ключе JSON = ошибка. Вложенные объекты настроек с дефолтами внутри — `.prefault({})`, а не `.default({})` (в zod 4 `default` не прогоняет значение через схему).
+- Статусы заказа, переходы, отмена, роли — `src/order.ts`, `src/team.ts`; правила — `docs/product-decisions.md`.
 
 ## Инварианты (не нарушать)
 
