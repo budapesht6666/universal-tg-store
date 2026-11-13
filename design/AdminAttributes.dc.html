@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Админка — характеристики</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button,input,select{font:inherit;color:inherit}
+</style>
+</helmet>
+<div lang="ru" style="min-height: 100vh; display: flex; flex-wrap: wrap; background: #F4F4F5; color: #09090B; font-family: Inter, -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 14px; line-height: 20px">
+  <div style="flex: 1 1 248px; display: flex">
+    <dc-import name="AdminSidebar" active="attributes" dark="{{ false }}" hint-size="248px,100%"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+      <div>
+        <h1 style="margin: 0; font-size: 24px; line-height: 32px; font-weight: 700">Характеристики</h1>
+        <p style="margin: 2px 0 0; color: #71717A">Свои поля товара — появятся в форме товара и в блоке «Характеристики» на карточке</p>
+      </div>
+      <button style="height: 38px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; border: 0; border-radius: 8px; background: #1F73D6; color: #FFFFFF; font-weight: 600; cursor: pointer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5v14"></path></svg>Новое поле
+      </button>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+      <div style="flex: 999 1 520px; min-width: 0; border: 1px solid #E4E4E7; border-radius: 12px; background: #FFFFFF; overflow-x: auto">
+        <table style="width: 100%; min-width: 640px; border-collapse: collapse">
+          <thead>
+            <tr style="text-align: left; color: #71717A; font-size: 13px; background: #FAFAFA">
+              <th style="padding: 10px 16px; font-weight: 500">Название</th>
+              <th style="padding: 10px 12px; font-weight: 500">Ключ</th>
+              <th style="padding: 10px 12px; font-weight: 500">Тип</th>
+              <th style="padding: 10px 12px; font-weight: 500">Обязательное</th>
+              <th style="padding: 10px 16px; font-weight: 500">На карточке</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{attrs}}" as="a" hint-placeholder-count="5">
+              <tr onClick="{{a.pick}}" style="border-top: 1px solid #E4E4E7; background: {{a.bg}}; cursor: pointer">
+                <td style="padding: 12px 16px; font-weight: 500"><button onClick="{{a.pick}}" style="border: 0; padding: 0; background: transparent; font-weight: 500; cursor: pointer">{{a.label}}</button></td>
+                <td style="padding: 12px 12px"><code style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: #52525B">{{a.key}}</code></td>
+                <td style="padding: 12px 12px"><span style="height: 22px; padding: 0 8px; display: inline-flex; align-items: center; border-radius: 6px; background: #F4F4F5; font-size: 12px; color: #3F3F46">{{a.type}}</span></td>
+                <td style="padding: 12px 12px; color: #52525B">{{a.req}}</td>
+                <td style="padding: 12px 16px; color: #52525B">{{a.show}}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+
+      <aside aria-label="Редактирование поля" style="flex: 1 1 340px; min-width: 0; padding: 20px; border: 1px solid #E4E4E7; border-radius: 12px; background: #FFFFFF; display: flex; flex-direction: column; gap: 14px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600">Поле «Плотность»</h2>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="at-label" style="font-weight: 500">Название</label>
+            <input id="at-label" value="Плотность" style="height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid #E4E4E7; outline: none">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="at-key" style="font-weight: 500">Ключ в JSON</label>
+            <input id="at-key" value="density" style="height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid #E4E4E7; outline: none; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px">
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="at-type" style="font-weight: 500">Тип значения</label>
+          <select id="at-type" style="height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid #E4E4E7; background: #FFFFFF">
+            <option>Число</option><option>Текст</option><option>Длинный текст</option><option>Да / нет</option><option>Выбор из списка</option><option>Несколько из списка</option><option>Ссылка</option><option>Цвет</option><option>Дата</option>
+          </select>
+          <span style="font-size: 12px; color: #71717A">От типа зависят поле в форме и проверка значения</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><label for="at-min" style="font-weight: 500">Мин.</label><input id="at-min" value="80" style="height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid #E4E4E7; outline: none"></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><label for="at-max" style="font-weight: 500">Макс.</label><input id="at-max" value="600" style="height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid #E4E4E7; outline: none"></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><label for="at-unit" style="font-weight: 500">Единица</label><input id="at-unit" value="г/м²" style="height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid #E4E4E7; outline: none"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="at-hint" style="font-weight: 500">Подсказка в форме</label>
+          <input id="at-hint" value="От 80 до 600" style="height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid #E4E4E7; outline: none">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <label style="display: flex; gap: 8px; align-items: center"><input type="checkbox"> Обязательное</label>
+          <label style="display: flex; gap: 8px; align-items: center"><input type="checkbox" checked> Показывать в «Характеристиках»</label>
+          <label style="display: flex; gap: 8px; align-items: center"><input type="checkbox"> Показывать в карточке каталога</label>
+        </div>
+        <div style="padding: 12px; border-radius: 10px; background: #FAFAFA; border: 1px solid #E4E4E7">
+          <div style="font-size: 12px; color: #71717A; margin-bottom: 8px">Так поле выглядит в форме товара</div>
+          <label for="at-prev" style="font-weight: 500">Плотность</label>
+          <div style="margin-top: 6px; height: 36px; display: flex; align-items: center; border-radius: 8px; border: 1px solid #E4E4E7; background: #FFFFFF; padding: 0 10px"><input id="at-prev" value="180" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent"><span style="color: #71717A">г/м²</span></div>
+          <div style="margin-top: 4px; font-size: 12px; color: #71717A">От 80 до 600</div>
+        </div>
+        <div style="display: flex; justify-content: space-between">
+          <button style="height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #E4E4E7; background: #FFFFFF; color: #C5221F; cursor: pointer">Удалить поле</button>
+          <button style="height: 36px; padding: 0 16px; border: 0; border-radius: 8px; background: #1F73D6; color: #FFFFFF; font-weight: 600; cursor: pointer">Сохранить</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const sel = s.sel ?? 'density';
+    const A = [
+      ['material', 'Материал', 'Выбор из списка', 'нет', 'характеристики'],
+      ['density', 'Плотность', 'Число', 'нет', 'характеристики'],
+      ['fit', 'Посадка', 'Выбор из списка', 'нет', 'характеристики'],
+      ['organic', 'Органический хлопок', 'Да / нет', 'нет', 'каталог'],
+      ['volume', 'Объём', 'Число', 'нет', 'характеристики'],
+      ['care', 'Уход', 'Длинный текст', 'нет', '—']
+    ];
+    return {
+      attrs: A.map((a) => ({ key: a[0], label: a[1], type: a[2], req: a[3], show: a[4], bg: a[0] === sel ? '#F0F6FE' : 'transparent', pick: () => this.setState({ sel: a[0] }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

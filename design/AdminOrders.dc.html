@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Админка — заказы</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button,select,input{font:inherit;color:inherit}
+</style>
+</helmet>
+<div lang="ru" style="position: relative; min-height: 100vh; display: flex; flex-wrap: wrap; background: {{t.page}}; color: {{t.text}}; font-family: Inter, -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 14px; line-height: 20px">
+  <div style="flex: 1 1 248px; display: flex">
+    <dc-import name="AdminSidebar" active="orders" dark="{{dark}}" hint-size="248px,100%"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+      <h1 style="margin: 0; font-size: 24px; line-height: 32px; font-weight: 700">Заказы</h1>
+      <div role="tablist" aria-label="Фильтр по статусу" style="display: flex; gap: 2px; padding: 3px; border-radius: 9px; background: {{t.muted}}">
+        <sc-for list="{{filters}}" as="fl" hint-placeholder-count="5">
+          <button role="tab" aria-selected="{{fl.sel}}" onClick="{{fl.pick}}" style="height: 30px; padding: 0 12px; border: 0; border-radius: 7px; background: {{fl.bg}}; color: {{fl.fg}}; font-weight: 500; box-shadow: {{fl.shadow}}; cursor: pointer">{{fl.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+      <div style="flex: 999 1 520px; min-width: 0; border: 1px solid {{t.border}}; border-radius: 12px; background: {{t.bg}}; overflow-x: auto">
+        <table style="width: 100%; min-width: 560px; border-collapse: collapse">
+          <thead>
+            <tr style="text-align: left; color: {{t.hint}}; font-size: 13px; background: {{t.head}}">
+              <th style="padding: 10px 16px; font-weight: 500">№</th>
+              <th style="padding: 10px 12px; font-weight: 500">Покупатель</th>
+              <th style="padding: 10px 12px; font-weight: 500">Когда</th>
+              <th style="padding: 10px 12px; font-weight: 500; text-align: right">Сумма</th>
+              <th style="padding: 10px 16px; font-weight: 500">Статус</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+              <tr onClick="{{r.pick}}" style="border-top: 1px solid {{t.border}}; background: {{r.bg}}; cursor: pointer">
+                <td style="padding: 12px 16px; font-weight: 600"><button onClick="{{r.pick}}" style="border: 0; padding: 0; background: transparent; font-weight: 600; cursor: pointer">{{r.no}}</button></td>
+                <td style="padding: 12px 12px"><div style="font-weight: 500">{{r.name}}</div><div style="font-size: 12px; color: {{t.hint}}">{{r.user}}</div></td>
+                <td style="padding: 12px 12px; color: {{t.hint}}; white-space: nowrap">{{r.when}}</td>
+                <td style="padding: 12px 12px; text-align: right; font-weight: 500; white-space: nowrap">{{r.total}}</td>
+                <td style="padding: 12px 16px"><span style="height: 24px; padding: 0 10px; display: inline-flex; align-items: center; gap: 6px; border-radius: 12px; background: {{r.stBg}}; color: {{r.stFg}}; font-size: 12px; font-weight: 600; white-space: nowrap"><span style="width: 6px; height: 6px; border-radius: 3px; background: {{r.stFg}}"></span>{{r.status}}</span><sc-if value="{{r.req}}" hint-placeholder-val="{{ false }}"><div style="margin-top: 4px; font-size: 12px; font-weight: 500; color: {{t.warnFg}}">просит отменить</div></sc-if></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+
+      <aside aria-label="Детали заказа" style="flex: 1 1 340px; min-width: 0; padding: 20px; border: 1px solid {{t.border}}; border-radius: 12px; background: {{t.bg}}; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 700">Заказ {{d.no}}</h2>
+          <span style="font-size: 13px; color: {{t.hint}}">{{d.when}}</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+            <span style="font-weight: 500">Статус</span>
+            <span style="height: 24px; padding: 0 10px; display: inline-flex; align-items: center; gap: 6px; border-radius: 12px; background: {{d.stBg}}; color: {{d.stFg}}; font-size: 12px; font-weight: 600; white-space: nowrap"><span style="width: 6px; height: 6px; border-radius: 3px; background: {{d.stFg}}"></span>{{d.status}}</span>
+          </div>
+          <sc-if value="{{d.request}}" hint-placeholder-val="{{ false }}">
+            <div role="status" style="padding: 10px 12px; border-radius: 10px; background: {{t.warnBg}}; color: {{t.warnFg}}">
+              <div style="font-weight: 600">Покупатель просит отменить заказ</div>
+              <div style="font-size: 13px">{{d.requestWhen}} · через бота. Решение за вами</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{d.isNew}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <div style="display: flex; flex-wrap: wrap; gap: 8px"><button onClick="{{d.accept}}" style="height: 38px; padding: 0 14px; border: 0; border-radius: 8px; background: #1F73D6; color: #FFFFFF; font-weight: 600; cursor: pointer">Принять и собирать</button><button onClick="{{d.askCancel}}" style="height: 38px; padding: 0 14px; border: 1px solid {{t.border}}; border-radius: 8px; background: {{t.bg}}; color: {{t.dangerText}}; font-weight: 500; cursor: pointer">Отменить заказ</button></div>
+              <span style="font-size: 12px; color: {{t.hint}}">Покупатель получит сообщение от бота</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{d.pickCourier}}" hint-placeholder-val="{{ true }}">
+            <div style="padding: 12px; border-radius: 10px; border: 1px solid {{t.border}}; display: flex; flex-direction: column; gap: 10px">
+              <span style="font-weight: 500">Кому передать</span>
+              <sc-if value="{{d.manual}}" hint-placeholder-val="{{ true }}">
+                <div role="radiogroup" aria-label="Курьер" style="display: flex; flex-direction: column; gap: 6px">
+                  <sc-for list="{{d.couriers}}" as="c" hint-placeholder-count="2">
+                    <button role="radio" aria-checked="{{c.on}}" onClick="{{c.pick}}" style="width: 100%; height: 42px; padding: 0 12px; display: flex; align-items: center; gap: 10px; border-radius: 8px; border: 1px solid {{c.border}}; background: {{c.bg}}; text-align: left; cursor: pointer">
+                      <span style="width: 26px; height: 26px; flex: none; border-radius: 13px; background: {{t.muted}}; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600">{{c.initial}}</span>
+                      <span style="flex: 1; min-width: 0; font-weight: 500">{{c.name}}</span>
+                      <span style="font-size: 12px; color: {{c.loadFg}}">{{c.load}}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{d.pool}}" hint-placeholder-val="{{ false }}">
+                <span style="font-size: 13px; color: {{t.hint}}">Заказ увидят все свободные курьеры. Кто первым нажмёт «Беру», тот и везёт</span>
+              </sc-if>
+              <div style="display: flex; flex-direction: column; gap: 4px">
+                <label for="o-eta" style="font-size: 13px; font-weight: 500">Когда привезти</label>
+                <input id="o-eta" placeholder="Сегодня, 14:00–16:00" style="height: 34px; padding: 0 10px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}; outline: none">
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px"><button onClick="{{d.assign}}" style="height: 38px; padding: 0 14px; border: 0; border-radius: 8px; background: #1F73D6; color: #FFFFFF; font-weight: 600; cursor: pointer">{{d.assignLabel}}</button><button onClick="{{d.askCancel}}" style="height: 38px; padding: 0 14px; border: 1px solid {{t.border}}; border-radius: 8px; background: {{t.bg}}; color: {{t.dangerText}}; font-weight: 500; cursor: pointer">Отменить заказ</button></div>
+              <span style="font-size: 12px; color: {{t.hint}}">Курьеру придёт карточка заказа в бота. «Курьер в пути» он поставит сам, когда заберёт заказ</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{d.waiting}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div style="padding: 10px 12px; border-radius: 10px; background: {{t.muted}}">
+                <div style="font-weight: 600">{{d.waitTitle}}</div>
+                <div style="font-size: 13px; color: {{t.hint}}">{{d.waitText}}</div>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px"><button onClick="{{d.reassign}}" style="height: 38px; padding: 0 14px; border: 1px solid {{t.border}}; border-radius: 8px; background: {{t.bg}}; font-weight: 500; cursor: pointer">Сменить курьера</button><button onClick="{{d.askCancel}}" style="height: 38px; padding: 0 14px; border: 1px solid {{t.border}}; border-radius: 8px; background: {{t.bg}}; color: {{t.dangerText}}; font-weight: 500; cursor: pointer">Отменить заказ</button></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{d.onWay}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <div style="display: flex; flex-wrap: wrap; gap: 8px"><button onClick="{{d.markDone}}" style="height: 38px; padding: 0 14px; border: 1px solid {{t.border}}; border-radius: 8px; background: {{t.bg}}; font-weight: 500; cursor: pointer">Отметить доставленным</button><button onClick="{{d.askCancel}}" style="height: 38px; padding: 0 14px; border: 1px solid {{t.border}}; border-radius: 8px; background: {{t.bg}}; color: {{t.dangerText}}; font-weight: 500; cursor: pointer">Отменить заказ</button></div>
+              <span style="font-size: 12px; color: {{t.hint}}">Обычно это делает курьер кнопкой в боте</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{d.closed}}" hint-placeholder-val="{{ false }}">
+            <span style="font-size: 13px; color: {{t.hint}}">Заказ закрыт, статус больше не меняется</span>
+          </sc-if>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid {{t.border}}">
+          <sc-for list="{{d.items}}" as="it" hint-placeholder-count="3">
+            <div style="display: flex; justify-content: space-between; gap: 12px">
+              <span style="min-width: 0">{{it.title}} <span style="color: {{t.hint}}">× {{it.qty}}</span></span>
+              <span style="white-space: nowrap">{{it.sum}}</span>
+            </div>
+          </sc-for>
+          <div style="display: flex; justify-content: space-between; font-weight: 700; padding-top: 8px; border-top: 1px solid {{t.border}}"><span>Итого</span><span>{{d.total}}</span></div>
+        </div>
+        <dl style="margin: 0; display: grid; grid-template-columns: 110px 1fr; gap: 8px 12px; padding-top: 12px; border-top: 1px solid {{t.border}}">
+          <dt style="color: {{t.hint}}">Покупатель</dt><dd style="margin: 0">{{d.name}} · <a href="#" style="color: {{t.link}}">{{d.user}}</a></dd>
+          <dt style="color: {{t.hint}}">Телефон</dt><dd style="margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px"><a href="{{d.tel}}" style="color: {{t.link}}">{{d.phone}}</a><sc-if value="{{d.phoneTg}}" hint-placeholder-val="{{ true }}"><span style="height: 20px; padding: 0 7px; display: inline-flex; align-items: center; gap: 4px; border-radius: 10px; background: {{t.muted}}; color: {{t.hint}}; font-size: 12px">✓ из Telegram</span></sc-if></dd>
+          <dt style="color: {{t.hint}}">Адрес</dt><dd style="margin: 0">{{d.delivery}}</dd>
+          <sc-if value="{{d.hasCourier}}" hint-placeholder-val="{{ false }}"><dt style="color: {{t.hint}}">Курьер</dt><dd style="margin: 0">{{d.courier}} <span style="color: {{t.hint}}">· связь через бота</span></dd></sc-if>
+          <dt style="color: {{t.hint}}">Комментарий</dt><dd style="margin: 0">{{d.comment}}</dd>
+        </dl>
+        <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid {{t.border}}">
+          <label for="o-msg" style="font-weight: 500">Написать покупателю</label>
+          <div style="display: flex; gap: 8px">
+            <input id="o-msg" placeholder="Например: курьер приедет завтра с 10 до 14" style="flex: 1; min-width: 0; height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}; outline: none">
+            <button style="height: 38px; padding: 0 14px; border: 0; border-radius: 8px; background: #1F73D6; color: #FFFFFF; font-weight: 600; cursor: pointer">Отправить</button>
+          </div>
+          <span style="font-size: 12px; color: {{t.hint}}">Уйдёт от бота, ответ покупателя появится здесь и в чате заказов</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid {{t.border}}">
+          <span style="font-weight: 500">История</span>
+          <sc-for list="{{d.history}}" as="h" hint-placeholder-count="3">
+            <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 13px">
+              <span style="min-width: 0">{{h.text}}<sc-if value="{{h.hasNote}}" hint-placeholder-val="{{ false }}"><span style="display: block; color: {{t.hint}}">{{h.note}}</span></sc-if></span>
+              <span style="color: {{t.hint}}; white-space: nowrap">{{h.when}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <sc-if value="{{cx.show}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 10; background: rgba(9,9,11,0.5); display: flex; align-items: flex-start; justify-content: center; padding: 140px 24px 24px">
+      <div role="dialog" aria-modal="true" aria-labelledby="cx-title" style="width: 100%; max-width: 440px; padding: 24px; border-radius: 12px; border: 1px solid {{t.border}}; background: {{t.bg}}; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 16px 48px rgba(0,0,0,0.25)">
+        <div>
+          <h2 id="cx-title" style="margin: 0; font-size: 18px; line-height: 26px; font-weight: 700">Отменить заказ {{cx.no}}?</h2>
+          <p style="margin: 4px 0 0; color: {{t.hint}}">Покупатель получит сообщение от бота с причиной</p>
+        </div>
+        <fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 8px">
+          <legend style="padding: 0; margin-bottom: 8px; font-weight: 500">Причина</legend>
+          <sc-for list="{{cx.reasons}}" as="rs" hint-placeholder-count="4">
+            <label style="height: 40px; padding: 0 12px; display: flex; align-items: center; gap: 10px; border-radius: 8px; border: 1px solid {{rs.border}}; background: {{rs.bg}}; cursor: pointer"><input type="radio" name="cx-reason" checked="{{rs.on}}" onChange="{{rs.pick}}" style="margin: 0; accent-color: #1F73D6">{{rs.label}}</label>
+          </sc-for>
+          <sc-if value="{{cx.other}}" hint-placeholder-val="{{ false }}">
+            <input aria-label="Причина своими словами" placeholder="Что случилось — это увидит покупатель" style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}; outline: none">
+          </sc-if>
+        </fieldset>
+        <label style="display: flex; gap: 10px; align-items: flex-start; cursor: pointer">
+          <input type="checkbox" checked="{{cx.restock}}" onChange="{{cx.toggleRestock}}" style="margin: 3px 0 0; accent-color: #1F73D6">
+          <span><span style="display: block; font-weight: 500">Вернуть товары на склад</span><span style="display: block; font-size: 13px; color: {{t.hint}}">Снимите, если товар испорчен или потерян</span></span>
+        </label>
+        <div style="display: flex; justify-content: flex-end; gap: 8px">
+          <button onClick="{{cx.close}}" style="height: 38px; padding: 0 14px; border: 1px solid {{t.border}}; border-radius: 8px; background: {{t.bg}}; font-weight: 500; cursor: pointer">Не отменять</button>
+          <button onClick="{{cx.confirm}}" style="height: 38px; padding: 0 14px; border: 0; border-radius: 8px; background: #DC2626; color: #FFFFFF; font-weight: 600; cursor: pointer">Отменить заказ</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false,"section":"Тема"},"assign":{"editor":"enum","options":["manual","pool"],"default":"manual","section":"Как раздавать заказы"},"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const s = this.state || {};
+    const t = dark
+      ? { page: '#09090B', bg: '#09090B', head: '#111113', muted: '#1F1F23', border: '#27272A', text: '#FAFAFA', hint: '#A1A1AA', link: '#8BB5EA', selBg: '#14233A', thumb: '#3F3F46', warnBg: '#3A2E14', warnFg: '#F5A524', dangerText: '#F87171', radioBg: '#14233A', radioBorder: '#2B5C99', okFg: '#4CC26E' }
+      : { page: '#F4F4F5', bg: '#FFFFFF', head: '#FAFAFA', muted: '#F0F0F2', border: '#E4E4E7', text: '#09090B', hint: '#71717A', link: '#1A5CAB', selBg: '#F0F6FE', thumb: '#FFFFFF', warnBg: '#FDF3E1', warnFg: '#9A4708', dangerText: '#C5221F', radioBg: '#F0F6FE', radioBorder: '#8BB5EA', okFg: '#17753A' };
+    const ST = dark
+      ? { new: ['Оформлен', '#14233A', '#8BB5EA'], processing: ['Собираем', '#3A2E14', '#F5A524'], shipping: ['Курьер в пути', '#16302D', '#3CC4B4'], done: ['Доставлен', '#1C3324', '#4CC26E'], cancelled: ['Отменён', '#1F1F23', '#A1A1AA'] }
+      : { new: ['Оформлен', '#E4EEFA', '#1A5CAB'], processing: ['Собираем', '#FDF3E1', '#9A4708'], shipping: ['Курьер в пути', '#DDF1EE', '#0F665E'], done: ['Доставлен', '#E3F3E8', '#17753A'], cancelled: ['Отменён', '#F0F0F2', '#5B5B63'] };
+    // допустимые переходы: сервер проверяет их же
+    const NEXT = { new: ['processing', 'Принять и собирать'], processing: ['shipping', 'Передать курьеру'], shipping: ['done', 'Доставлен'] };
+    const HIST = { processing: 'Собираем', shipping: 'Курьер в пути', done: 'Доставлен' };
+    const mode = this.props.assign ?? 'manual';
+    // активные курьеры из раздела «Команда»; выключенные сюда не попадают
+    const COURIERS = [{ id: 'me', name: 'Вы', initial: 'В', load: 0 }, { id: 'alex', name: 'Алексей', initial: 'А', load: 1 }];
+    const loadText = (n) => n === 0 ? 'свободен' : n + ' ' + (n === 1 ? 'доставка' : 'доставки');
+    const REASONS = [['stock', 'Нет в наличии'], ['noanswer', 'Не дозвонились до покупателя'], ['customer', 'Покупатель попросил'], ['other', 'Другое']];
+    const money = (n) => n.toLocaleString('ru-RU') + ' ₽';
+    const orders = [
+      { id: 1042, name: 'Анна К.', user: '@anna_k', when: 'Сегодня, 14:32', st: 'new', phone: '+7 999 123-45-67', delivery: 'Москва, ул. Лесная, 5, кв. 12', comment: 'Позвоните за час', items: [['Футболка «Base»', 1, 1990], ['Кружка керамическая', 2, 890], ['Рюкзак городской', 1, 6490]], hist: [['Оформлен', 'Сегодня, 14:32']] },
+      { id: 1041, name: 'Игорь П.', user: '@igorp', when: 'Сегодня, 11:05', st: 'new', phone: '+7 916 555-01-02', delivery: 'Москва, Профсоюзная ул., 18, кв. 4', comment: '—', items: [['Худи оверсайз', 1, 4990]], hist: [['Оформлен', 'Сегодня, 11:05']] },
+      { id: 1040, name: 'Мария С.', user: '@masha_s', when: 'Вчера, 19:47', st: 'new', phone: '+7 905 222-33-44', delivery: 'Казань, пр. Победы, 10', comment: '—', items: [['Блокнот в точку A5', 3, 590], ['Набор открыток', 2, 450]], hist: [['Оформлен', 'Вчера, 19:47']] },
+      { id: 1039, name: 'Дмитрий Л.', user: '@dlebedev', when: 'Вчера, 10:12', st: 'processing', request: 'Сегодня, 13:05', phone: '+7 925 000-11-22', delivery: 'Санкт-Петербург, Невский пр., 1', comment: 'Подарочная упаковка', items: [['Бутылка для воды', 2, 1290]], hist: [['Оформлен', 'Вчера, 10:12'], ['Собираем · Ирина', 'Вчера, 11:30'], ['Покупатель просит отменить', 'Сегодня, 13:05']] },
+      { id: 1038, name: 'Ольга В.', user: '@olgav', when: '11 ноября', st: 'shipping', phone: '+7 903 777-88-99', delivery: 'Екатеринбург, ул. Малышева, 30', comment: '—', courier: 'Алексей', items: [['Футболка «Base»', 2, 1990]], hist: [['Оформлен', '11 ноября, 09:15'], ['Собираем · Ирина', '11 ноября, 10:02'], ['Курьер назначен: Алексей · Ирина', 'Сегодня, 08:50'], ['Курьер в пути · Алексей', 'Сегодня, 09:30']] },
+      { id: 1037, name: 'Сергей Т.', user: '@sergt', when: '10 ноября', st: 'cancelled', phone: '+7 901 101-20-30', delivery: 'Новосибирск, Красный пр., 7', comment: '—', items: [['Шоппер из канваса', 1, 1190]], hist: [['Оформлен', '10 ноября, 18:40'], ['Отменён · покупатель', '10 ноября, 18:52', 'Товары возвращены на склад']] },
+      { id: 1036, name: 'Елена Р.', user: '@elena_r', when: '9 ноября', st: 'done', phone: '+7 926 444-55-66', delivery: 'Москва, ул. Тверская, 12, кв. 40', comment: '—', courier: 'Алексей', items: [['Кружка керамическая', 4, 890]], hist: [['Оформлен', '9 ноября, 12:00'], ['Собираем · Ирина', '9 ноября, 12:20'], ['Курьер назначен: Алексей · Ирина', '10 ноября, 09:10'], ['Курьер в пути · Алексей', '10 ноября, 10:00'], ['Доставлен · Алексей', '10 ноября, 15:45']] }
+    ];
+    const stOver = s.st ?? {};
+    const extra = s.extra ?? {};
+    const filter = s.filter ?? 'all';
+    const selId = s.sel ?? 1039;
+    const stOf = (o) => stOver[o.id] ?? o.st;
+    const reqOf = (o) => !!o.request && (stOf(o) === 'processing' || stOf(o) === 'shipping');
+    const total = (o) => o.items.reduce((a, i) => a + i[1] * i[2], 0);
+    const addHist = (id, row) => Object.assign({}, extra, { [id]: (extra[id] || []).concat([row]) });
+    const rows = orders.filter((o) => filter === 'all' || stOf(o) === filter).map((o) => ({
+      no: '№' + o.id, name: o.name, user: o.user, when: o.when, total: money(total(o)),
+      status: ST[stOf(o)][0], stBg: ST[stOf(o)][1], stFg: ST[stOf(o)][2], req: reqOf(o),
+      bg: o.id === selId ? t.selBg : 'transparent', pick: () => this.setState({ sel: o.id, cancelFor: null })
+    }));
+    const o = orders.find((x) => x.id === selId);
+    const assigned = s.assigned ?? {};
+    const selCourier = s.courier ?? COURIERS.slice().sort((x, y) => x.load - y.load)[0].id;
+    const courierName = (id) => (COURIERS.find((c) => c.id === id) || { name: '' }).name;
+    const cur = stOf(o);
+    const counts = {}; orders.forEach((x) => { counts[stOf(x)] = (counts[stOf(x)] || 0) + 1; });
+    const filters = [['all', 'Все'], ['new', 'Оформлен'], ['processing', 'Собираем'], ['shipping', 'Курьер в пути'], ['done', 'Доставлен'], ['cancelled', 'Отменён']].map((f) => ({
+      label: f[0] === 'all' ? f[1] : f[1] + ' ' + (counts[f[0]] || 0), sel: f[0] === filter ? 'true' : 'false',
+      bg: f[0] === filter ? t.thumb : 'transparent', fg: f[0] === filter ? t.text : t.hint, shadow: f[0] === filter ? '0 1px 2px rgba(0,0,0,0.12)' : 'none',
+      pick: () => this.setState({ filter: f[0] })
+    }));
+    // окно отмены
+    const reason = s.reason ?? (reqOf(o) ? 'customer' : 'stock');
+    const restock = s.restock ?? true;
+    const cx = {
+      show: s.cancelFor === o.id, no: '№' + o.id, other: reason === 'other', restock: restock,
+      reasons: REASONS.map((r) => ({ label: r[1], on: r[0] === reason, bg: r[0] === reason ? t.radioBg : 'transparent', border: r[0] === reason ? t.radioBorder : t.border, pick: () => this.setState({ reason: r[0] }) })),
+      toggleRestock: () => this.setState({ restock: !restock }),
+      close: () => this.setState({ cancelFor: null }),
+      confirm: () => this.setState({
+        cancelFor: null, reason: null, restock: null,
+        st: Object.assign({}, stOver, { [o.id]: 'cancelled' }),
+        extra: addHist(o.id, ['Отменён · Ирина', 'Только что', 'Причина: ' + REASONS.find((r) => r[0] === reason)[1].toLowerCase() + (restock ? '. Товары возвращены на склад' : '. Остатки не возвращались')])
+      })
+    };
+    const history = o.hist.concat(extra[o.id] || []).map((h) => ({ text: h[0], when: h[1], note: h[2] || '', hasNote: !!h[2] }));
+    return {
+      t: t, dark: dark, rows: rows, filters: filters,
+      d: {
+        no: '№' + o.id, when: o.when, name: o.name, user: o.user, phone: o.phone, delivery: o.delivery, comment: o.comment,
+        tel: 'tel:' + o.phone.replace(/[^+\d]/g, ''), phoneTg: o.id % 2 === 0,
+        status: ST[cur][0], stBg: ST[cur][1], stFg: ST[cur][2], total: money(total(o)),
+        request: reqOf(o), requestWhen: o.request || '',
+        closed: cur === 'done' || cur === 'cancelled',
+        isNew: cur === 'new',
+        accept: () => this.setState({ st: Object.assign({}, stOver, { [o.id]: 'processing' }), extra: addHist(o.id, ['Собираем · Ирина', 'Только что']) }),
+        pickCourier: cur === 'processing' && !assigned[o.id], manual: mode === 'manual', pool: mode === 'pool',
+        couriers: COURIERS.map((c) => ({
+          name: c.name, initial: c.initial, load: loadText(c.load), loadFg: c.load === 0 ? t.okFg : t.hint,
+          on: c.id === selCourier ? 'true' : 'false', bg: c.id === selCourier ? t.radioBg : 'transparent', border: c.id === selCourier ? t.radioBorder : t.border,
+          pick: () => this.setState({ courier: c.id })
+        })),
+        assignLabel: mode === 'pool' ? 'Предложить курьерам' : 'Передать курьеру',
+        assign: () => this.setState({
+          assigned: Object.assign({}, assigned, { [o.id]: mode === 'pool' ? 'pool' : selCourier }),
+          extra: addHist(o.id, [mode === 'pool' ? 'Предложен курьерам · Ирина' : 'Курьер назначен: ' + courierName(selCourier) + ' · Ирина', 'Только что'])
+        }),
+        waiting: cur === 'processing' && !!assigned[o.id],
+        waitTitle: assigned[o.id] === 'pool' ? 'Предложен курьерам' : 'Курьер назначен: ' + courierName(assigned[o.id]),
+        waitText: assigned[o.id] === 'pool' ? 'Ждём, кто возьмёт. Если долго никто — назначьте вручную' : 'Ждём, когда заберёт заказ — тогда статус сменится на «Курьер в пути»',
+        reassign: () => { const a = Object.assign({}, assigned); delete a[o.id]; this.setState({ assigned: a }); },
+        onWay: cur === 'shipping',
+        markDone: () => this.setState({ st: Object.assign({}, stOver, { [o.id]: 'done' }), extra: addHist(o.id, ['Доставлен · Ирина', 'Только что']) }),
+        hasCourier: (!!o.courier && (cur === 'shipping' || cur === 'done')) || (cur === 'processing' && !!assigned[o.id] && assigned[o.id] !== 'pool'),
+        courier: o.courier || courierName(assigned[o.id]),
+        askCancel: () => this.setState({ cancelFor: o.id, reason: null, restock: null }),
+        items: o.items.map((i) => ({ title: i[0], qty: i[1], sum: money(i[1] * i[2]) })),
+        history: history
+      },
+      cx: cx
+    };
+  }
+}
+</script>
+</body>
+</html>

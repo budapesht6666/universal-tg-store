@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Токены и компоненты</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button,input{font:inherit}
+</style>
+</helmet>
+<div style="width: 1120px; height: 844px; padding: 40px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; background: #F2F2F7; color: #0B0B0C; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 14px; line-height: 20px">
+
+  <section style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-size: 17px; font-weight: 700">Цвета</h2>
+    <p style="margin: 0; color: #6B6B73; font-size: 13px; line-height: 18px">В Telegram значения приходят из themeParams: фон страницы — secondary_bg_color, карточки и поля — bg_color. Здесь — палитра шаблона по умолчанию.</p>
+    <div style="display: grid; grid-template-columns: 1fr 56px 56px; gap: 6px 10px; align-items: center; font-size: 13px">
+      <span style="color: #6B6B73">Токен</span><span style="color: #6B6B73">Light</span><span style="color: #6B6B73">Dark</span>
+      <sc-for list="{{colors}}" as="c" hint-placeholder-count="12">
+        <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px">{{c.name}}</span>
+        <span title="{{c.l}}" style="height: 28px; border-radius: 8px; background: {{c.l}}; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08)"></span>
+        <span title="{{c.d}}" style="height: 28px; border-radius: 8px; background: {{c.d}}; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08)"></span>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-size: 17px; font-weight: 700">Типографика</h2>
+    <p style="margin: 0; color: #6B6B73; font-size: 13px; line-height: 18px">Системный шрифт: SF Pro на iOS, Roboto на Android. Ничего не грузим.</p>
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 26px; line-height: 32px; font-weight: 700">2 490 ₽ <span style="font-size: 12px; font-weight: 400; color: #6B6B73">26/32 · цена</span></div>
+      <div style="font-size: 22px; line-height: 28px; font-weight: 700">Заголовок экрана <span style="font-size: 12px; font-weight: 400; color: #6B6B73">22/28</span></div>
+      <div style="font-size: 17px; line-height: 22px; font-weight: 600">Раздел <span style="font-size: 12px; font-weight: 400; color: #6B6B73">17/22</span></div>
+      <div style="font-size: 15px; line-height: 20px; font-weight: 600">Название товара <span style="font-size: 12px; font-weight: 400; color: #6B6B73">15/20 · 2 строки</span></div>
+      <div style="font-size: 15px; line-height: 22px">Основной текст описания <span style="font-size: 12px; color: #6B6B73">15/22</span></div>
+      <div style="font-size: 13px; line-height: 18px; color: #6B6B73">Подсказка, подпись поля <span style="font-size: 12px">13/18</span></div>
+    </div>
+    <h2 style="margin: 16px 0 0; font-size: 17px; font-weight: 700">Форма</h2>
+    <div style="display: flex; gap: 12px; align-items: flex-end; font-size: 12px; color: #6B6B73">
+      <div style="display: flex; flex-direction: column; gap: 4px; align-items: center"><span style="width: 44px; height: 44px; border-radius: 8px; background: #FFFFFF"></span>8</div>
+      <div style="display: flex; flex-direction: column; gap: 4px; align-items: center"><span style="width: 44px; height: 44px; border-radius: 12px; background: #FFFFFF"></span>12</div>
+      <div style="display: flex; flex-direction: column; gap: 4px; align-items: center"><span style="width: 44px; height: 44px; border-radius: 16px; background: #FFFFFF"></span>16</div>
+      <div style="display: flex; flex-direction: column; gap: 4px; align-items: center"><span style="width: 44px; height: 44px; border-radius: 22px; background: #FFFFFF"></span>pill</div>
+      <span style="margin-left: 8px; line-height: 16px">Радиусы. Отступы кратны 4: 4 · 8 · 12 · 16 · 24 · 32</span>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-size: 17px; font-weight: 700">Иконки — Lucide</h2>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+      <sc-for list="{{icons}}" as="i" hint-placeholder-count="12">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 12px; background: #FFFFFF; font-size: 11px; color: #6B6B73; text-align: center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B0B0C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{i.d}}"></path></svg>
+          <span>{{i.n}}</span>
+        </div>
+      </sc-for>
+    </div>
+    <h2 style="margin: 12px 0 0; font-size: 17px; font-weight: 700">Компоненты</h2>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+      <button style="height: 44px; padding: 0 18px; border: 0; border-radius: 12px; background: #1F73D6; color: #FFFFFF; font-weight: 600">Основная</button>
+      <button style="height: 44px; padding: 0 18px; border: 0; border-radius: 12px; background: #E4EEFA; color: #1A5CAB; font-weight: 600">Вторичная</button>
+      <span style="height: 34px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 17px; background: #0B0B0C; color: #FFFFFF; font-weight: 500">Все</span>
+      <span style="height: 34px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 17px; background: #FFFFFF; font-weight: 500">Одежда</span>
+      <span style="height: 22px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 8px; background: #C2410C; color: #FFFFFF; font-size: 12px; font-weight: 700">−20%</span>
+      <span style="height: 22px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 8px; background: #E4EEFA; color: #1A5CAB; font-size: 12px; font-weight: 600">Новинка</span>
+      <div style="height: 36px; display: flex; align-items: center; border-radius: 12px; background: #1F73D6; color: #FFFFFF; font-weight: 700">
+        <span style="width: 32px; text-align: center">−</span><span style="min-width: 18px; text-align: center">2</span><span style="width: 32px; text-align: center">+</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="tk-phone" style="font-size: 13px; color: #6B6B73">Телефон</label>
+      <input id="tk-phone" value="+7 999 12" style="height: 44px; padding: 0 14px; border-radius: 12px; border: 1.5px solid #C5221F; background: #FFFFFF; font-size: 15px; outline: none">
+      <span style="font-size: 13px; color: #C5221F">Номер неполный — нужно 11 цифр</span>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1120,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      colors: [
+        { name: 'bg', l: '#F2F2F7', d: '#1C1C1E' },
+        { name: 'surface', l: '#FFFFFF', d: '#2C2C2E' },
+        { name: 'text', l: '#0B0B0C', d: '#F5F5F7' },
+        { name: 'hint', l: '#6B6B73', d: '#9D9DA6' },
+        { name: 'separator', l: '#E4E4EA', d: '#38383C' },
+        { name: 'accent', l: '#1F73D6', d: '#1F73D6' },
+        { name: 'accent-text', l: '#1A5CAB', d: '#8BB5EA' },
+        { name: 'accent-soft', l: '#E4EEFA', d: '#1E3654' },
+        { name: 'sale', l: '#C2410C', d: '#E8590C' },
+        { name: 'warning', l: '#B45309', d: '#F5A524' },
+        { name: 'success', l: '#17753A', d: '#4CC26E' },
+        { name: 'danger', l: '#C5221F', d: '#FF6B5E' }
+      ],
+      icons: [
+        { n: 'search', d: 'M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16ZM21 21l-4.3-4.3' },
+        { n: 'shopping-bag', d: 'M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4ZM3 6h18M16 10a4 4 0 0 1-8 0' },
+        { n: 'arrow-up-down', d: 'm21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16' },
+        { n: 'plus / minus', d: 'M5 12h14M12 5v14' },
+        { n: 'trash-2', d: 'M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2' },
+        { n: 'share', d: 'M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6 12 2 8 6M12 2v13' },
+        { n: 'check', d: 'M20 6 9 17l-5-5' },
+        { n: 'circle-alert', d: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM12 8v4M12 16h.01' },
+        { n: 'package', d: 'm7.5 4.27 9 5.15M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16ZM3.3 7l8.7 5 8.7-5M12 22V12' },
+        { n: 'upload', d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12' },
+        { n: 'file-json', d: 'M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7ZM14 2v4a2 2 0 0 0 2 2h4M10 12a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1 1 1 0 0 1 1 1v1a1 1 0 0 0 1 1M14 18a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1 1 1 0 0 1-1-1v-1a1 1 0 0 0-1-1' },
+        { n: 'sliders', d: 'M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "AdminAttributes.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "title": "Админка — характеристики товара",
+      "w": 1440,
+      "x": 3040,
+      "y": 4860
+    },
+    "AdminDark.dc.html": {
+      "h": 900,
+      "title": "Админка — тёмная тема",
+      "w": 1440,
+      "x": 0,
+      "y": 6420
+    },
+    "AdminImport.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "title": "Админка — импорт и экспорт JSON",
+      "w": 1440,
+      "x": 3040,
+      "y": 3500
+    },
+    "AdminOrders.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "is_interactive": true,
+      "title": "Админка — заказы",
+      "w": 1440,
+      "x": 0,
+      "y": 4860
+    },
+    "AdminProductForm.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "is_interactive": true,
+      "title": "Админка — форма товара (ошибки)",
+      "w": 1440,
+      "x": 1520,
+      "y": 3500
+    },
+    "AdminProducts.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "title": "Админка — товары",
+      "w": 1440,
+      "x": 0,
+      "y": 3500
+    },
+    "AdminSettings.dc.html": {
+      "expand": "fill",
+      "h": 1460,
+      "is_interactive": true,
+      "title": "Админка — настройки и фичи",
+      "w": 1440,
+      "x": 1520,
+      "y": 4860
+    },
+    "AdminSidebar.dc.html": {
+      "h": 900,
+      "title": "Компонент: боковое меню админки",
+      "w": 248,
+      "x": 1520,
+      "y": 6420
+    },
+    "Main.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "Магазин — прототип (кликабельный)",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "ShopScreens.dc.html": {
+      "h": 1960,
+      "title": "Экраны магазина: светлая и тёмная тема",
+      "w": 5182,
+      "x": 0,
+      "y": 1190
+    },
+    "Tokens.dc.html": {
+      "h": 844,
+      "title": "Токены и компоненты",
+      "w": 1120,
+      "x": 470,
+      "y": 0
+    },
+    "AdminTeam.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "title": "Админка — команда и приглашения",
+      "w": 1440,
+      "x": 0,
+      "y": 7460
+    },
+    "BotCourier.dc.html": {
+      "h": 960,
+      "title": "Курьер в боте",
+      "w": 1824,
+      "x": 1520,
+      "y": 7460
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-11-13T12:24:59.633Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "noteOrder": [
+    "t_shop",
+    "t_screens",
+    "t_admin"
+  ],
+  "notes": {
+    "t_admin": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Веб-админка",
+      "w": 240,
+      "x": 0,
+      "y": 3200
+    },
+    "t_screens": {
+      "kind": "title1",
+      "maxW": 5182,
+      "text": "Все экраны магазина: светлая и тёмная тема",
+      "w": 240,
+      "x": 0,
+      "y": 890
+    },
+    "t_shop": {
+      "kind": "title1",
+      "maxW": 1590,
+      "text": "Mini App: магазин",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Tokens.dc.html",
+    "ShopScreens.dc.html",
+    "AdminProducts.dc.html",
+    "AdminProductForm.dc.html",
+    "AdminImport.dc.html",
+    "AdminOrders.dc.html",
+    "AdminSettings.dc.html",
+    "AdminTeam.dc.html",
+    "BotCourier.dc.html",
+    "AdminAttributes.dc.html",
+    "AdminDark.dc.html",
+    "AdminSidebar.dc.html"
+  ],
+  "pages": [],
+  "title": "Universal TG Store"
+}

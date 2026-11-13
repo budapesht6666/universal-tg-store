@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Админка — товары</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button,input,select{font:inherit;color:inherit}
+input::placeholder{color:#8E8E96}
+</style>
+</helmet>
+<div lang="ru" style="min-height: 100vh; display: flex; flex-wrap: wrap; background: {{t.page}}; color: {{t.text}}; font-family: Inter, -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 14px; line-height: 20px">
+  <div style="flex: 1 1 248px; display: flex">
+    <dc-import name="AdminSidebar" active="products" dark="{{dark}}" hint-size="248px,100%"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+      <div>
+        <h1 style="margin: 0; font-size: 24px; line-height: 32px; font-weight: 700">Товары</h1>
+        <p style="margin: 2px 0 0; color: {{t.hint}}">16 товаров · 2 скрыты</p>
+      </div>
+      <a href="AdminProductForm.dc.html" style="height: 38px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: 8px; background: #1F73D6; color: #FFFFFF; font-weight: 600; text-decoration: none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5v14"></path></svg>Добавить товар
+      </a>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+      <label style="flex: 1 1 280px; max-width: 360px; height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}; color: {{t.hint}}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16ZM21 21l-4.3-4.3"></path></svg>
+        <input aria-label="Поиск по названию или артикулу" placeholder="Название или артикул" value="{{q}}" onChange="{{onQ}}" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: {{t.text}}">
+      </label>
+      <select aria-label="Категория" value="{{cat}}" onChange="{{onCat}}" style="height: 38px; padding: 0 10px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}">
+        <option value="all">Все категории</option>
+        <option value="Одежда">Одежда</option>
+        <option value="Аксессуары">Аксессуары</option>
+        <option value="Для дома">Для дома</option>
+        <option value="Канцелярия">Канцелярия</option>
+      </select>
+      <select aria-label="Статус" style="height: 38px; padding: 0 10px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}">
+        <option>Любой статус</option><option>Активные</option><option>Скрытые</option><option>Нет в наличии</option>
+      </select>
+      <sc-if value="{{hasSel}}" hint-placeholder-val="{{ false }}">
+        <div style="margin-left: auto; height: 38px; display: flex; align-items: center; gap: 4px; padding: 0 4px 0 12px; border-radius: 8px; background: {{t.muted}}">
+          <span style="font-weight: 500; margin-right: 6px">{{selLabel}}</span>
+          <button style="height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: {{t.bg}}; cursor: pointer">Скрыть</button>
+          <button style="height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: {{t.bg}}; color: {{t.danger}}; cursor: pointer">Удалить</button>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="border: 1px solid {{t.border}}; border-radius: 12px; background: {{t.bg}}; overflow-x: auto">
+      <table style="width: 100%; min-width: 820px; border-collapse: collapse">
+        <thead>
+          <tr style="text-align: left; color: {{t.hint}}; font-size: 13px; background: {{t.head}}">
+            <th style="width: 44px; padding: 10px 0 10px 16px; font-weight: 500"><input type="checkbox" aria-label="Выбрать все" checked="{{allSel}}" onChange="{{toggleAll}}"></th>
+            <th style="padding: 10px 12px; font-weight: 500">Товар</th>
+            <th style="padding: 10px 12px; font-weight: 500">Категория</th>
+            <th style="padding: 10px 12px; font-weight: 500; text-align: right">Цена</th>
+            <th style="padding: 10px 12px; font-weight: 500; text-align: right">Остаток</th>
+            <th style="padding: 10px 12px; font-weight: 500">На витрине</th>
+            <th style="width: 52px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+            <tr style="border-top: 1px solid {{t.border}}; background: {{r.rowBg}}">
+              <td style="padding: 10px 0 10px 16px"><input type="checkbox" aria-label="{{r.selLabel}}" checked="{{r.sel}}" onChange="{{r.toggleSel}}"></td>
+              <td style="padding: 10px 12px">
+                <div style="display: flex; align-items: center; gap: 12px; min-width: 0">
+                  <span style="width: 40px; height: 40px; flex: none; border-radius: 8px; background: {{r.tint}}; display: flex; align-items: center; justify-content: center; color: {{t.art}}">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{r.icon}}"></path></svg>
+                  </span>
+                  <div style="min-width: 0; max-width: 380px">
+                    <a href="AdminProductForm.dc.html" style="display: block; color: {{t.text}}; font-weight: 500; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis" title="{{r.title}}">{{r.title}}</a>
+                    <span style="font-size: 12px; color: {{t.hint}}; font-family: ui-monospace, SFMono-Regular, Menlo, monospace">{{r.sku}}</span>
+                  </div>
+                </div>
+              </td>
+              <td style="padding: 10px 12px; color: {{t.hint}}">{{r.cat}}</td>
+              <td style="padding: 10px 12px; text-align: right; white-space: nowrap">
+                <div style="font-weight: 500">{{r.price}}</div>
+                <sc-if value="{{r.hasOld}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: {{t.hint}}; text-decoration: line-through">{{r.old}}</div></sc-if>
+              </td>
+              <td style="padding: 10px 12px; text-align: right; color: {{r.stockColor}}; font-weight: {{r.stockWeight}}">{{r.stock}}</td>
+              <td style="padding: 10px 12px">
+                <button role="switch" aria-checked="{{r.activeAria}}" aria-label="{{r.switchLabel}}" onClick="{{r.toggleActive}}" style="width: 36px; height: 20px; padding: 2px; border: 0; border-radius: 10px; background: {{r.swBg}}; display: flex; justify-content: {{r.swJustify}}; cursor: pointer">
+                  <span style="width: 16px; height: 16px; border-radius: 8px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.2)"></span>
+                </button>
+              </td>
+              <td style="padding: 10px 12px 10px 0">
+                <a href="AdminProductForm.dc.html" aria-label="{{r.editLabel}}" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: {{t.hint}}">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497zM15 5l4 4"></path></svg>
+                </a>
+              </td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; color: {{t.hint}}">
+      <span>{{countLabel}}</span>
+      <div style="display: flex; gap: 6px">
+        <button style="height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}; color: {{t.hint}}; cursor: pointer">Назад</button>
+        <button style="height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}; cursor: pointer">Вперёд</button>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false,"section":"Тема"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const s = this.state || {};
+    const t = dark
+      ? { page: '#09090B', bg: '#09090B', head: '#111113', muted: '#1F1F23', border: '#27272A', text: '#FAFAFA', hint: '#A1A1AA', art: '#C7C7CE', danger: '#FF6B5E', warn: '#F5A524', selBg: '#14233A', tints: ['#22303F', '#3A3128', '#21332A', '#312A3D', '#3B2829', '#22353A'] }
+      : { page: '#F4F4F5', bg: '#FFFFFF', head: '#FAFAFA', muted: '#F0F0F2', border: '#E4E4E7', text: '#09090B', hint: '#71717A', art: '#59606B', danger: '#C5221F', warn: '#B45309', selBg: '#F0F6FE', tints: ['#E9EFF8', '#F4EEE6', '#E7F2EC', '#F0EAF6', '#F7EAEA', '#E6F1F4'] };
+    const I = {
+      shirt: 'M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z',
+      mug: 'M10 2v2M14 2v2M6 2v2M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1',
+      backpack: 'M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2ZM8 10h8M8 18h8M8 22v-6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v6M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2',
+      bag: 'M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4ZM3 6h18M16 10a4 4 0 0 1-8 0',
+      notebook: 'M2 6h4M2 10h4M2 14h4M2 18h4M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM16 2v20',
+      bottle: 'M5.116 4.104A1 1 0 0 1 6.11 3h11.78a1 1 0 0 1 .994 1.105L17.19 20.21A2 2 0 0 1 15.2 22H8.8a2 2 0 0 1-2-1.79zM6 12a5 5 0 0 1 6 0 5 5 0 0 0 6 0'
+    };
+    const data = [
+      ['tee', 'Футболка «Base» из плотного хлопка', 'TB-001', 'Одежда', 1990, 2490, 12, true, 'shirt', 0],
+      ['hoodie', 'Худи оверсайз с начёсом', 'HD-014', 'Одежда', 4990, null, 3, true, 'shirt', 1],
+      ['mug', 'Кружка керамическая, 350 мл', 'MG-350', 'Для дома', 890, null, 40, true, 'mug', 2],
+      ['backpack', 'Рюкзак городской водоотталкивающий с отделением для ноутбука 15″', 'BP-020', 'Аксессуары', 6490, 7990, 7, true, 'backpack', 3],
+      ['tote', 'Шоппер из канваса', 'TT-002', 'Аксессуары', 1190, null, 0, true, 'bag', 4],
+      ['notebook', 'Блокнот в точку A5', 'NB-A5', 'Канцелярия', 590, null, 25, true, 'notebook', 5],
+      ['bottle', 'Бутылка для воды 750 мл', 'BT-750', 'Аксессуары', 1290, 1490, 15, false, 'bottle', 0],
+      ['cards', 'Набор открыток, 12 шт.', 'PC-012', 'Канцелярия', 450, null, null, false, 'notebook', 2]
+    ];
+    const money = (n) => n.toLocaleString('ru-RU') + ' ₽';
+    const active = s.active ?? {};
+    const sel = s.sel ?? {};
+    const q = (s.q ?? '').toLowerCase();
+    const cat = s.cat ?? 'all';
+    const filtered = data.filter((d) => (cat === 'all' || d[3] === cat) && (!q || (d[1] + ' ' + d[2]).toLowerCase().includes(q)));
+    const rows = filtered.map((d) => {
+      const id = d[0];
+      const isActive = active[id] ?? d[7];
+      const isSel = !!sel[id];
+      const stock = d[6];
+      return {
+        title: d[1], sku: d[2], cat: d[3], price: money(d[4]), old: d[5] ? money(d[5]) : '', hasOld: !!d[5],
+        icon: I[d[8]], tint: t.tints[d[9]],
+        stock: stock === null ? '∞' : String(stock),
+        stockColor: stock === 0 ? t.danger : (stock !== null && stock <= 3 ? t.warn : t.text),
+        stockWeight: stock !== null && stock <= 3 ? '600' : '400',
+        sel: isSel, selLabel: 'Выбрать: ' + d[1], editLabel: 'Редактировать: ' + d[1], switchLabel: 'Показывать на витрине: ' + d[1],
+        rowBg: isSel ? t.selBg : 'transparent',
+        activeAria: isActive ? 'true' : 'false', swBg: isActive ? '#1F73D6' : (dark ? '#3F3F46' : '#D4D4D8'), swJustify: isActive ? 'flex-end' : 'flex-start',
+        toggleActive: () => this.setState({ active: Object.assign({}, active, { [id]: !isActive }) }),
+        toggleSel: () => this.setState({ sel: Object.assign({}, sel, { [id]: !isSel }) })
+      };
+    });
+    const selCount = Object.values(sel).filter(Boolean).length;
+    const allSel = filtered.length > 0 && filtered.every((d) => sel[d[0]]);
+    return {
+      t: t, dark: dark, rows: rows, q: s.q ?? '', cat: cat,
+      onQ: (e) => this.setState({ q: e.target.value }), onCat: (e) => this.setState({ cat: e.target.value }),
+      hasSel: selCount > 0, selLabel: 'Выбрано: ' + selCount, allSel: allSel,
+      toggleAll: () => { const n = {}; if (!allSel) filtered.forEach((d) => { n[d[0]] = true; }); this.setState({ sel: n }); },
+      countLabel: rows.length === 0 ? 'Ничего не найдено' : '1–' + rows.length + ' из 16'
+    };
+  }
+}
+</script>
+</body>
+</html>

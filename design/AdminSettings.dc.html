@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Админка — настройки</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+</style>
+</helmet>
+<div lang="ru" style="min-height: 100vh; display: flex; flex-wrap: wrap; background: #F4F4F5; color: #09090B; font-family: Inter, -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 14px; line-height: 20px">
+  <div style="flex: 1 1 248px; display: flex">
+    <dc-import name="AdminSidebar" active="settings" dark="{{ false }}" hint-size="248px,100%"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 1000px">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+      <h1 style="margin: 0; font-size: 24px; line-height: 32px; font-weight: 700">Настройки</h1>
+      <button style="height: 36px; padding: 0 16px; border: 0; border-radius: 8px; background: #1F73D6; color: #FFFFFF; font-weight: 600; cursor: pointer">Сохранить</button>
+    </div>
+
+    <section style="padding: 20px; border: 1px solid #E4E4E7; border-radius: 12px; background: #FFFFFF; display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-size: 16px; font-weight: 600">Магазин</h2>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="s-name" style="font-weight: 500">Название</label>
+          <input id="s-name" value="Universal Store" style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid #E4E4E7; outline: none">
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="s-cur" style="font-weight: 500">Валюта</label>
+            <select id="s-cur" style="height: 38px; padding: 0 10px; border-radius: 8px; border: 1px solid #E4E4E7; background: #FFFFFF"><option>₽ RUB</option><option>$ USD</option><option>€ EUR</option></select>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="s-loc" style="font-weight: 500">Формат чисел</label>
+            <select id="s-loc" style="height: 38px; padding: 0 10px; border-radius: 8px; border: 1px solid #E4E4E7; background: #FFFFFF"><option>1 990 ₽ — ru-RU</option><option>$1,990 — en-US</option></select>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px; max-width: 320px">
+        <label for="s-view" style="font-weight: 500">Вид каталога по умолчанию</label>
+        <select id="s-view" style="height: 38px; padding: 0 10px; border-radius: 8px; border: 1px solid #E4E4E7; background: #FFFFFF"><option>Плитка в две колонки</option><option>Список</option></select>
+        <span style="font-size: 12px; color: #71717A">Покупатель может переключить, выбор запоминается</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="s-hello" style="font-weight: 500">Приветствие бота</label>
+        <textarea id="s-hello" rows="2" style="padding: 10px 12px; border-radius: 8px; border: 1px solid #E4E4E7; outline: none; resize: vertical">Привет! Здесь одежда и аксессуары на каждый день. Открывайте магазин — доставим за 1–2 дня.</textarea>
+        <span style="font-size: 12px; color: #71717A">Ответ на /start, под ним кнопка «Открыть магазин»</span>
+      </div>
+    </section>
+
+    <section style="padding: 20px; border: 1px solid #E4E4E7; border-radius: 12px; background: #FFFFFF; display: flex; flex-direction: column; gap: 4px">
+      <h2 style="margin: 0 0 4px; font-size: 16px; font-weight: 600">Возможности каталога</h2>
+      <p style="margin: 0 0 8px; color: #71717A">Выключенное исчезает из магазина сразу, данные товаров не теряются</p>
+      <sc-for list="{{features}}" as="f" hint-placeholder-count="7">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid #F0F0F2">
+          <div style="display: flex; gap: 12px; align-items: flex-start">
+            <span style="width: 32px; height: 32px; flex: none; border-radius: 8px; background: #F4F4F5; display: flex; align-items: center; justify-content: center; color: #3F3F46">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{f.icon}}"></path></svg>
+            </span>
+            <div>
+              <div style="font-weight: 500">{{f.label}}</div>
+              <div style="font-size: 13px; color: #71717A">{{f.hint}}</div>
+            </div>
+          </div>
+          <button role="switch" aria-checked="{{f.aria}}" aria-label="{{f.label}}" onClick="{{f.toggle}}" style="width: 40px; height: 22px; flex: none; padding: 2px; border: 0; border-radius: 11px; background: {{f.bg}}; display: flex; justify-content: {{f.justify}}; cursor: pointer">
+            <span style="width: 18px; height: 18px; border-radius: 9px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.2)"></span>
+          </button>
+        </div>
+      </sc-for>
+    </section>
+
+    <section style="padding: 20px; border: 1px solid #E4E4E7; border-radius: 12px; background: #FFFFFF; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600">Поля оформления заказа</h2>
+        <button style="border: 0; padding: 0; background: transparent; color: #1A5CAB; font-weight: 500; cursor: pointer">+ Добавить поле</button>
+      </div>
+      <div style="border: 1px solid #E4E4E7; border-radius: 10px; overflow: hidden">
+        <sc-for list="{{fields}}" as="cf" hint-placeholder-count="4">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-top: {{cf.top}}">
+            <span aria-hidden="true" style="color: #A1A1AA"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="9" cy="19" r="1.6"></circle><circle cx="15" cy="5" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="15" cy="19" r="1.6"></circle></svg></span>
+            <span style="flex: 1; font-weight: 500">{{cf.label}}</span>
+            <span style="height: 22px; padding: 0 8px; display: inline-flex; align-items: center; border-radius: 6px; background: #F4F4F5; font-size: 12px; color: #52525B; font-family: ui-monospace, SFMono-Regular, Menlo, monospace">{{cf.type}}</span>
+            <label style="display: flex; align-items: center; gap: 6px; color: #52525B; font-size: 13px; width: 130px"><input type="checkbox" checked="{{cf.req}}" onChange="{{cf.toggle}}"> обязательное</label>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding-top: 4px">
+        <div>
+          <div style="font-weight: 500">Телефон только из Telegram</div>
+          <div style="font-size: 13px; color: #71717A">Номер подтверждён Telegram, курьер точно дозвонится. Вписать номер вручную будет нельзя</div>
+        </div>
+        <button role="switch" aria-checked="{{tgOnly.aria}}" aria-label="Телефон только из Telegram" onClick="{{tgOnly.toggle}}" style="width: 40px; height: 22px; flex: none; padding: 2px; border: 0; border-radius: 11px; background: {{tgOnly.bg}}; display: flex; justify-content: {{tgOnly.justify}}; cursor: pointer">
+          <span style="width: 18px; height: 18px; border-radius: 9px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.2)"></span>
+        </button>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px">
+        <div>
+          <label for="s-maxqty" style="font-weight: 500">Максимум штук одного товара</label>
+          <div style="font-size: 13px; color: #71717A">Если остаток меньше, ограничит остаток</div>
+        </div>
+        <input id="s-maxqty" value="100" inputmode="numeric" style="width: 96px; height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid #E4E4E7; outline: none; text-align: right">
+      </div>
+    </section>
+
+    <section style="padding: 20px; border: 1px solid #E4E4E7; border-radius: 12px; background: #FFFFFF; display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 16px; font-weight: 600">Заказы</h2>
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px">
+        <div>
+          <div style="font-weight: 500">Покупатель может отменить заказ сам</div>
+          <div style="font-size: 13px; color: #71717A">Пока заказ не взят в работу. Потом — только просьба менеджеру через бота</div>
+        </div>
+        <button role="switch" aria-checked="{{custCancel.aria}}" aria-label="Покупатель может отменить заказ сам" onClick="{{custCancel.toggle}}" style="width: 40px; height: 22px; flex: none; padding: 2px; border: 0; border-radius: 11px; background: {{custCancel.bg}}; display: flex; justify-content: {{custCancel.justify}}; cursor: pointer">
+          <span style="width: 18px; height: 18px; border-radius: 9px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.2)"></span>
+        </button>
+      </div>
+    </section>
+
+    <section style="padding: 20px; border: 1px solid #E4E4E7; border-radius: 12px; background: #FFFFFF; display: flex; flex-direction: column; gap: 14px">
+      <h2 style="margin: 0; font-size: 16px; font-weight: 600">Доставка</h2>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <span id="s-assign" style="font-weight: 500">Как раздавать заказы курьерам</span>
+        <div role="radiogroup" aria-labelledby="s-assign" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+          <sc-for list="{{assign}}" as="as" hint-placeholder-count="2">
+            <button role="radio" aria-checked="{{as.on}}" onClick="{{as.pick}}" style="padding: 12px; border-radius: 10px; border: 1px solid {{as.border}}; background: {{as.bg}}; text-align: left; display: flex; flex-direction: column; gap: 2px; cursor: pointer">
+              <span style="font-weight: 600">{{as.label}}</span>
+              <span style="font-size: 13px; color: #71717A">{{as.hint}}</span>
+            </button>
+          </sc-for>
+        </div>
+        <span style="font-size: 12px; color: #71717A">Пока курьер один, заказ назначается на него сам — нажимать ничего не нужно</span>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px">
+        <div>
+          <label for="s-shopphone" style="font-weight: 500">Телефон магазина</label>
+          <div style="font-size: 13px; color: #71717A">Сюда позвонит покупатель, если курьер скрыл свой номер</div>
+        </div>
+        <input id="s-shopphone" value="+7 495 000-00-00" inputmode="tel" style="width: 180px; height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid #E4E4E7; outline: none">
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1460}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const on = s.on ?? { categories: true, search: true, sort: true, gallery: true, discounts: true, badges: true, stock: true };
+    const req = s.req ?? { name: true, phone: true, address: true, comment: false };
+    const F = [
+      ['categories', 'Категории', 'Чипсы над каталогом и фильтр по категории', 'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z'],
+      ['search', 'Поиск', 'Строка поиска по названию и описанию', 'M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16ZM21 21l-4.3-4.3'],
+      ['sort', 'Сортировка', 'По популярности, цене и новизне', 'm21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16'],
+      ['gallery', 'Галерея фото', 'Несколько фото с листанием на карточке товара', 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2ZM9 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21'],
+      ['discounts', 'Скидки', 'Старая цена зачёркнута, процент скидки на фото', 'M19 5 5 19M6.5 4a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM17.5 15a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z'],
+      ['badges', 'Бейджи', '«Новинка», «Хит» и свои метки', 'M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z'],
+      ['stock', 'Остатки', '«Осталось 3 шт.», запрет заказать больше, чем есть', 'm7.5 4.27 9 5.15M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16ZM3.3 7l8.7 5 8.7-5M12 22V12']
+    ];
+    const C = [['name', 'Имя', 'text'], ['phone', 'Телефон', 'phone'], ['address', 'Адрес', 'textarea'], ['comment', 'Комментарий', 'textarea']];
+    const tg = !!s.tgOnly;
+    const cc = s.custCancel ?? true;
+    const mode = s.assign ?? 'manual';
+    return {
+      assign: [['manual', 'Вручную', 'Менеджер выбирает курьера для каждого заказа'], ['pool', 'Курьеры берут сами', 'Собранный заказ видят все свободные курьеры, кто первым нажал «Беру» — везёт']].map((a) => ({
+        label: a[1], hint: a[2], on: a[0] === mode ? 'true' : 'false', bg: a[0] === mode ? '#F0F6FE' : '#FFFFFF', border: a[0] === mode ? '#8BB5EA' : '#E4E4E7',
+        pick: () => this.setState({ assign: a[0] })
+      })),
+      custCancel: { aria: cc ? 'true' : 'false', bg: cc ? '#1F73D6' : '#D4D4D8', justify: cc ? 'flex-end' : 'flex-start', toggle: () => this.setState({ custCancel: !cc }) },
+      tgOnly: { aria: tg ? 'true' : 'false', bg: tg ? '#1F73D6' : '#D4D4D8', justify: tg ? 'flex-end' : 'flex-start', toggle: () => this.setState({ tgOnly: !tg }) },
+      features: F.map((f) => ({
+        label: f[1], hint: f[2], icon: f[3], aria: on[f[0]] ? 'true' : 'false',
+        bg: on[f[0]] ? '#1F73D6' : '#D4D4D8', justify: on[f[0]] ? 'flex-end' : 'flex-start',
+        toggle: () => this.setState({ on: Object.assign({}, on, { [f[0]]: !on[f[0]] }) })
+      })),
+      fields: C.map((c, i) => ({
+        label: c[1], type: c[2], req: !!req[c[0]], top: i === 0 ? '0' : '1px solid #F0F0F2',
+        toggle: () => this.setState({ req: Object.assign({}, req, { [c[0]]: !req[c[0]] }) })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

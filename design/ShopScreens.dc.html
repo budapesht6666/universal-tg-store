@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Экраны магазина в двух темах</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+</style>
+</helmet>
+<div style="width: 5182px; height: 1960px; display: flex; flex-direction: column; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif">
+  <div style="flex: 1; padding: 40px 46px; background: #E1E1E7; display: flex; flex-direction: column; gap: 16px">
+    <div style="font-size: 22px; font-weight: 700; color: #1C1C1E">Светлая тема</div>
+    <div style="display: flex; gap: 80px">
+      <sc-for list="{{shots}}" as="sh" hint-placeholder-count="11">
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <span style="font-size: 16px; font-weight: 600; color: #3C3C43">{{sh.label}}</span>
+          <div style="width: 390px; height: 844px; border-radius: 28px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)">
+            <dc-import name="Main" screen="{{sh.screen}}" dark="{{ false }}" f-categories="{{sh.on}}" f-sort="{{sh.on}}" f-badges="{{sh.on}}" f-discounts="{{sh.on}}" f-stock="{{sh.on}}" f-search="{{sh.on}}" layout="{{sh.layout}}" order="{{sh.order}}" hint-size="390px,844px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="flex: 1; padding: 40px 46px; background: #0B0B0D; display: flex; flex-direction: column; gap: 16px">
+    <div style="font-size: 22px; font-weight: 700; color: #F5F5F7">Тёмная тема</div>
+    <div style="display: flex; gap: 80px">
+      <sc-for list="{{shots}}" as="sh" hint-placeholder-count="11">
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <span style="font-size: 16px; font-weight: 600; color: #C7C7CE">{{sh.label}}</span>
+          <div style="width: 390px; height: 844px; border-radius: 28px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)">
+            <dc-import name="Main" screen="{{sh.screen}}" dark="{{ true }}" f-categories="{{sh.on}}" f-sort="{{sh.on}}" f-badges="{{sh.on}}" f-discounts="{{sh.on}}" f-stock="{{sh.on}}" f-search="{{sh.on}}" layout="{{sh.layout}}" order="{{sh.order}}" hint-size="390px,844px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":5182,"height":1960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      shots: [
+        { label: 'Каталог', screen: 'catalog', on: true, layout: 'grid', order: '1042' },
+        { label: 'Каталог списком', screen: 'catalog', on: true, layout: 'list', order: '1042' },
+        { label: 'Каталог — все фичи выключены', screen: 'catalog', on: false, layout: 'grid', order: '1042' },
+        { label: 'Карточка товара', screen: 'product', on: true, layout: 'grid', order: '1042' },
+        { label: 'Корзина', screen: 'cart', on: true, layout: 'grid', order: '1042' },
+        { label: 'Оформление — ошибки в полях', screen: 'checkoutErrors', on: true, layout: 'grid', order: '1042' },
+        { label: 'Заказ оформлен', screen: 'success', on: true, layout: 'grid', order: '1042' },
+        { label: 'Мои заказы', screen: 'orders', on: true, layout: 'grid', order: '1042' },
+        { label: 'Заказ — можно отменить', screen: 'order', on: true, layout: 'grid', order: '1042' },
+        { label: 'Заказ — курьер в пути', screen: 'order', on: true, layout: 'grid', order: '1038' },
+        { label: 'Заказ — отменён магазином', screen: 'order', on: true, layout: 'grid', order: '1009' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

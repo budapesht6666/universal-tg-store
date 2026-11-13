@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Админка — команда</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button,input,select{font:inherit;color:inherit}
+</style>
+</helmet>
+<div lang="ru" style="min-height: 100vh; display: flex; flex-wrap: wrap; background: #F4F4F5; color: #09090B; font-family: Inter, -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 14px; line-height: 20px">
+  <div style="flex: 1 1 248px; display: flex">
+    <dc-import name="AdminSidebar" active="team" dark="{{ false }}" hint-size="248px,100%"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px; display: flex; flex-direction: column; gap: 20px">
+    <div>
+      <h1 style="margin: 0; font-size: 24px; line-height: 32px; font-weight: 700">Команда</h1>
+      <p style="margin: 2px 0 0; color: #71717A">Кто работает с заказами. Вход через Telegram, без паролей</p>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+      <div style="flex: 999 1 560px; min-width: 0; border: 1px solid #E4E4E7; border-radius: 12px; background: #FFFFFF; overflow-x: auto">
+        <table style="width: 100%; min-width: 680px; border-collapse: collapse">
+          <thead>
+            <tr style="text-align: left; color: #71717A; font-size: 13px; background: #FAFAFA">
+              <th style="padding: 10px 16px; font-weight: 500">Человек</th>
+              <th style="padding: 10px 12px; font-weight: 500">Роли</th>
+              <th style="padding: 10px 12px; font-weight: 500">Сейчас</th>
+              <th style="padding: 10px 12px; font-weight: 500">Номер покупателю</th>
+              <th style="padding: 10px 16px; font-weight: 500">Активен</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{members}}" as="m" hint-placeholder-count="4">
+              <tr style="border-top: 1px solid #E4E4E7; opacity: {{m.opacity}}">
+                <td style="padding: 12px 16px">
+                  <div style="display: flex; align-items: center; gap: 10px">
+                    <span style="width: 32px; height: 32px; flex: none; border-radius: 16px; background: #F0F0F2; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px">{{m.initial}}</span>
+                    <div style="min-width: 0">
+                      <div style="font-weight: 500">{{m.name}}</div>
+                      <div style="font-size: 12px; color: #71717A">{{m.user}} · {{m.phone}}</div>
+                    </div>
+                  </div>
+                </td>
+                <td style="padding: 12px 12px">
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px">
+                    <sc-for list="{{m.roles}}" as="r" hint-placeholder-count="2">
+                      <span style="height: 22px; padding: 0 8px; display: inline-flex; align-items: center; border-radius: 6px; background: {{r.bg}}; color: {{r.fg}}; font-size: 12px; font-weight: 500">{{r.label}}</span>
+                    </sc-for>
+                  </div>
+                </td>
+                <td style="padding: 12px 12px; color: #52525B; white-space: nowrap">{{m.now}}</td>
+                <td style="padding: 12px 12px; color: #52525B">{{m.showPhone}}</td>
+                <td style="padding: 12px 16px">
+                  <button role="switch" aria-checked="{{m.aria}}" aria-label="{{m.switchLabel}}" onClick="{{m.toggle}}" style="width: 40px; height: 22px; padding: 2px; border: 0; border-radius: 11px; background: {{m.swBg}}; display: flex; justify-content: {{m.swJustify}}; cursor: pointer">
+                    <span style="width: 18px; height: 18px; border-radius: 9px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.2)"></span>
+                  </button>
+                </td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+        <div style="padding: 12px 16px; border-top: 1px solid #E4E4E7; display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: #71717A">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 2px"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>
+          <span>Курьер видит адрес и телефон покупателя, только пока заказ у него. После доставки они скрываются из его чата с ботом. Выключенный курьер сразу теряет доступ к заказам.</span>
+        </div>
+      </div>
+
+      <aside aria-label="Приглашение" style="flex: 1 1 340px; min-width: 0; padding: 20px; border: 1px solid #E4E4E7; border-radius: 12px; background: #FFFFFF; display: flex; flex-direction: column; gap: 14px">
+        <div>
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600">Пригласить в команду</h2>
+          <p style="margin: 2px 0 0; font-size: 13px; color: #71717A">Человек откроет ссылку, бот попросит поделиться номером — и он появится в списке</p>
+        </div>
+        <div role="radiogroup" aria-label="Роль" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; padding: 3px; border-radius: 9px; background: #F0F0F2">
+          <sc-for list="{{roles}}" as="ro" hint-placeholder-count="2">
+            <button role="radio" aria-checked="{{ro.on}}" onClick="{{ro.pick}}" style="height: 32px; border: 0; border-radius: 7px; background: {{ro.bg}}; color: {{ro.fg}}; font-weight: 500; box-shadow: {{ro.shadow}}; cursor: pointer">{{ro.label}}</button>
+          </sc-for>
+        </div>
+        <span style="font-size: 13px; color: #52525B">{{roleHint}}</span>
+        <sc-if value="{{noLink}}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{createLink}}" style="height: 38px; border: 0; border-radius: 8px; background: #1F73D6; color: #FFFFFF; font-weight: 600; cursor: pointer">Создать ссылку</button>
+        </sc-if>
+        <sc-if value="{{hasLink}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="inv-link" style="font-weight: 500">Ссылка-приглашение</label>
+            <div style="display: flex; gap: 8px">
+              <input id="inv-link" readonly value="https://t.me/universal_store_bot?start=inv_8Kq2xT" style="flex: 1; min-width: 0; height: 38px; padding: 0 10px; border-radius: 8px; border: 1px solid #E4E4E7; background: #FAFAFA; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; outline: none">
+              <button onClick="{{copy}}" style="height: 38px; padding: 0 12px; border: 1px solid #E4E4E7; border-radius: 8px; background: #FFFFFF; font-weight: 500; cursor: pointer">{{copyLabel}}</button>
+            </div>
+            <span style="font-size: 12px; color: #71717A">Сработает один раз и действует 24 часа. Отправьте её человеку в Telegram</span>
+          </div>
+        </sc-if>
+        <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid #E4E4E7">
+          <span style="font-weight: 500">Ждут ответа</span>
+          <sc-for list="{{invites}}" as="iv" hint-placeholder-count="1">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 13px">
+              <span><span style="font-weight: 500">{{iv.role}}</span> <span style="color: #71717A">· {{iv.left}}</span></span>
+              <button onClick="{{iv.revoke}}" style="border: 0; padding: 0; background: transparent; color: #C5221F; font-weight: 500; cursor: pointer">Отозвать</button>
+            </div>
+          </sc-for>
+          <sc-if value="{{noInvites}}" hint-placeholder-val="{{ false }}"><span style="font-size: 13px; color: #71717A">Нет активных приглашений</span></sc-if>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const ROLE = { owner: ['Владелец', '#E4EEFA', '#1A5CAB'], manager: ['Менеджер', '#F0F0F2', '#3F3F46'], courier: ['Курьер', '#DDF1EE', '#0F665E'] };
+    const M = [
+      { id: 'me', name: 'Вы', initial: 'В', user: '@shop_admin', phone: '+7 999 000-00-01', roles: ['owner', 'courier'], now: '—', showPhone: 'Показывать', fixed: true },
+      { id: 'irina', name: 'Ирина', initial: 'И', user: '@irina_m', phone: '+7 999 000-00-02', roles: ['manager'], now: '2 заказа собирает', showPhone: '—' },
+      { id: 'alex', name: 'Алексей', initial: 'А', user: '@alex_dlv', phone: '+7 900 000-12-34', roles: ['courier'], now: '1 доставка', showPhone: 'Скрыт — звонят в магазин' },
+      { id: 'marat', name: 'Марат', initial: 'М', user: '@marat_k', phone: '+7 900 000-56-78', roles: ['courier'], now: '—', showPhone: 'Скрыт — звонят в магазин', off: true }
+    ];
+    const off = s.off ?? { marat: true };
+    const role = s.role ?? 'courier';
+    const invites = (s.invites ?? [{ id: 1, role: 'Курьер', left: 'осталось 21 ч' }]);
+    return {
+      members: M.map((m) => {
+        const on = !off[m.id];
+        return {
+          name: m.name, initial: m.initial, user: m.user, phone: m.phone, now: on ? m.now : 'Выключен', showPhone: m.showPhone,
+          roles: m.roles.map((r) => ({ label: ROLE[r][0], bg: ROLE[r][1], fg: ROLE[r][2] })),
+          opacity: on ? 1 : 0.55, aria: on ? 'true' : 'false', switchLabel: 'Активен: ' + m.name,
+          swBg: on ? '#1F73D6' : '#D4D4D8', swJustify: on ? 'flex-end' : 'flex-start',
+          toggle: () => { if (!m.fixed) this.setState({ off: Object.assign({}, off, { [m.id]: on }) }); }
+        };
+      }),
+      roles: [['courier', 'Курьер'], ['manager', 'Менеджер']].map((r) => ({
+        label: r[1], on: r[0] === role ? 'true' : 'false', bg: r[0] === role ? '#FFFFFF' : 'transparent', fg: r[0] === role ? '#09090B' : '#71717A',
+        shadow: r[0] === role ? '0 1px 2px rgba(0,0,0,0.12)' : 'none', pick: () => this.setState({ role: r[0], link: false, copied: false })
+      })),
+      roleHint: role === 'courier' ? 'Получает доставки в бота, отмечает «Забрал, еду» и «Доставлен». В админку не входит' : 'Работает в админке: заказы, товары, сообщения покупателям. Команду и настройки не меняет',
+      noLink: !s.link, hasLink: !!s.link,
+      createLink: () => this.setState({ link: true, copied: false, invites: invites.concat([{ id: Date.now(), role: role === 'courier' ? 'Курьер' : 'Менеджер', left: 'осталось 24 ч' }]) }),
+      copy: () => this.setState({ copied: true }), copyLabel: s.copied ? 'Скопировано' : 'Скопировать',
+      invites: invites.map((iv) => ({ role: iv.role, left: iv.left, revoke: () => this.setState({ invites: invites.filter((x) => x.id !== iv.id) }) })),
+      noInvites: invites.length === 0
+    };
+  }
+}
+</script>
+</body>
+</html>

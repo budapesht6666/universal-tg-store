@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Админка — форма товара</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+input::placeholder,textarea::placeholder{color:#8E8E96}
+</style>
+</helmet>
+<div lang="ru" style="min-height: 100vh; display: flex; flex-wrap: wrap; background: {{t.page}}; color: {{t.text}}; font-family: Inter, -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 14px; line-height: 20px">
+  <div style="flex: 1 1 248px; display: flex">
+    <dc-import name="AdminSidebar" active="products" dark="{{dark}}" hint-size="248px,100%"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <div style="position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 32px; background: {{t.bg}}; border-bottom: 1px solid {{t.border}}">
+      <div style="min-width: 0">
+        <nav aria-label="Навигация" style="font-size: 13px; color: {{t.hint}}"><a href="AdminProducts.dc.html" style="color: {{t.hint}}; text-decoration: none">Товары</a> / Футболка «Base»</nav>
+        <h1 style="margin: 2px 0 0; font-size: 20px; line-height: 28px; font-weight: 700">Футболка «Base» из плотного хлопка</h1>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: {{t.warn}}"><span style="width: 7px; height: 7px; border-radius: 4px; background: {{t.warn}}"></span>Есть несохранённые изменения</span>
+        <a href="AdminProducts.dc.html" style="height: 36px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 8px; border: 1px solid {{t.border}}; color: {{t.text}}; text-decoration: none">Отмена</a>
+        <button style="height: 36px; padding: 0 16px; border: 0; border-radius: 8px; background: #1F73D6; color: #FFFFFF; font-weight: 600; cursor: pointer">Сохранить</button>
+      </div>
+    </div>
+
+    <div style="padding: 24px 32px 48px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <div style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+
+        <div role="alert" style="display: flex; gap: 10px; padding: 12px 14px; border-radius: 10px; background: {{t.dangerSoft}}; color: {{t.text}}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{t.danger}}" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM12 8v4M12 16h.01"></path></svg>
+          <span>Не сохранено: исправьте 2 поля — <a href="#f-old" style="color: {{t.danger}}">старая цена</a> и <a href="#f-img" style="color: {{t.danger}}">ссылка на фото</a>.</span>
+        </div>
+
+        <section style="padding: 20px; border: 1px solid {{t.border}}; border-radius: 12px; background: {{t.bg}}; display: flex; flex-direction: column; gap: 16px">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600">Основное</h2>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="f-title" style="font-weight: 500">Название <span style="color: {{t.danger}}">*</span></label>
+            <input id="f-title" value="Футболка «Base» из плотного хлопка" style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}; outline: none">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <div style="display: flex; justify-content: space-between"><label for="f-short" style="font-weight: 500">Короткое описание</label><span style="font-size: 12px; color: {{shortCounterColor}}">{{shortCounter}}</span></div>
+            <input id="f-short" value="{{short}}" onChange="{{onShort}}" style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}; outline: none">
+            <span style="font-size: 12px; color: {{t.hint}}">Показывается в карточке каталога, обрезается после 2 строк</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <div style="display: flex; justify-content: space-between; align-items: center">
+              <label for="f-desc" style="font-weight: 500">Полное описание</label>
+              <div role="tablist" aria-label="Режим" style="display: flex; gap: 2px; padding: 2px; border-radius: 7px; background: {{t.muted}}">
+                <button role="tab" aria-selected="{{tabs.textSel}}" onClick="{{tabs.pickText}}" style="height: 26px; padding: 0 10px; border: 0; border-radius: 5px; background: {{tabs.textBg}}; font-size: 12px; cursor: pointer">Текст</button>
+                <button role="tab" aria-selected="{{tabs.prevSel}}" onClick="{{tabs.pickPrev}}" style="height: 26px; padding: 0 10px; border: 0; border-radius: 5px; background: {{tabs.prevBg}}; font-size: 12px; cursor: pointer">Превью</button>
+              </div>
+            </div>
+            <sc-if value="{{tabs.isText}}" hint-placeholder-val="{{ true }}">
+              <textarea id="f-desc" rows="5" style="padding: 10px 12px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}; outline: none; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; line-height: 20px">Базовая футболка на каждый день из **чесаного хлопка**. Плотное полотно держит форму и не просвечивает.
+
+- горловина с двойной лентой
+- прямой силуэт — берите свой обычный размер</textarea>
+            </sc-if>
+            <sc-if value="{{tabs.isPrev}}" hint-placeholder-val="{{ false }}">
+              <div style="padding: 10px 12px; border-radius: 8px; border: 1px solid {{t.border}}; line-height: 21px">
+                <p style="margin: 0 0 8px">Базовая футболка на каждый день из <strong>чесаного хлопка</strong>. Плотное полотно держит форму и не просвечивает.</p>
+                <ul style="margin: 0; padding-left: 20px"><li>горловина с двойной лентой</li><li>прямой силуэт — берите свой обычный размер</li></ul>
+              </div>
+            </sc-if>
+            <span style="font-size: 12px; color: {{t.hint}}">Markdown: **жирный**, списки, ссылки. HTML не поддерживается.</span>
+          </div>
+        </section>
+
+        <section style="padding: 20px; border: 1px solid {{t.border}}; border-radius: 12px; background: {{t.bg}}; display: flex; flex-direction: column; gap: 16px">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600">Цена и наличие</h2>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="f-price" style="font-weight: 500">Цена <span style="color: {{t.danger}}">*</span></label>
+              <div style="height: 38px; display: flex; align-items: center; border-radius: 8px; border: 1px solid {{t.border}}; padding: 0 12px"><input id="f-price" value="1 990" inputmode="decimal" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent"><span style="color: {{t.hint}}">₽</span></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="f-old" style="font-weight: 500">Старая цена</label>
+              <div style="height: 38px; display: flex; align-items: center; border-radius: 8px; border: 1px solid {{t.danger}}; box-shadow: 0 0 0 3px {{t.dangerRing}}; padding: 0 12px"><input id="f-old" value="1 490" inputmode="decimal" aria-invalid="true" aria-describedby="f-old-err" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent"><span style="color: {{t.hint}}">₽</span></div>
+              <span id="f-old-err" style="font-size: 12px; line-height: 16px; color: {{t.danger}}">Должна быть больше цены (1 990 ₽), иначе скидка не покажется</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="f-stock" style="font-weight: 500">Остаток</label>
+              <div style="height: 38px; display: flex; align-items: center; border-radius: 8px; border: 1px solid {{t.border}}; padding: 0 12px"><input id="f-stock" value="12" inputmode="numeric" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent"><span style="color: {{t.hint}}">шт.</span></div>
+              <span style="font-size: 12px; line-height: 16px; color: {{t.hint}}">Пусто — без учёта остатков</span>
+            </div>
+          </div>
+        </section>
+
+        <section style="padding: 20px; border: 1px solid {{t.border}}; border-radius: 12px; background: {{t.bg}}; display: flex; flex-direction: column; gap: 16px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px">
+            <h2 style="margin: 0; font-size: 16px; font-weight: 600">Характеристики</h2>
+            <a href="AdminAttributes.dc.html" style="font-size: 13px; color: {{t.link}}">Настроить поля</a>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="a-mat" style="font-weight: 500">Материал</label>
+              <select id="a-mat" style="height: 38px; padding: 0 10px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}"><option>Хлопок 100%</option><option>Лён</option><option>Смесовая ткань</option></select>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="a-den" style="font-weight: 500">Плотность</label>
+              <div style="height: 38px; display: flex; align-items: center; border-radius: 8px; border: 1px solid {{t.border}}; padding: 0 12px"><input id="a-den" value="180" inputmode="numeric" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent"><span style="color: {{t.hint}}">г/м²</span></div>
+              <span style="font-size: 12px; color: {{t.hint}}">От 80 до 600</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="a-fit" style="font-weight: 500">Посадка</label>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                <sc-for list="{{fits}}" as="fi" hint-placeholder-count="3">
+                  <button aria-pressed="{{fi.on}}" onClick="{{fi.pick}}" style="height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid {{fi.border}}; background: {{fi.bg}}; color: {{fi.fg}}; cursor: pointer">{{fi.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="a-eco" style="font-weight: 500">Органический хлопок</label>
+              <label style="height: 38px; display: flex; align-items: center; gap: 8px"><input id="a-eco" type="checkbox"> <span style="color: {{t.hint}}">Покажем значок на карточке</span></label>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <aside style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+        <section style="padding: 20px; border: 1px solid {{t.border}}; border-radius: 12px; background: {{t.bg}}; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+          <div>
+            <div style="font-weight: 600">На витрине</div>
+            <div style="font-size: 13px; color: {{t.hint}}">{{activeHint}}</div>
+          </div>
+          <button role="switch" aria-checked="{{activeAria}}" aria-label="На витрине" onClick="{{toggleActive}}" style="width: 40px; height: 22px; padding: 2px; border: 0; border-radius: 11px; background: {{swBg}}; display: flex; justify-content: {{swJustify}}; cursor: pointer">
+            <span style="width: 18px; height: 18px; border-radius: 9px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.2)"></span>
+          </button>
+        </section>
+
+        <section style="padding: 20px; border: 1px solid {{t.border}}; border-radius: 12px; background: {{t.bg}}; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600">Фото</h2>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+            <sc-for list="{{photos}}" as="ph" hint-placeholder-count="3">
+              <div style="position: relative; aspect-ratio: 1 / 1; border-radius: 10px; background: {{ph.tint}}; display: flex; align-items: center; justify-content: center; color: {{t.art}}; box-shadow: {{ph.ring}}">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></svg>
+                <sc-if value="{{ph.main}}" hint-placeholder-val="{{ false }}"><span style="position: absolute; left: 6px; bottom: 6px; height: 18px; padding: 0 6px; border-radius: 5px; background: rgba(0,0,0,0.6); color: #FFFFFF; font-size: 11px; display: flex; align-items: center">Обложка</span></sc-if>
+                <span aria-hidden="true" style="position: absolute; top: 6px; left: 6px; color: {{t.hint}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="9" cy="19" r="1.6"></circle><circle cx="15" cy="5" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="15" cy="19" r="1.6"></circle></svg></span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding: 16px; border: 1.5px dashed {{t.border}}; border-radius: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; color: {{t.hint}}">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path></svg>
+            <span><button style="border: 0; padding: 0; background: transparent; color: {{t.link}}; font-weight: 500; cursor: pointer">Выберите файлы</button> или перетащите сюда</span>
+            <span style="font-size: 12px">JPG, PNG, WebP до 10 МБ — сожмём в WebP</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="f-img" style="font-weight: 500">Или ссылка</label>
+            <div style="display: flex; gap: 6px">
+              <input id="f-img" value="http://cdn.example.com/tee-3.jpg" aria-invalid="true" aria-describedby="f-img-err" style="flex: 1; min-width: 0; height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid {{t.danger}}; box-shadow: 0 0 0 3px {{t.dangerRing}}; background: {{t.bg}}; outline: none">
+              <button style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}; cursor: pointer">Добавить</button>
+            </div>
+            <span id="f-img-err" style="font-size: 12px; line-height: 16px; color: {{t.danger}}">Нужна ссылка с https:// — Telegram не покажет картинку по http</span>
+          </div>
+        </section>
+
+        <section style="padding: 20px; border: 1px solid {{t.border}}; border-radius: 12px; background: {{t.bg}}; display: flex; flex-direction: column; gap: 14px">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600">Витрина</h2>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-weight: 500">Категории</span>
+            <div style="min-height: 38px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 8px; border: 1px solid {{t.border}}">
+              <span style="height: 26px; padding: 0 6px 0 10px; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; background: {{t.muted}}">Одежда <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg></span>
+              <span style="color: {{t.hint}}">Добавить…</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-weight: 500">Бейджи</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px">
+              <sc-for list="{{badges}}" as="b" hint-placeholder-count="3">
+                <button aria-pressed="{{b.on}}" onClick="{{b.pick}}" style="height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid {{b.border}}; background: {{b.bg}}; color: {{b.fg}}; cursor: pointer">{{b.label}}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="f-sku" style="font-weight: 500">Артикул</label>
+              <input id="f-sku" value="TB-001" style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.bg}}; outline: none; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="f-id" style="font-weight: 500">ID в ссылке</label>
+              <input id="f-id" value="tee-basic" style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid {{t.border}}; background: {{t.muted}}; outline: none; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px">
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false,"section":"Тема"},"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const s = this.state || {};
+    const t = dark
+      ? { page: '#09090B', bg: '#09090B', muted: '#1F1F23', border: '#27272A', text: '#FAFAFA', hint: '#A1A1AA', art: '#C7C7CE', danger: '#FF6B5E', dangerSoft: '#2A1615', dangerRing: 'rgba(255,107,94,0.2)', warn: '#F5A524', link: '#8BB5EA', chipOn: '#14233A', tints: ['#22303F', '#3A3128', '#21332A'] }
+      : { page: '#F4F4F5', bg: '#FFFFFF', muted: '#F0F0F2', border: '#E4E4E7', text: '#09090B', hint: '#71717A', art: '#59606B', danger: '#C5221F', dangerSoft: '#FDECEB', dangerRing: 'rgba(197,34,31,0.14)', warn: '#B45309', link: '#1A5CAB', chipOn: '#E4EEFA', tints: ['#E9EFF8', '#F4EEE6', '#E7F2EC'] };
+    const short = s.short ?? 'Прямой крой, 180 г/м², не садится после стирки';
+    const max = 160;
+    const tab = s.tab ?? 'text';
+    const active = s.active ?? true;
+    const fit = s.fit ?? 'Прямая';
+    const badgeSel = s.badges ?? { 'Хит': true };
+    const pill = (on) => ({ border: on ? '#1F73D6' : t.border, bg: on ? t.chipOn : t.bg, fg: on ? t.link : t.text, on: on ? 'true' : 'false' });
+    return {
+      t: t, dark: dark, short: short,
+      shortCounter: short.length + ' / ' + max, shortCounterColor: short.length > max ? t.danger : t.hint,
+      onShort: (e) => this.setState({ short: e.target.value }),
+      tabs: {
+        isText: tab === 'text', isPrev: tab === 'prev',
+        textSel: tab === 'text' ? 'true' : 'false', prevSel: tab === 'prev' ? 'true' : 'false',
+        textBg: tab === 'text' ? t.bg : 'transparent', prevBg: tab === 'prev' ? t.bg : 'transparent',
+        pickText: () => this.setState({ tab: 'text' }), pickPrev: () => this.setState({ tab: 'prev' })
+      },
+      activeAria: active ? 'true' : 'false', activeHint: active ? 'Покупатели видят товар' : 'Скрыт от покупателей',
+      swBg: active ? '#1F73D6' : (dark ? '#3F3F46' : '#D4D4D8'), swJustify: active ? 'flex-end' : 'flex-start',
+      toggleActive: () => this.setState({ active: !active }),
+      fits: ['Прямая', 'Свободная', 'Оверсайз'].map((f) => Object.assign(pill(f === fit), { label: f, pick: () => this.setState({ fit: f }) })),
+      badges: ['Новинка', 'Хит', 'Скоро закончится'].map((b) => Object.assign(pill(!!badgeSel[b]), { label: b, pick: () => this.setState({ badges: Object.assign({}, badgeSel, { [b]: !badgeSel[b] }) }) })),
+      photos: [0, 1, 2].map((i) => ({ tint: t.tints[i], main: i === 0, ring: i === 0 ? '0 0 0 2px #1F73D6' : 'none' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

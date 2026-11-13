@@ -3,7 +3,13 @@
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/routeTree.gen.ts", "!**/drizzle/meta", "!catalog/catalog.schema.json"]
+    "includes": [
+      "**",
+      "!**/routeTree.gen.ts",
+      "!**/drizzle/meta",
+      "!catalog/catalog.schema.json",
+      "!**/design"
+    ]
   },
   "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
   "linter": { "enabled": true, "rules": { "preset": "recommended" } },
