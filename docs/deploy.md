@@ -1,0 +1,58 @@
+# Запуск: бот, локальная проверка, сервер
+
+## 1. Бот в Telegram
+
+1. [@BotFather](https://t.me/BotFather) → `/newbot` → имя и ник (например, `pechka_hoian_bot`) → токен в `BOT_TOKEN`.
+2. Свой числовой Telegram ID — у [@userinfobot](https://t.me/userinfobot) → в `OWNER_TELEGRAM_ID`. Этот человек — владелец: настраивает магазин и приглашает команду.
+3. По желанию в BotFather: `/setuserpic` (аватар — `design/brand/`, PNG 640×640), `/setdescription` (текст на пустом чате), `/setabouttext`.
+
+Кнопку меню, команды и вебхук сервер ставит сам при запуске. Регистрировать Mini App через `/newapp` не нужно: магазин открывается кнопками бота. `/newapp` пригодится позже, если захочется ссылку вида `t.me/<бот>/menu`.
+
+## 2. Локально
+
+```bash
+cp .env.example .env      # заполнить BOT_TOKEN, OWNER_TELEGRAM_ID; SESSION_SECRET и WEBHOOK_SECRET — случайные строки
+pnpm install
+pnpm dev                  # сервер :3000 (бот — polling), магазин :5173, админка :5174/admin/
+```
+
+- **В браузере** магазин и админка открываются сразу: при `NODE_ENV=development` сервер подписывает тестовый вход владельца.
+- **В Telegram** Mini App открывается только по https. Без `PUBLIC_URL` бот работает (заказы, уведомления, /login), но без кнопок Mini App. Для полной проверки нужен туннель на сервер (порт 3000, после `pnpm build` он раздаёт и магазин, и админку):
+
+  ```bash
+  pnpm build
+  cloudflared tunnel --url http://localhost:3000   # → https://….trycloudflare.com в PUBLIC_URL, перезапустить сервер
+  ```
+
+  Каждый запуск cloudflared даёт новый адрес — его нужно снова вписать в `PUBLIC_URL`.
+
+Первый запуск: владелец пишет боту `/start` → «Настроить магазин» → мастер из трёх шагов.
+
+## 3. Сервер
+
+Схема — скилл `vps-ops`: Docker + Caddy на одном VPS, состояние в `/srv`.
+
+**Где арендовать.** Сервер — **не во Вьетнаме и не в России**: там провайдеры блокируют `api.telegram.org`, и бот не получит ни одного сообщения. Ближе всего к покупателям — Сингапур. Покупателям во Вьетнаме сам магазин (https-адрес) доступен.
+
+**Память.** Приложение в работе — около 150 МБ (лимит в compose — 512 МБ). Сборка образа (Vite) берёт до 1,5 ГБ: на машине с 1 ГБ RAM нужен swap или сборка в CI.
+
+```bash
+vps add pechka --type web --repo <git-адрес> --domain pechka.<ваш>.duckdns.org --port 3000
+cp /srv/apps/pechka/repo/deploy/compose.yml /srv/apps/pechka/compose.yml
+nano /srv/apps/pechka/.env    # как .env.example; PUBLIC_URL=https://pechka.<ваш>.duckdns.org
+vps deploy pechka
+vps logs pechka               # «Бот @… (webhook)» и «Сервер: …»
+```
+
+- `vps add` сам допишет блок в `/srv/proxy/Caddyfile` (образец — `deploy/Caddyfile.snippet`).
+- База (`data/store.db`) и фото (`data/uploads`) — в `/srv/apps/pechka/data`, попадают в ночной бэкап `vps backup`.
+- Миграции БД применяются при запуске. Обновление — `vps deploy pechka`.
+- Проверка: `curl -sSI https://pechka.<ваш>.duckdns.org/api/health`, потом `/start` в боте.
+
+## 4. После запуска
+
+1. Владелец: `/start` → «Настроить магазин» → страна, название, телефон, часы, демо-меню.
+2. Раздел «Команда» → «Курьера» → отправить ссылку курьеру. Пока курьер один, заказы назначаются ему сами.
+3. С компьютера: `/login` в боте → ссылка → «Меню»: цены, фото, свои блюда.
+4. Пройти заказ самому: меню → корзина → точка на карте → оформить. Менеджеру придёт сообщение со звуком.
+5. Поставить на чат с ботом свой звук уведомления (Настройки чата → Уведомления → Звук): так новый заказ слышно сразу.

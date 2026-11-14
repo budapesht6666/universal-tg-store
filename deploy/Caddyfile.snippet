@@ -1,0 +1,5 @@
+# Блок для /srv/proxy/Caddyfile. Домен = PUBLIC_URL в .env приложения.
+pechka.example.duckdns.org {
+	encode zstd gzip
+	reverse_proxy pechka:3000
+}
