@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Корзина, когда закрыто</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; display: flex; flex-direction: column; background: #F2F2F7; color: #0B0B0C; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 15px; line-height: 20px">
+
+  <div style="height: 48px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; background: #FFFFFF; border-bottom: 1px solid #E4E4EA">
+    <a href="ShopMenu.dc.html" style="width: 80px; height: 40px; display: flex; align-items: center; gap: 2px; padding: 0 8px; color: #B5482A; font-size: 16px; text-decoration: none">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Назад
+    </a>
+    <span style="font-size: 16px; font-weight: 600">Корзина</span>
+    <span style="width: 80px"></span>
+  </div>
+
+  <div style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding: 16px">
+
+    <div role="status" style="display: flex; gap: 12px; padding: 14px; border-radius: 16px; background: {{b.bg}}; color: {{b.fg}}">
+      <span style="width: 40px; height: 40px; flex: none; border-radius: 20px; background: #FFFFFF; display: flex; align-items: center; justify-content: center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{b.icon}}"></path></svg>
+      </span>
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <span style="font-weight: 700">{{b.title}}</span>
+        <span style="font-size: 13px; line-height: 18px">{{b.text}}</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; border-radius: 16px; background: #FFFFFF; overflow: hidden">
+      <sc-for list="{{items}}" as="it" hint-placeholder-count="2">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid #EFEFF3">
+          <span style="width: 52px; height: 52px; flex: none; border-radius: 12px; background: #FBE9E2"></span>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+            <span style="font-weight: 600">{{it.name}}</span>
+            <span style="font-size: 13px; color: #6B6B73">{{it.price}}</span>
+          </div>
+          <div style="height: 34px; display: flex; align-items: center; border-radius: 11px; background: #F2F2F7; font-weight: 700">
+            <button aria-label="Убрать одну порцию" style="width: 32px; height: 34px; border: 0; background: transparent; font-size: 18px; cursor: pointer">−</button>
+            <span style="min-width: 16px; text-align: center">{{it.qty}}</span>
+            <button aria-label="Добавить порцию" style="width: 32px; height: 34px; border: 0; background: transparent; font-size: 18px; cursor: pointer">+</button>
+          </div>
+        </div>
+      </sc-for>
+      <div style="display: flex; flex-direction: column; gap: 6px; padding: 14px">
+        <div style="display: flex; justify-content: space-between; color: #6B6B73"><span>Доставка</span><span style="color: #17753A; font-weight: 600">Бесплатно</span></div>
+        <div style="display: flex; justify-content: space-between; font-size: 17px; line-height: 22px; font-weight: 700"><span>Итого</span><span>330 000 ₫</span></div>
+        <span style="font-size: 13px; color: #6B6B73">Оплата курьеру при получении — наличными или переводом</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex: none; display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 20px; background: #F2F2F7">
+    <button disabled aria-disabled="true" style="height: 52px; border: 0; border-radius: 14px; background: #E1E1E6; color: #5E5E66; font-size: 16px; font-weight: 600">{{b.button}}</button>
+    <span style="text-align: center; font-size: 13px; color: #6B6B73">Корзина сохранится до открытия</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["closed","paused"],"default":"closed"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const paused = (this.props.state ?? 'closed') === 'paused';
+    const b = paused
+      ? { title: 'Кухня на паузе до 19:30', text: 'Сейчас много заказов. Меню можно смотреть и собирать корзину — оформить получится через 20 минут.', button: 'Пауза · примем заказы в 19:30', bg: '#FDF1DC', fg: '#6B3F05', icon: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM12 6v6l4 2' }
+      : { title: 'Сейчас закрыто', text: 'Принимаем заказы каждый день с 10:00 до 22:00. Откроемся завтра в 10:00.', button: 'Закрыто · откроемся завтра в 10:00', bg: '#E9E9F0', fg: '#2C2C33', icon: 'M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z' };
+    return {
+      b: b,
+      items: [
+        { name: 'Комплексный обед', price: '160 000 ₫', qty: 1 },
+        { name: 'Борщ с говядиной', price: '85 000 ₫', qty: 2 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

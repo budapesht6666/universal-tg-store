@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Оформление заказа</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button,input,textarea{font:inherit;color:inherit}
+input::placeholder,textarea::placeholder{color:#8E8E96}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; display: flex; flex-direction: column; background: #F2F2F7; color: #0B0B0C; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 15px; line-height: 20px">
+
+  <div style="height: 48px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; background: #FFFFFF; border-bottom: 1px solid #E4E4EA">
+    <a href="ShopMenu.dc.html" style="width: 80px; height: 40px; display: flex; align-items: center; gap: 2px; padding: 0 8px; color: #B5482A; font-size: 16px; text-decoration: none">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Назад
+    </a>
+    <span style="font-size: 16px; font-weight: 600">Оформление</span>
+    <span style="width: 80px"></span>
+  </div>
+
+  <form style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 20px; padding: 16px 16px 120px">
+
+    <section style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <h2 style="margin: 0; font-size: 17px; line-height: 22px; font-weight: 700">Куда привезти</h2>
+        <span style="font-size: 13px; line-height: 18px; color: #6B6B73">Уточните местоположение</span>
+      </div>
+      <div style="display: flex; flex-direction: column; border-radius: 16px; background: #FFFFFF; overflow: hidden">
+        <div style="position: relative; height: 168px; background: #E7ECE2">
+          <svg width="358" height="168" viewBox="0 0 358 168" aria-hidden="true" style="position: absolute; inset: 0">
+            <path d="M-10 122C60 110 110 138 180 124s120-40 190-30" stroke="#B9D3E6" stroke-width="18" fill="none"></path>
+            <path d="M0 46h358M0 84h358M60 0v168M150 0v168M250 0v168M310 0v168" stroke="#FFFFFF" stroke-width="7"></path>
+            <path d="M-10 12l120 70 120-70 140 56" stroke="#FFFFFF" stroke-width="4" fill="none"></path>
+            <rect x="160" y="10" width="80" height="28" rx="4" fill="#D9E4D0"></rect>
+            <rect x="70" y="94" width="70" height="16" rx="3" fill="#D9E4D0"></rect>
+            <circle cx="179" cy="76" r="{{accR}}" fill="{{accFill}}" stroke="{{accStroke}}" stroke-width="1.5"></circle>
+          </svg>
+          <svg width="34" height="44" viewBox="0 0 24 32" aria-hidden="true" style="position: absolute; left: 162px; top: 34px">
+            <path d="M12 31s10-11.2 10-19A10 10 0 0 0 2 12c0 7.8 10 19 10 19Z" fill="#B5482A"></path>
+            <circle cx="12" cy="12" r="4" fill="#FFFFFF"></circle>
+          </svg>
+          <span style="position: absolute; left: 10px; top: 10px; height: 28px; padding: 0 10px; display: flex; align-items: center; gap: 6px; border-radius: 14px; background: rgba(255,255,255,0.94); box-shadow: 0 1px 3px rgba(0,0,0,0.14); font-size: 12px; font-weight: 600">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9 2 12l3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"></path></svg>Двигайте карту — пин встанет точно
+          </span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: {{rowBg}}">
+          <span style="width: 28px; height: 28px; flex: none; border-radius: 14px; background: {{iconBg}}; color: {{iconFg}}; display: flex; align-items: center; justify-content: center">
+            <sc-if value="{{poor}}" hint-placeholder-val="{{ false }}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 7v6M12 17h.01"></path></svg>
+            </sc-if>
+            <sc-if value="{{good}}" hint-placeholder-val="{{ true }}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+            </sc-if>
+          </span>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+            <span style="font-weight: 600">{{status}}</span>
+            <span style="font-size: 13px; line-height: 17px; color: {{subFg}}">{{sub}}</span>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" style="height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 12px; background: #FBE9E2; color: #8F3520; font-weight: 600; cursor: pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 22 2l-9 19-2-8-8-2Z"></path></svg>Я сейчас здесь
+      </button>
+
+      <div role="separator" aria-label="или" style="display: flex; align-items: center; gap: 12px; margin: 2px 0">
+        <span style="flex: 1; height: 1px; background: #D6D6DD"></span>
+        <span style="font-size: 17px; line-height: 22px; font-weight: 800; letter-spacing: 0.08em; color: #6B6B73">ИЛИ</span>
+        <span style="flex: 1; height: 1px; background: #D6D6DD"></span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="co-link" style="font-size: 13px; line-height: 18px; color: #6B6B73">В Google Maps выберите нужное место → «Поделиться» → «Копировать». Вставьте ссылку в поле ниже.</label>
+        <div style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 6px 0 14px; border-radius: 12px; background: #FFFFFF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8E8E96" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path></svg>
+          <input id="co-link" placeholder="Ссылка Google Maps или координаты" style="flex: 1; min-width: 0; height: 40px; border: 0; background: transparent; font-size: 15px; outline: none">
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="co-house" style="font-size: 13px; color: #6B6B73">Дом, этаж, квартира — если нужно</label>
+        <input id="co-house" value="Вилла 12, второй этаж" style="height: 44px; padding: 0 14px; border: 0; border-radius: 12px; background: #FFFFFF; font-size: 15px; outline: none">
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-size: 17px; line-height: 22px; font-weight: 700">Как с вами связаться</h2>
+      <div style="display: flex; flex-direction: column; border-radius: 16px; background: #FFFFFF">
+        <label style="display: flex; align-items: center; gap: 12px; height: 48px; padding: 0 14px; border-bottom: 1px solid #EFEFF3">
+          <span style="width: 76px; color: #6B6B73">Имя</span>
+          <input value="Анна" aria-label="Имя" style="flex: 1; min-width: 0; height: 44px; border: 0; background: transparent; font-size: 15px; outline: none">
+        </label>
+        <label style="display: flex; align-items: center; gap: 12px; height: 48px; padding: 0 14px">
+          <span style="width: 76px; color: #6B6B73">Телефон</span>
+          <input value="+84 91 234 56 78" aria-label="Телефон" style="flex: 1; min-width: 0; height: 44px; border: 0; background: transparent; font-size: 15px; outline: none">
+          <span style="height: 24px; padding: 0 8px; display: flex; align-items: center; border-radius: 8px; background: #E4EEFA; color: #1A5CAB; font-size: 12px; font-weight: 600">из Telegram</span>
+        </label>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="co-comment" style="font-size: 13px; color: #6B6B73">Комментарий</label>
+        <textarea id="co-comment" rows="2" placeholder="Без лука, позвонить у ворот" style="padding: 12px 14px; border: 0; border-radius: 12px; background: #FFFFFF; font-size: 15px; resize: none; outline: none"></textarea>
+      </div>
+    </section>
+  </form>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 20px; background: #F2F2F7; border-top: 1px solid #E4E4EA">
+    <span style="text-align: center; font-size: 13px; color: #6B6B73">3 порции · доставка бесплатно · оплата курьеру</span>
+    <button style="height: 52px; border: 0; border-radius: 14px; background: #B5482A; color: #FFFFFF; font-size: 16px; font-weight: 600; cursor: pointer">Оформить заказ · 330 000 ₫</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"geo":{"editor":"enum","options":["good","poor"],"default":"good"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const poor = (this.props.geo ?? 'good') === 'poor';
+    return poor ? {
+      poor: true, good: false, accR: 60, accFill: 'rgba(176,96,8,0.10)', accStroke: 'rgba(176,96,8,0.45)',
+      rowBg: '#FDF1DC', iconBg: '#F7DDB0', iconFg: '#8A4B06',
+      status: 'Неточно: ±400 м', sub: 'Подвиньте карту, чтобы пин встал на ваш дом', subFg: '#6B3F05'
+    } : {
+      poor: false, good: true, accR: 14, accFill: 'rgba(181,72,42,0.10)', accStroke: 'rgba(181,72,42,0.40)',
+      rowBg: '#FFFFFF', iconBg: '#E3F2E7', iconFg: '#17753A',
+      status: 'Точка поставлена · ±15 м', sub: 'Хойан, Кам Тхань · 15.8801, 108.3380', subFg: '#6B6B73'
+    };
+  }
+}
+</script>
+</body>
+</html>

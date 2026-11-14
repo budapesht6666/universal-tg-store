@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="512" height="512">
+  <title>Печка</title>
+  <rect x="38" y="6" width="9" height="16" rx="2" fill="#B5482A"/>
+  <rect x="10" y="18" width="44" height="38" rx="7" fill="#B5482A"/>
+  <path d="M21 50V40a11 11 0 0 1 22 0v10z" fill="#FFFFFF"/>
+  <path d="M32 48c-3.6 0-6-2.5-6-5.6 0-3.6 3.4-5.4 3.6-9.4 2.9 1.8 8.4 5.6 8.4 9.6 0 3-2.4 5.4-6 5.4z" fill="#F2A541"/>
+</svg>

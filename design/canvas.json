@@ -8,14 +8,16 @@
       "title": "Админка — характеристики товара",
       "w": 1440,
       "x": 3040,
-      "y": 4860
+      "y": 4860,
+      "page": "old"
     },
     "AdminDark.dc.html": {
       "h": 900,
       "title": "Админка — тёмная тема",
       "w": 1440,
       "x": 0,
-      "y": 6420
+      "y": 6420,
+      "page": "old"
     },
     "AdminImport.dc.html": {
       "expand": "fill",
@@ -23,7 +25,8 @@
       "title": "Админка — импорт и экспорт JSON",
       "w": 1440,
       "x": 3040,
-      "y": 3500
+      "y": 3500,
+      "page": "old"
     },
     "AdminOrders.dc.html": {
       "expand": "fill",
@@ -32,7 +35,8 @@
       "title": "Админка — заказы",
       "w": 1440,
       "x": 0,
-      "y": 4860
+      "y": 4860,
+      "page": "old"
     },
     "AdminProductForm.dc.html": {
       "expand": "fill",
@@ -41,7 +45,8 @@
       "title": "Админка — форма товара (ошибки)",
       "w": 1440,
       "x": 1520,
-      "y": 3500
+      "y": 3500,
+      "page": "old"
     },
     "AdminProducts.dc.html": {
       "expand": "fill",
@@ -50,7 +55,8 @@
       "title": "Админка — товары",
       "w": 1440,
       "x": 0,
-      "y": 3500
+      "y": 3500,
+      "page": "old"
     },
     "AdminSettings.dc.html": {
       "expand": "fill",
@@ -59,14 +65,16 @@
       "title": "Админка — настройки и фичи",
       "w": 1440,
       "x": 1520,
-      "y": 4860
+      "y": 4860,
+      "page": "old"
     },
     "AdminSidebar.dc.html": {
       "h": 900,
       "title": "Компонент: боковое меню админки",
       "w": 248,
       "x": 1520,
-      "y": 6420
+      "y": 6420,
+      "page": "old"
     },
     "Main.dc.html": {
       "h": 844,
@@ -74,21 +82,24 @@
       "title": "Магазин — прототип (кликабельный)",
       "w": 390,
       "x": 0,
-      "y": 0
+      "y": 0,
+      "page": "old"
     },
     "ShopScreens.dc.html": {
       "h": 1960,
       "title": "Экраны магазина: светлая и тёмная тема",
       "w": 5182,
       "x": 0,
-      "y": 1190
+      "y": 1190,
+      "page": "old"
     },
     "Tokens.dc.html": {
       "h": 844,
       "title": "Токены и компоненты",
       "w": 1120,
       "x": 470,
-      "y": 0
+      "y": 0,
+      "page": "old"
     },
     "AdminTeam.dc.html": {
       "expand": "fill",
@@ -97,14 +108,89 @@
       "title": "Админка — команда и приглашения",
       "w": 1440,
       "x": 0,
-      "y": 7460
+      "y": 7460,
+      "page": "old"
     },
     "BotCourier.dc.html": {
       "h": 960,
       "title": "Курьер в боте",
       "w": 1824,
       "x": 1520,
-      "y": 7460
+      "y": 7460,
+      "page": "old"
+    },
+    "Brand.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1280,
+      "h": 760,
+      "title": "Бренд — логотип, цвета, шрифт",
+      "page": "mvp"
+    },
+    "ShopMenu.dc.html": {
+      "x": 0,
+      "y": 1200,
+      "w": 390,
+      "h": 844,
+      "title": "Магазин — меню с вкладками",
+      "page": "mvp"
+    },
+    "ShopClosed.dc.html": {
+      "x": 470,
+      "y": 1200,
+      "w": 390,
+      "h": 844,
+      "title": "Магазин — сейчас закрыто",
+      "page": "mvp"
+    },
+    "ShopCheckout.dc.html": {
+      "x": 940,
+      "y": 1200,
+      "w": 390,
+      "h": 844,
+      "title": "Магазин — оформление, точка на карте",
+      "page": "mvp"
+    },
+    "StaffOrders.dc.html": {
+      "x": 0,
+      "y": 2500,
+      "w": 390,
+      "h": 844,
+      "title": "Менеджер — заказы на телефоне",
+      "page": "mvp"
+    },
+    "StaffCourier.dc.html": {
+      "x": 470,
+      "y": 2500,
+      "w": 390,
+      "h": 844,
+      "title": "Курьер — мои доставки",
+      "page": "mvp"
+    },
+    "BotNotify.dc.html": {
+      "x": 940,
+      "y": 2500,
+      "w": 1330,
+      "h": 960,
+      "title": "Бот — уведомления команде",
+      "page": "mvp"
+    },
+    "AdminMenu.dc.html": {
+      "x": 0,
+      "y": 3900,
+      "w": 1440,
+      "h": 900,
+      "title": "Админка — меню",
+      "expand": "fill",
+      "page": "mvp"
+    },
+    "SetupWizard.dc.html": {
+      "x": 0,
+      "y": 5140,
+      "w": 1760,
+      "h": 960,
+      "title": "Мастер первой настройки",
+      "page": "mvp"
     }
   },
   "createdOnFiles": {
@@ -113,12 +199,18 @@
   },
   "designSystems": [],
   "launch": {
-    "view": "canvas"
+    "view": "canvas",
+    "page": "mvp"
   },
   "noteOrder": [
     "t_shop",
     "t_screens",
-    "t_admin"
+    "t_admin",
+    "m_brand",
+    "m_shop",
+    "m_staff",
+    "m_admin",
+    "m_wizard"
   ],
   "notes": {
     "t_admin": {
@@ -127,7 +219,8 @@
       "text": "Веб-админка",
       "w": 240,
       "x": 0,
-      "y": 3200
+      "y": 3200,
+      "page": "old"
     },
     "t_screens": {
       "kind": "title1",
@@ -135,7 +228,8 @@
       "text": "Все экраны магазина: светлая и тёмная тема",
       "w": 240,
       "x": 0,
-      "y": 890
+      "y": 890,
+      "page": "old"
     },
     "t_shop": {
       "kind": "title1",
@@ -143,7 +237,48 @@
       "text": "Mini App: магазин",
       "w": 240,
       "x": 0,
-      "y": -300
+      "y": -300,
+      "page": "old"
+    },
+    "m_brand": {
+      "x": 0,
+      "y": -300,
+      "text": "Бренд «Печка»",
+      "kind": "title1",
+      "maxW": 1280,
+      "page": "mvp"
+    },
+    "m_shop": {
+      "x": 0,
+      "y": 900,
+      "text": "Магазин: меню, закрыто, оформление",
+      "kind": "title1",
+      "maxW": 1330,
+      "page": "mvp"
+    },
+    "m_staff": {
+      "x": 0,
+      "y": 2200,
+      "text": "Команда на телефоне и бот",
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "mvp"
+    },
+    "m_admin": {
+      "x": 0,
+      "y": 3600,
+      "text": "Админка с компьютера",
+      "kind": "title1",
+      "maxW": 1440,
+      "page": "mvp"
+    },
+    "m_wizard": {
+      "x": 0,
+      "y": 4840,
+      "text": "Первая настройка",
+      "kind": "title1",
+      "maxW": 1760,
+      "page": "mvp"
     }
   },
   "order": [
@@ -159,8 +294,26 @@
     "BotCourier.dc.html",
     "AdminAttributes.dc.html",
     "AdminDark.dc.html",
-    "AdminSidebar.dc.html"
+    "AdminSidebar.dc.html",
+    "Brand.dc.html",
+    "ShopMenu.dc.html",
+    "ShopClosed.dc.html",
+    "ShopCheckout.dc.html",
+    "StaffOrders.dc.html",
+    "StaffCourier.dc.html",
+    "BotNotify.dc.html",
+    "AdminMenu.dc.html",
+    "SetupWizard.dc.html"
   ],
-  "pages": [],
+  "pages": [
+    {
+      "id": "mvp",
+      "name": "MVP — Печка"
+    },
+    {
+      "id": "old",
+      "name": "old"
+    }
+  ],
   "title": "Universal TG Store"
 }
