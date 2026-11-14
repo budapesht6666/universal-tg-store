@@ -1,4 +1,5 @@
 /** Запуск: БД → бот (polling локально, вебхук на сервере) → HTTP. */
+import { mkdirSync } from "node:fs";
 import { serve } from "@hono/node-server";
 import { webhookCallback } from "grammy";
 import { type AppOptions, createApp } from "./app.ts";
@@ -12,6 +13,7 @@ import { silentNotifier } from "./notify.ts";
 
 const env = loadEnv();
 const db = openDb(env.DATABASE_PATH);
+mkdirSync(env.UPLOADS_DIR, { recursive: true });
 const deps: Deps = {
   db,
   env,

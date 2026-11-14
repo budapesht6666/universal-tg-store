@@ -5,6 +5,7 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { serveStatic } from "@hono/node-server/serve-static";
+import { sign } from "@tma.js/init-data-node";
 import { type Context, Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { csrf } from "hono/csrf";
@@ -56,6 +57,15 @@ export function createApp(deps: Deps, options: AppOptions = {}) {
   });
 
   app.get("/api/health", (c) => c.json({ ok: true }));
+
+  // Только локально: подписанный initData, чтобы открыть Mini App в обычном браузере.
+  if (deps.env.NODE_ENV === "development") {
+    app.get("/api/dev/init-data", (c) => {
+      const id = Number(c.req.query("id") ?? deps.env.OWNER_TELEGRAM_ID);
+      const user = { id, first_name: c.req.query("name") ?? "Разработчик" };
+      return c.text(sign({ user } as never, deps.env.BOT_TOKEN, new Date()));
+    });
+  }
 
   // Защита от подделки запросов нужна только входу по cookie (компьютер): заголовок
   // Authorization чужой сайт подставить не может. Локально разрешаем Vite (localhost).

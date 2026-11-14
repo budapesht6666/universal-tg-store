@@ -12,6 +12,16 @@ export type Names = { name: (id: number | null) => string | null };
 export const staffAppUrl = (env: Env, path = "") => `${env.PUBLIC_URL}/admin/${path}`;
 export const shopAppUrl = (env: Env, path = "") => `${env.PUBLIC_URL}/${path}`;
 
+/** Кнопка Mini App — только при https PUBLIC_URL (иначе Telegram отклонит всё сообщение). */
+export function webAppButton(
+  kb: InlineKeyboard,
+  env: Env,
+  text: string,
+  url: string,
+): InlineKeyboard {
+  return env.WEB_APP_ENABLED ? kb.webApp(text, url) : kb;
+}
+
 function money(order: OrderRow, locale: string) {
   return formatMoney(order.total, order.currency, locale);
 }
@@ -72,7 +82,7 @@ export function staffOrderMessage(order: OrderRow, env: Env, locale: string, nam
   ].join("\n");
   const kb = new InlineKeyboard();
   if (order.status === "new") kb.text("✅ Принять", `a:${order.id}`);
-  kb.webApp("Открыть", staffAppUrl(env, `orders/${order.id}`));
+  webAppButton(kb, env, "Открыть", staffAppUrl(env, `orders/${order.id}`));
   return { text, reply_markup: kb };
 }
 
@@ -95,13 +105,18 @@ export function courierMessage(order: OrderRow, env: Env, locale: string) {
   const kb = new InlineKeyboard().url("🗺 Карта", mapsUrlFromCoords(order.lat, order.lng));
   if (order.status === "processing") kb.text("🥡 Забрал, еду", `p:${order.id}`);
   if (order.status === "shipping") kb.text("✅ Доставлен", `d:${order.id}`);
-  kb.row().webApp("Открыть", staffAppUrl(env, `orders/${order.id}`));
+  webAppButton(kb.row(), env, "Открыть", staffAppUrl(env, `orders/${order.id}`));
   return { text, reply_markup: kb };
 }
 
 /** Сообщение покупателю о его заказе. null — писать не нужно. */
 export function customerMessage(order: OrderRow, env: Env, locale: string, byCustomer: boolean) {
-  const kb = new InlineKeyboard().webApp("Открыть заказ", shopAppUrl(env, `orders/${order.id}`));
+  const kb = webAppButton(
+    new InlineKeyboard(),
+    env,
+    "Открыть заказ",
+    shopAppUrl(env, `orders/${order.id}`),
+  );
   const sum = money(order, locale);
   const texts: Record<OrderRow["status"], string> = {
     new: `Заказ <b>#${order.id}</b> оформлен · ${sum}\nОплата курьеру при получении. Напишем, когда начнём готовить.`,

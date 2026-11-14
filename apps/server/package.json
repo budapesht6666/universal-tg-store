@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "API магазина, бот, база данных и раздача Mini App и админки",
+  "exports": {
+    "./api": "./src/app.ts"
+  },
   "scripts": {
     "dev": "node --watch --env-file-if-exists=../../.env src/main.ts",
     "start": "node --env-file-if-exists=../../.env src/main.ts",

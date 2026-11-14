@@ -21,7 +21,7 @@ import {
   upsertUser,
 } from "../repo/team.ts";
 import { rememberRelay } from "./notifier.ts";
-import { esc, roleLabel, shopAppUrl, staffAppUrl } from "./texts.ts";
+import { esc, roleLabel, shopAppUrl, staffAppUrl, webAppButton } from "./texts.ts";
 
 const CALLBACK_ACTIONS: Record<string, StaffOrderActionName> = {
   a: "accept",
@@ -31,7 +31,7 @@ const CALLBACK_ACTIONS: Record<string, StaffOrderActionName> = {
 
 /** Кнопка меню в чате: у команды — «Заказы», у покупателей — «Меню» (общая, ставится при запуске). */
 async function setStaffMenuButton(ctx: Context, deps: Deps) {
-  if (!ctx.chat) return;
+  if (!ctx.chat || !deps.env.WEB_APP_ENABLED) return;
   await ctx.api
     .setChatMenuButton({
       chat_id: ctx.chat.id,
@@ -89,7 +89,12 @@ export function createBot(deps: Deps): Bot {
     if (!shop) {
       if (ctx.from.id === env.OWNER_TELEGRAM_ID) {
         await ctx.reply("Привет! Магазин ещё не настроен — это три шага, пара минут.", {
-          reply_markup: new InlineKeyboard().webApp("Настроить магазин", staffAppUrl(env, "setup")),
+          reply_markup: webAppButton(
+            new InlineKeyboard(),
+            env,
+            "Настроить магазин",
+            staffAppUrl(env, "setup"),
+          ),
         });
       } else {
         await ctx.reply("Магазин скоро откроется. Загляните чуть позже!");
@@ -97,9 +102,9 @@ export function createBot(deps: Deps): Bot {
       return;
     }
 
-    const kb = new InlineKeyboard().webApp("Открыть меню", shopAppUrl(env));
+    const kb = webAppButton(new InlineKeyboard(), env, "Открыть меню", shopAppUrl(env));
     if (roles.length > 0) {
-      kb.row().webApp("Заказы", staffAppUrl(env));
+      webAppButton(kb.row(), env, "Заказы", staffAppUrl(env));
       await setStaffMenuButton(ctx, deps);
     }
     await ctx.reply(esc(shop.settings.shop.greeting), { parse_mode: "HTML", reply_markup: kb });
@@ -247,8 +252,14 @@ export function createBot(deps: Deps): Bot {
 
 /** Общая кнопка меню «Меню» и список команд — при запуске. */
 export async function setupBotUi(bot: Bot, deps: Deps): Promise<void> {
+  await bot.api.setMyCommands([{ command: "start", description: "Открыть меню" }]);
+  if (!deps.env.WEB_APP_ENABLED) {
+    console.warn(
+      "PUBLIC_URL без https: бот работает, но кнопок Mini App нет. Для них нужен https-адрес (туннель).",
+    );
+    return;
+  }
   await bot.api.setChatMenuButton({
     menu_button: { type: "web_app", text: "Меню", web_app: { url: shopAppUrl(deps.env) } },
   });
-  await bot.api.setMyCommands([{ command: "start", description: "Открыть меню" }]);
 }
