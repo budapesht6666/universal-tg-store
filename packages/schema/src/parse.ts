@@ -51,7 +51,7 @@ const MIGRATIONS: Record<number, Migration> = {};
 
 function migrate(input: unknown): ParseResult<Record<string, unknown>> {
   if (typeof input !== "object" || input === null || Array.isArray(input)) {
-    return { ok: false, issues: [{ path: "", message: "Каталог должен быть JSON-объектом" }] };
+    return { ok: false, issues: [{ path: "", message: "Меню должно быть JSON-объектом" }] };
   }
   let data = input as Record<string, unknown>;
   const version = data.version;
@@ -78,7 +78,7 @@ function migrate(input: unknown): ParseResult<Record<string, unknown>> {
       issues: [
         {
           path: "version",
-          message: `Каталог в формате версии ${version}, а шаблон понимает до ${CATALOG_FORMAT_VERSION}. Обновите шаблон`,
+          message: `Меню в формате версии ${version}, а шаблон понимает до ${CATALOG_FORMAT_VERSION}. Обновите шаблон`,
         },
       ],
     };
@@ -137,13 +137,7 @@ function checkReferences(catalog: Catalog): { catalog: Catalog; issues: CatalogI
       catalog.products,
       (p) => p.id,
       (i) => `products[${i}].id`,
-      "Товар",
-    ),
-    ...duplicates(
-      catalog.products,
-      (p) => p.sku,
-      (i) => `products[${i}].sku`,
-      "Артикул",
+      "Блюдо",
     ),
   ];
 
@@ -153,11 +147,12 @@ function checkReferences(catalog: Catalog): { catalog: Catalog; issues: CatalogI
   const knownKeys = [...attributeDefs.keys()].join(", ") || "характеристик пока нет";
 
   const products = catalog.products.map((product, i) => {
-    product.categoryIds.forEach((id, j) => {
-      if (!categoryIds.has(id)) {
-        issues.push({ path: `products[${i}].categoryIds[${j}]`, message: `Нет категории «${id}»` });
-      }
-    });
+    if (!categoryIds.has(product.categoryId)) {
+      issues.push({
+        path: `products[${i}].categoryId`,
+        message: `Нет категории «${product.categoryId}»`,
+      });
+    }
 
     const attributes: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(product.attributes)) {
@@ -192,8 +187,8 @@ function checkReferences(catalog: Catalog): { catalog: Catalog; issues: CatalogI
 
 /**
  * Разбирает каталог: миграция версии → схема → ссылки и характеристики.
- * Возвращает либо нормализованный каталог (значения по умолчанию подставлены, телефоны
- * приведены к +7…), либо все найденные ошибки сразу.
+ * Возвращает либо нормализованное меню (значения по умолчанию подставлены),
+ * либо все найденные ошибки сразу.
  */
 export function parseCatalog(input: unknown): ParseResult<Catalog> {
   const migrated = migrate(input);

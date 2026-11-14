@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  buildZodSchema,
-  type FieldDefinition,
-  FieldDefinitionSchema,
-  normalizePhone,
-  PhoneSchema,
-} from "../src/index.ts";
+import { buildZodSchema, type FieldDefinition, FieldDefinitionSchema } from "../src/index.ts";
 
 const defs: FieldDefinition[] = [
   FieldDefinitionSchema.parse({
@@ -15,7 +9,6 @@ const defs: FieldDefinition[] = [
     required: true,
     maxLength: 20,
   }),
-  FieldDefinitionSchema.parse({ key: "phone", label: "Телефон", type: "phone", required: true }),
   FieldDefinitionSchema.parse({
     key: "density",
     label: "Плотность",
@@ -71,10 +64,9 @@ describe("FieldDefinition", () => {
 });
 
 describe("buildZodSchema", () => {
-  it("пропускает корректные значения и нормализует телефон", () => {
+  it("пропускает корректные значения", () => {
     const r = schema.parse({
       name: " Анна ",
-      phone: "8 (999) 123-45-67",
       density: 180,
       material: "Лён",
       tags: ["a"],
@@ -82,7 +74,6 @@ describe("buildZodSchema", () => {
     });
     expect(r).toEqual({
       name: "Анна",
-      phone: "+79991234567",
       density: 180,
       material: "Лён",
       tags: ["a"],
@@ -94,14 +85,12 @@ describe("buildZodSchema", () => {
     expect(
       schema.parse({
         name: "Анна",
-        phone: "+7 999 123-45-67",
         density: "",
         material: "",
         color: null,
       }),
     ).toEqual({
       name: "Анна",
-      phone: "+79991234567",
     });
   });
 
@@ -109,7 +98,6 @@ describe("buildZodSchema", () => {
     expect(
       messages({
         name: "",
-        phone: "",
         density: 1.5,
         material: "Шёлк",
         tags: ["a", "b", "c"],
@@ -117,37 +105,20 @@ describe("buildZodSchema", () => {
       }),
     ).toEqual({
       name: "Обязательное поле",
-      phone: "Без телефона курьер не сможет передать заказ",
       density: "Нужно целое число",
       material: "Выберите один из вариантов: Хлопок, Лён",
       tags: "Не больше 2 элементов",
       color: "Цвет в формате #RRGGBB, например #1F73D6",
     });
-    expect(messages({ name: "x".repeat(21), phone: "+7 999", density: 1000 })).toEqual({
+    expect(messages({ name: "x".repeat(21), density: 1000 })).toEqual({
       name: "Не длиннее 20 символов",
-      phone: "Номер неполный — нужно от 10 до 15 цифр",
       density: "Не больше 600",
     });
   });
 
   it("неизвестные ключи — ошибка", () => {
-    expect(messages({ name: "Анна", phone: "+79991234567", nmae: "x" })).toEqual({
+    expect(messages({ name: "Анна", nmae: "x" })).toEqual({
       "": "Неизвестное поле «nmae» — проверьте написание",
     });
-  });
-});
-
-describe("телефон", () => {
-  it("нормализует российские номера", () => {
-    expect(normalizePhone("8 999 123-45-67")).toBe("+79991234567");
-    expect(normalizePhone("9991234567")).toBe("+79991234567");
-    expect(normalizePhone("+44 20 7946 0958")).toBe("+442079460958");
-    expect(normalizePhone("12345")).toBeNull();
-  });
-
-  it("PhoneSchema объясняет, зачем нужен номер", () => {
-    expect(PhoneSchema.safeParse("").error?.issues[0]?.message).toBe(
-      "Без телефона курьер не сможет передать заказ",
-    );
   });
 });

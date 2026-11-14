@@ -9,812 +9,6 @@
       "type": "number",
       "const": 1
     },
-    "settings": {
-      "type": "object",
-      "properties": {
-        "shop": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 64
-            },
-            "description": {
-              "default": "",
-              "type": "string",
-              "maxLength": 500
-            },
-            "greeting": {
-              "default": "",
-              "description": "Ответ бота на /start, под ним кнопка «Открыть магазин»",
-              "type": "string",
-              "maxLength": 1000
-            },
-            "locale": {
-              "default": "ru-RU",
-              "type": "string"
-            },
-            "currency": {
-              "default": "RUB",
-              "type": "string",
-              "pattern": "^[A-Z]{3}$"
-            }
-          },
-          "required": [
-            "name"
-          ],
-          "additionalProperties": false
-        },
-        "features": {
-          "default": {},
-          "type": "object",
-          "properties": {
-            "categories": {
-              "default": true,
-              "type": "boolean"
-            },
-            "search": {
-              "default": true,
-              "type": "boolean"
-            },
-            "sort": {
-              "default": true,
-              "type": "boolean"
-            },
-            "gallery": {
-              "default": true,
-              "type": "boolean"
-            },
-            "discounts": {
-              "default": true,
-              "type": "boolean"
-            },
-            "badges": {
-              "default": true,
-              "type": "boolean"
-            },
-            "stock": {
-              "default": true,
-              "type": "boolean"
-            }
-          },
-          "additionalProperties": false,
-          "description": "Фичи каталога: выключенная пропадает из магазина, данные товаров остаются"
-        },
-        "catalog": {
-          "default": {},
-          "type": "object",
-          "properties": {
-            "defaultView": {
-              "default": "grid",
-              "type": "string",
-              "enum": [
-                "grid",
-                "list"
-              ]
-            }
-          },
-          "additionalProperties": false
-        },
-        "checkout": {
-          "default": {},
-          "type": "object",
-          "properties": {
-            "fields": {
-              "default": [
-                {
-                  "key": "name",
-                  "label": "Имя",
-                  "type": "text",
-                  "required": true,
-                  "maxLength": 80
-                },
-                {
-                  "key": "phone",
-                  "label": "Телефон",
-                  "type": "phone",
-                  "required": true,
-                  "hint": "Курьер позвонит перед доставкой"
-                },
-                {
-                  "key": "address",
-                  "label": "Адрес",
-                  "type": "textarea",
-                  "required": true,
-                  "placeholder": "Город, улица, дом, квартира",
-                  "maxLength": 300
-                },
-                {
-                  "key": "comment",
-                  "label": "Комментарий",
-                  "type": "textarea",
-                  "maxLength": 500
-                }
-              ],
-              "type": "array",
-              "items": {
-                "oneOf": [
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "text"
-                      },
-                      "minLength": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "maximum": 9007199254740991
-                      },
-                      "maxLength": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 10000
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "textarea"
-                      },
-                      "maxLength": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 20000
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "markdown"
-                      },
-                      "maxLength": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 50000
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "number"
-                      },
-                      "min": {
-                        "type": "number"
-                      },
-                      "max": {
-                        "type": "number"
-                      },
-                      "integer": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "unit": {
-                        "type": "string",
-                        "maxLength": 16
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "money"
-                      },
-                      "min": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "maximum": 1000000000000,
-                        "description": "Целое число в минорных единицах валюты: 199000 = 1990 ₽"
-                      },
-                      "max": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "maximum": 1000000000000,
-                        "description": "Целое число в минорных единицах валюты: 199000 = 1990 ₽"
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "boolean"
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "select"
-                      },
-                      "options": {
-                        "minItems": 1,
-                        "maxItems": 100,
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "minLength": 1,
-                          "maxLength": 60
-                        }
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type",
-                      "options"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "multiselect"
-                      },
-                      "options": {
-                        "minItems": 1,
-                        "maxItems": 100,
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "minLength": 1,
-                          "maxLength": 60
-                        }
-                      },
-                      "maxItems": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 9007199254740991
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type",
-                      "options"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "url"
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "image"
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "images"
-                      },
-                      "maxItems": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 50
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "tags"
-                      },
-                      "maxItems": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 50
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "date"
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "color"
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "key": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-                      },
-                      "label": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 60
-                      },
-                      "hint": {
-                        "type": "string",
-                        "maxLength": 200
-                      },
-                      "placeholder": {
-                        "type": "string",
-                        "maxLength": 100
-                      },
-                      "required": {
-                        "default": false,
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "type": "string",
-                        "const": "phone"
-                      }
-                    },
-                    "required": [
-                      "key",
-                      "label",
-                      "type"
-                    ],
-                    "additionalProperties": false
-                  }
-                ]
-              }
-            },
-            "phoneFromTelegramOnly": {
-              "default": false,
-              "description": "Номер только из Telegram (requestContact), ручной ввод запрещён",
-              "type": "boolean"
-            },
-            "maxQtyPerItem": {
-              "default": 100,
-              "description": "Максимум штук одного товара в заказе; если остаток меньше — ограничит остаток",
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 10000
-            }
-          },
-          "additionalProperties": false
-        },
-        "orders": {
-          "default": {},
-          "type": "object",
-          "properties": {
-            "customerCanCancel": {
-              "default": true,
-              "description": "Покупатель может сам отменить заказ, пока он в статусе «Оформлен»",
-              "type": "boolean"
-            }
-          },
-          "additionalProperties": false
-        },
-        "delivery": {
-          "default": {},
-          "type": "object",
-          "properties": {
-            "assignment": {
-              "default": "manual",
-              "description": "manual — менеджер выбирает курьера; pool — курьеры берут сами",
-              "type": "string",
-              "enum": [
-                "manual",
-                "pool"
-              ]
-            },
-            "shopPhone": {
-              "description": "Сюда звонит покупатель, если курьер скрыл свой номер",
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "required": [
-        "shop"
-      ],
-      "additionalProperties": false
-    },
     "attributes": {
       "default": [],
       "type": "array",
@@ -1080,13 +274,13 @@
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 1000000000000,
-                "description": "Целое число в минорных единицах валюты: 199000 = 1990 ₽"
+                "description": "Целое число в минимальных единицах валюты: 65000 = 65 000 ₫; 199000 = 1990 ₽"
               },
               "max": {
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 1000000000000,
-                "description": "Целое число в минорных единицах валюты: 199000 = 1990 ₽"
+                "description": "Целое число в минимальных единицах валюты: 65000 = 65 000 ₫; 199000 = 1990 ₽"
               }
             },
             "required": [
@@ -1546,52 +740,6 @@
               "type"
             ],
             "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "key": {
-                "type": "string",
-                "pattern": "^[a-z][a-zA-Z0-9_]{0,39}$"
-              },
-              "label": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 60
-              },
-              "hint": {
-                "type": "string",
-                "maxLength": 200
-              },
-              "placeholder": {
-                "type": "string",
-                "maxLength": 100
-              },
-              "required": {
-                "default": false,
-                "type": "boolean"
-              },
-              "showInCard": {
-                "default": false,
-                "description": "Показывать в карточке каталога (в списке товаров)",
-                "type": "boolean"
-              },
-              "showInSpecs": {
-                "default": true,
-                "description": "Показывать в блоке «Характеристики» на странице товара",
-                "type": "boolean"
-              },
-              "type": {
-                "type": "string",
-                "const": "phone"
-              }
-            },
-            "required": [
-              "key",
-              "label",
-              "type"
-            ],
-            "additionalProperties": false
           }
         ]
       }
@@ -1614,6 +762,7 @@
           },
           "sort": {
             "default": 0,
+            "description": "Порядок в меню, по возрастанию",
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
@@ -1637,74 +786,55 @@
             "maxLength": 64,
             "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
           },
-          "sku": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 64
-          },
           "title": {
             "type": "string",
             "minLength": 1,
             "maxLength": 120
           },
-          "shortDescription": {
-            "default": "",
-            "description": "Для карточки в каталоге, до 160 символов",
-            "type": "string",
-            "maxLength": 160
-          },
           "description": {
             "default": "",
-            "description": "Markdown без HTML",
+            "description": "Состав и описание, обычный текст",
             "type": "string",
-            "maxLength": 20000
+            "maxLength": 1000
           },
           "price": {
             "type": "integer",
             "minimum": 0,
             "maximum": 1000000000000,
-            "description": "Целое число в минорных единицах валюты: 199000 = 1990 ₽"
+            "description": "Целое число в минимальных единицах валюты: 65000 = 65 000 ₫; 199000 = 1990 ₽"
           },
           "compareAtPrice": {
-            "description": "Старая цена (зачёркнутая)",
+            "description": "Старая цена: показывается зачёркнутой рядом с «−20%»",
             "type": "integer",
             "minimum": 0,
             "maximum": 1000000000000
           },
-          "images": {
-            "default": [],
-            "maxItems": 20,
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "url": {
-                  "type": "string",
-                  "maxLength": 2048
-                },
-                "alt": {
-                  "type": "string",
-                  "maxLength": 200
-                }
+          "image": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "maxLength": 2048
               },
-              "required": [
-                "url"
-              ],
-              "additionalProperties": false
-            }
+              "alt": {
+                "type": "string",
+                "maxLength": 200
+              }
+            },
+            "required": [
+              "url"
+            ],
+            "additionalProperties": false
           },
-          "categoryIds": {
-            "default": [],
-            "type": "array",
-            "items": {
-              "type": "string",
-              "maxLength": 64,
-              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-            }
+          "categoryId": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
           },
           "badges": {
             "default": [],
-            "maxItems": 5,
+            "description": "Метки на карточке: «Хит», «Острое 🌶», «Вег»",
+            "maxItems": 3,
             "type": "array",
             "items": {
               "type": "string",
@@ -1712,22 +842,14 @@
               "maxLength": 24
             }
           },
-          "stock": {
-            "default": null,
-            "description": "Остаток; null — без учёта остатков",
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 9007199254740991
-              },
-              {
-                "type": "null"
-              }
-            ]
+          "available": {
+            "default": true,
+            "description": "false — «Закончилось»: блюдо видно в меню, но заказать нельзя",
+            "type": "boolean"
           },
           "isActive": {
             "default": true,
+            "description": "false — блюдо скрыто из меню",
             "type": "boolean"
           },
           "sort": {
@@ -1759,17 +881,17 @@
         "required": [
           "id",
           "title",
-          "price"
+          "price",
+          "categoryId"
         ],
         "additionalProperties": false
       }
     }
   },
   "required": [
-    "version",
-    "settings"
+    "version"
   ],
   "additionalProperties": false,
-  "title": "Каталог Universal TG Store",
-  "description": "Формат импорта/экспорта каталога"
+  "title": "Меню Universal TG Store",
+  "description": "Формат импорта/экспорта меню"
 }

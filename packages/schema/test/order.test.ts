@@ -1,15 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildCheckoutSchema,
-  CreateOrderInputSchema,
   can,
   canTransition,
+  createOrderInputSchema,
   customerCancelMode,
   isFinalStatus,
+  isGoogleMapsUrl,
+  mapsUrlFromCoords,
   ORDER_STATUS_LABELS,
   ORDER_STATUSES,
   orderTotal,
-  parseCatalog,
+  regionFor,
   StaffCancelInputSchema,
 } from "../src/index.ts";
 
@@ -17,7 +18,7 @@ describe("статусы заказа", () => {
   it("один словарь названий", () => {
     expect(ORDER_STATUSES.map((s) => ORDER_STATUS_LABELS[s])).toEqual([
       "Оформлен",
-      "Собираем",
+      "Готовим",
       "Курьер в пути",
       "Доставлен",
       "Отменён",
@@ -48,10 +49,9 @@ describe("отмена", () => {
     expect(customerCancelMode("new", off)).toBe("request");
   });
 
-  it("менеджер указывает причину, «Другое» — с комментарием", () => {
+  it("магазин указывает причину, «Другое» — с комментарием", () => {
     expect(StaffCancelInputSchema.parse({ reason: "out_of_stock" })).toEqual({
       reason: "out_of_stock",
-      restock: true,
     });
     const r = StaffCancelInputSchema.safeParse({ reason: "other", comment: " " });
     expect(r.error?.issues[0]).toMatchObject({
@@ -61,51 +61,89 @@ describe("отмена", () => {
   });
 });
 
-describe("оформление", () => {
-  const catalog = parseCatalog({ version: 1, settings: { shop: { name: "М" } } });
-  if (!catalog.ok) throw new Error("каталог невалиден");
-  const checkout = buildCheckoutSchema(catalog.value.settings);
-
-  it("корзина: не пустая, без повторов, количество от 1", () => {
-    expect(
-      CreateOrderInputSchema.safeParse({ items: [], customer: {} }).error?.issues[0]?.message,
-    ).toBe("Корзина пуста");
-    const dup = CreateOrderInputSchema.safeParse({
-      items: [
-        { productId: "tee", qty: 1 },
-        { productId: "tee", qty: 2 },
-      ],
-      customer: {},
-    });
-    expect(dup.error?.issues[0]?.message).toBe("Товар повторяется — объедините позиции");
-    expect(
-      CreateOrderInputSchema.safeParse({ items: [{ productId: "tee", qty: 0 }], customer: {} })
-        .success,
-    ).toBe(false);
+describe("точка на карте", () => {
+  it("принимает ссылки Google Maps", () => {
+    expect(isGoogleMapsUrl("https://maps.app.goo.gl/AbC123")).toBe(true);
+    expect(isGoogleMapsUrl("https://www.google.com/maps/place/10.77,106.70")).toBe(true);
+    expect(isGoogleMapsUrl("https://maps.google.com/?q=10.776889,106.700806")).toBe(true);
+    expect(isGoogleMapsUrl("https://goo.gl/maps/xyz")).toBe(true);
+    expect(isGoogleMapsUrl("https://google.com/search?q=pho")).toBe(false);
+    expect(isGoogleMapsUrl("https://evil.com/maps.app.goo.gl")).toBe(false);
+    expect(isGoogleMapsUrl("javascript:alert(1)")).toBe(false);
   });
 
-  it("поля покупателя по настройкам: телефон и адрес обязательны", () => {
-    const r = checkout.safeParse({ name: "Анна", phone: "", address: "" });
-    expect(r.error?.issues.map((i) => [i.path[0], i.message])).toEqual([
-      ["phone", "Без телефона курьер не сможет передать заказ"],
-      ["address", "Обязательное поле"],
-    ]);
-    expect(
-      checkout.parse({ name: "Анна", phone: "89991234567", address: "Москва, Лесная, 5" }),
-    ).toEqual({
-      name: "Анна",
-      phone: "+79991234567",
-      address: "Москва, Лесная, 5",
+  it("кнопка «Я сейчас здесь» собирает ссылку по координатам", () => {
+    expect(mapsUrlFromCoords(10.7768889, 106.7008056)).toBe(
+      "https://maps.google.com/?q=10.776889,106.700806",
+    );
+  });
+});
+
+describe("оформление", () => {
+  const schema = createOrderInputSchema({ region: regionFor("VN") });
+  const items = [{ productId: "pho-bo", qty: 2 }];
+  const customer = {
+    name: "Анна",
+    phone: "0912 345 678",
+    mapUrl: "Дом — https://maps.app.goo.gl/AbC123",
+  };
+
+  it("корзина: не пустая, без повторов, количество от 1 до 50", () => {
+    expect(schema.safeParse({ items: [], customer }).error?.issues[0]?.message).toBe(
+      "Корзина пуста",
+    );
+    const dup = schema.safeParse({
+      items: [
+        { productId: "pho-bo", qty: 1 },
+        { productId: "pho-bo", qty: 2 },
+      ],
+      customer,
     });
+    expect(dup.error?.issues[0]?.message).toBe("Блюдо повторяется — объедините позиции");
+    expect(schema.safeParse({ items: [{ productId: "pho-bo", qty: 0 }], customer }).success).toBe(
+      false,
+    );
+    expect(
+      schema.safeParse({ items: [{ productId: "pho-bo", qty: 51 }], customer }).error?.issues[0]
+        ?.message,
+    ).toBe("Не больше 50 порций одного блюда");
+  });
+
+  it("нормализует телефон по стране магазина и достаёт ссылку из текста", () => {
+    expect(schema.parse({ items, customer })).toEqual({
+      items,
+      customer: {
+        name: "Анна",
+        phone: "+84912345678",
+        mapUrl: "https://maps.app.goo.gl/AbC123",
+        address: "",
+        comment: "",
+      },
+      phoneFromTelegram: false,
+    });
+  });
+
+  it("обязательные поля объясняют, зачем они", () => {
+    const r = schema.safeParse({ items, customer: { name: "", phone: "", mapUrl: "" } });
+    expect(r.error?.issues.map((i) => [i.path.at(-1), i.message])).toEqual([
+      ["name", "Как к вам обращаться?"],
+      ["phone", "Без телефона курьер не сможет передать заказ"],
+      ["mapUrl", "Добавьте точку на карте — так курьер быстрее вас найдёт"],
+    ]);
+    const wrongLink = schema.safeParse({
+      items,
+      customer: { ...customer, mapUrl: "ул. Ле Лой, 5" },
+    });
+    expect(wrongLink.error?.issues[0]?.message).toMatch(/^Нужна ссылка из Google Maps/);
   });
 
   it("сумма заказа", () => {
     expect(
       orderTotal([
-        { price: 199000, qty: 2 },
-        { price: 89000, qty: 1 },
+        { price: 75000, qty: 2 },
+        { price: 30000, qty: 1 },
       ]),
-    ).toBe(487000);
+    ).toBe(180000);
   });
 });
 

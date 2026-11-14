@@ -34,6 +34,25 @@ describe("деньги", () => {
     expect(toMinor("abc", "RUB")).toBeNull();
   });
 
+  it("донги: без дробной части, точка и запятая — разделители тысяч", () => {
+    expect(currencyDigits("VND")).toBe(0);
+    expect(nbsp(formatMoney(65000, "VND", "ru-RU"))).toBe("65 000 ₫");
+    expect(toMinor("65000", "VND")).toBe(65000);
+    expect(toMinor("65.000", "VND")).toBe(65000);
+    expect(toMinor("65,000", "VND")).toBe(65000);
+    expect(toMinor("1.250.000", "VND")).toBe(1250000);
+    expect(toMinor("65 000", "VND")).toBe(65000);
+    expect(toMinor("65000.5", "VND")).toBeNull();
+    expect(fromMinor(65000, "VND")).toBe("65000");
+  });
+
+  it("смешанные разделители: последний — дробный", () => {
+    expect(toMinor("1.990,50", "RUB")).toBe(199050);
+    expect(toMinor("1,990.50", "USD")).toBe(199050);
+    expect(toMinor("1.990", "RUB")).toBe(199000);
+    expect(toMinor("0.125", "USD")).toBeNull();
+  });
+
   it("и обратно — для поля ввода", () => {
     expect(fromMinor(199000, "RUB")).toBe("1990");
     expect(fromMinor(199005, "RUB")).toBe("1990.05");

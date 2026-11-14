@@ -2,10 +2,10 @@
  * Заказы: статусы, допустимые переходы, отмена, оформление.
  * Названия статусов — единственный словарь для магазина, админки и бота (docs/product-decisions.md).
  */
-import type { Settings } from "./catalog.ts";
-import { IdSchema } from "./catalog.ts";
-import { buildZodSchema } from "./fields.ts";
+import { IdSchema, MAX_QTY_PER_ITEM } from "./catalog.ts";
 import type { Minor } from "./money.ts";
+import { phoneSchema } from "./phone.ts";
+import type { Settings } from "./settings.ts";
 import { z } from "./zod.ts";
 
 export const ORDER_STATUSES = ["new", "processing", "shipping", "done", "cancelled"] as const;
@@ -14,7 +14,7 @@ export type OrderStatus = z.output<typeof OrderStatusSchema>;
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   new: "Оформлен",
-  processing: "Собираем",
+  processing: "Готовим",
   shipping: "Курьер в пути",
   done: "Доставлен",
   cancelled: "Отменён",
@@ -48,7 +48,7 @@ export function isFinalStatus(status: OrderStatus): boolean {
 /**
  * Что может покупатель с заказом:
  * cancel — отменить сам (только «Оформлен» и если разрешено настройкой);
- * request — попросить менеджера отменить; none — заказ закрыт.
+ * request — попросить магазин отменить; none — заказ закрыт.
  */
 export function customerCancelMode(
   status: OrderStatus,
@@ -65,18 +65,17 @@ export const CANCEL_REASONS = ["out_of_stock", "no_answer", "customer_request", 
 export type CancelReason = (typeof CANCEL_REASONS)[number];
 
 export const CANCEL_REASON_LABELS: Record<CancelReason, string> = {
-  out_of_stock: "Нет в наличии",
+  out_of_stock: "Закончилось блюдо",
   no_answer: "Не дозвонились до покупателя",
   customer_request: "Покупатель попросил",
   other: "Другое",
 };
 
-/** Отмена менеджером: причина обязательна, «Другое» — с комментарием, который увидит покупатель. */
+/** Отмена магазином: причина обязательна, «Другое» — с комментарием, который увидит покупатель. */
 export const StaffCancelInputSchema = z
   .strictObject({
     reason: z.enum(CANCEL_REASONS),
     comment: z.string().trim().max(500).optional(),
-    restock: z.boolean().default(true),
   })
   .refine((v) => v.reason !== "other" || (v.comment !== undefined && v.comment.length > 0), {
     error: "Опишите причину — её увидит покупатель",
@@ -91,42 +90,96 @@ export type DeliveryFailureReason = (typeof DELIVERY_FAILURE_REASONS)[number];
 
 export const DELIVERY_FAILURE_LABELS: Record<DeliveryFailureReason, string> = {
   no_answer: "Не дозвонился",
-  not_home: "Никого нет дома",
+  not_home: "Никого нет на месте",
   refused: "Покупатель отказался",
   other: "Другое",
 };
+
+// ───────────── Точка на карте ─────────────
+
+const MAP_HOSTS = /^(maps\.app\.goo\.gl|goo\.gl|maps\.google\.[a-z.]+|(www\.)?google\.[a-z.]+)$/;
+
+/** Ссылка ведёт на Google Maps: короткая maps.app.goo.gl или google.com/maps, maps.google.com. */
+export function isGoogleMapsUrl(value: string): boolean {
+  if (!URL.canParse(value)) return false;
+  const url = new URL(value);
+  if (url.protocol !== "https:" && url.protocol !== "http:") return false;
+  const host = url.hostname.toLowerCase();
+  if (!MAP_HOSTS.test(host)) return false;
+  if (host === "goo.gl" || /^(www\.)?google\./.test(host)) return url.pathname.startsWith("/maps");
+  return true;
+}
+
+/** Ссылка на точку по координатам — так её собирает кнопка «Я сейчас здесь». */
+export function mapsUrlFromCoords(latitude: number, longitude: number): string {
+  return `https://maps.google.com/?q=${latitude.toFixed(6)},${longitude.toFixed(6)}`;
+}
+
+/**
+ * Точка доставки. Из «Поделиться» в Google Maps часто приходит текст со ссылкой внутри
+ * («Кафе Хоа — https://maps.app.goo.gl/…») — достаём первую ссылку.
+ */
+export const MapLinkSchema = z
+  .string()
+  .trim()
+  .min(1, { error: "Добавьте точку на карте — так курьер быстрее вас найдёт" })
+  .transform((value, ctx) => {
+    const link = value.match(/https?:\/\/\S+/)?.[0] ?? value;
+    if (!isGoogleMapsUrl(link)) {
+      ctx.issues.push({
+        code: "custom",
+        input: value,
+        message:
+          "Нужна ссылка из Google Maps: поставьте точку, нажмите «Поделиться» → «Копировать ссылку»",
+      });
+      return z.NEVER;
+    }
+    return link;
+  });
 
 // ───────────── Оформление ─────────────
 
 export const OrderItemInputSchema = z.strictObject({
   productId: IdSchema,
-  qty: z.int().min(1, { error: "Количество — от 1" }),
+  qty: z
+    .int()
+    .min(1, { error: "Количество — от 1" })
+    .max(MAX_QTY_PER_ITEM, { error: `Не больше ${MAX_QTY_PER_ITEM} порций одного блюда` }),
 });
 
 /**
- * Что присылает магазин при оформлении. Цены и остатки клиент не присылает: сервер берёт их из БД.
- * Поля покупателя проверяются схемой из settings.checkout.fields — см. buildCheckoutSchema.
+ * Что присылает магазин при оформлении. Цен клиент не присылает: сервер берёт их из БД.
+ * Форма фиксированная: имя, телефон, точка на карте, уточнение адреса, комментарий.
+ * Телефон нормализуется по коду страны магазина, поэтому схема строится от настроек.
  */
-export const CreateOrderInputSchema = z.strictObject({
-  items: z
-    .array(OrderItemInputSchema)
-    .min(1, { error: "Корзина пуста" })
-    .max(100)
-    .refine((items) => new Set(items.map((i) => i.productId)).size === items.length, {
-      error: "Товар повторяется — объедините позиции",
+export function createOrderInputSchema(settings: Pick<Settings, "region">) {
+  return z.strictObject({
+    items: z
+      .array(OrderItemInputSchema)
+      .min(1, { error: "Корзина пуста" })
+      .max(100)
+      .refine((items) => new Set(items.map((i) => i.productId)).size === items.length, {
+        error: "Блюдо повторяется — объедините позиции",
+      }),
+    customer: z.strictObject({
+      name: z.string().trim().min(1, { error: "Как к вам обращаться?" }).max(80),
+      phone: phoneSchema(settings.region.phoneCode),
+      mapUrl: MapLinkSchema,
+      address: z
+        .string()
+        .trim()
+        .max(300)
+        .default("")
+        .meta({ description: "Дом, подъезд, этаж, квартира — необязательно" }),
+      comment: z.string().trim().max(500).default(""),
     }),
-  customer: z.record(z.string(), z.unknown()),
-  /** Номер подтверждён Telegram (requestContact) — для пометки «из Telegram» в админке. */
-  phoneFromTelegram: z.boolean().default(false),
-});
-export type CreateOrderInput = z.output<typeof CreateOrderInputSchema>;
-
-/** Проверка полей покупателя по настройкам оформления. */
-export function buildCheckoutSchema(settings: Pick<Settings, "checkout">) {
-  return buildZodSchema(settings.checkout.fields);
+    /** Номер пришёл из Telegram (кнопка «Взять из Telegram») — пометка в админке. */
+    phoneFromTelegram: z.boolean().default(false),
+  });
 }
+export type CreateOrderInput = z.output<ReturnType<typeof createOrderInputSchema>>;
 
-/** Позиция заказа — снимок на момент оформления: цена и название не меняются вместе с каталогом. */
+/** Позиция заказа — снимок на момент оформления: цена и название не меняются вместе с меню. */
 export type OrderItemSnapshot = {
   productId: string;
   title: string;

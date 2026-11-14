@@ -1,10 +1,9 @@
 /**
  * FieldDefinition — описание поля без кода: из него строятся проверка значения (на сервере и в
- * админке одна и та же), поле формы в админке и поля оформления заказа в магазине.
+ * админке одна и та же) и поле формы в админке.
  * Пользовательские характеристики товара (attributes) — тоже FieldDefinition.
  */
 import { MoneySchema } from "./money.ts";
-import { PhoneSchema } from "./phone.ts";
 import { z } from "./zod.ts";
 
 export const FIELD_KEY_PATTERN = /^[a-z][a-zA-Z0-9_]{0,39}$/;
@@ -119,7 +118,6 @@ function fieldVariants<E extends z.core.$ZodLooseShape>(extra: E) {
     z.strictObject({ ...b, type: z.literal("tags"), maxItems: z.int().min(1).max(50).optional() }),
     z.strictObject({ ...b, type: z.literal("date") }),
     z.strictObject({ ...b, type: z.literal("color") }),
-    z.strictObject({ ...b, type: z.literal("phone") }),
   ] as const;
 }
 
@@ -159,7 +157,6 @@ export const FIELD_TYPES = [
   "tags",
   "date",
   "color",
-  "phone",
 ] as const satisfies readonly FieldType[];
 
 export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
@@ -177,7 +174,6 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   tags: "Метки",
   date: "Дата",
   color: "Цвет",
-  phone: "Телефон",
 };
 
 function assertNever(value: never): never {
@@ -248,8 +244,6 @@ function baseValueSchema(def: FieldDefinition): z.ZodType {
       return z
         .string()
         .regex(/^#[0-9a-fA-F]{6}$/, { error: "Цвет в формате #RRGGBB, например #1F73D6" });
-    case "phone":
-      return PhoneSchema;
     default:
       return assertNever(def);
   }
@@ -258,10 +252,6 @@ function baseValueSchema(def: FieldDefinition): z.ZodType {
 /** Схема значения одного поля с учётом required. */
 export function fieldValueSchema(def: FieldDefinition): z.ZodType {
   let schema = baseValueSchema(def);
-  if (def.required && def.type === "phone") {
-    // Пустой телефон — не «обязательное поле», а объяснение, зачем он нужен.
-    return z.preprocess((v) => v ?? "", schema);
-  }
   if (def.required) {
     if (def.type === "multiselect" || def.type === "images" || def.type === "tags") {
       schema = (schema as z.ZodArray<z.ZodType>).min(1, {

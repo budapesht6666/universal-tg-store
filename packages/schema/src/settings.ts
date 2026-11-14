@@ -1,0 +1,131 @@
+/**
+ * Настройки магазина. Хранятся в БД, первый раз задаются мастером настройки при установке,
+ * потом меняются в админке. Регион (валюта, часовой пояс, код страны) после настройки
+ * не меняется: смена валюты молча переоценила бы все цены (65000 ₫ ≠ 65000 копеек).
+ */
+import { WeekHoursSchema } from "./hours.ts";
+import { normalizePhone } from "./phone.ts";
+import { z } from "./zod.ts";
+
+export const REGIONS = {
+  VN: { label: "Вьетнам", currency: "VND", timeZone: "Asia/Ho_Chi_Minh", phoneCode: "84" },
+  TH: { label: "Таиланд", currency: "THB", timeZone: "Asia/Bangkok", phoneCode: "66" },
+  ID: { label: "Индонезия", currency: "IDR", timeZone: "Asia/Makassar", phoneCode: "62" },
+  RU: { label: "Россия", currency: "RUB", timeZone: "Europe/Moscow", phoneCode: "7" },
+} as const;
+export type RegionCode = keyof typeof REGIONS;
+export const RegionCodeSchema = z.enum(Object.keys(REGIONS) as [RegionCode, ...RegionCode[]]);
+
+function isValidTimeZone(timeZone: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en", { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export const RegionSchema = z.strictObject({
+  country: RegionCodeSchema.default("VN"),
+  currency: z
+    .string()
+    .regex(/^[A-Z]{3}$/, { error: "Код валюты ISO 4217 из трёх заглавных букв, например VND" })
+    .default("VND"),
+  timeZone: z
+    .string()
+    .default("Asia/Ho_Chi_Minh")
+    // Не Intl.supportedValuesOf: там ICU-имена (Asia/Saigon), и Asia/Ho_Chi_Minh не найдётся.
+    .refine(isValidTimeZone, { error: "Неизвестный часовой пояс, пример: Asia/Ho_Chi_Minh" }),
+  phoneCode: z
+    .string()
+    .regex(/^\d{1,3}$/, { error: "Код страны без плюса, например 84" })
+    .default("84"),
+  /** Формат чисел и дат. Интерфейс пока только на русском. */
+  locale: z.string().default("ru-RU"),
+});
+export type Region = z.output<typeof RegionSchema>;
+
+/** Регион из пресета страны — для мастера настройки. */
+export function regionFor(country: RegionCode): Region {
+  const { label: _label, ...rest } = REGIONS[country];
+  return { country, ...rest, locale: "ru-RU" };
+}
+
+export const ShopInfoSchema = z.strictObject({
+  name: z.string().trim().min(1, { error: "Как называется магазин?" }).max(64),
+  phone: z
+    .string()
+    .trim()
+    .min(1, { error: "Нужен телефон — по нему покупатель свяжется с магазином" }),
+  greeting: z
+    .string()
+    .trim()
+    .max(1000)
+    .default("Привет! Здесь можно заказать еду с доставкой. Откройте меню 👇")
+    .meta({ description: "Ответ бота на /start, под ним кнопка «Открыть меню»" }),
+});
+
+export const FeaturesSchema = z
+  .strictObject({
+    discounts: z.boolean().default(true),
+    badges: z.boolean().default(true),
+  })
+  .meta({ description: "Фичи меню: выключенная пропадает из магазина, данные блюд остаются" });
+export type Features = z.output<typeof FeaturesSchema>;
+export type FeatureKey = keyof Features;
+
+export const FEATURE_LABELS: Record<FeatureKey, string> = {
+  discounts: "Старая цена и скидка",
+  badges: "Метки на блюдах",
+};
+
+export const OrderSettingsSchema = z.strictObject({
+  customerCanCancel: z
+    .boolean()
+    .default(true)
+    .meta({ description: "Покупатель может сам отменить заказ, пока он в статусе «Оформлен»" }),
+});
+
+export const SettingsSchema = z
+  .strictObject({
+    region: RegionSchema.prefault({}),
+    shop: ShopInfoSchema,
+    hours: WeekHoursSchema.prefault({}),
+    features: FeaturesSchema.prefault({}),
+    orders: OrderSettingsSchema.prefault({}),
+  })
+  .transform((settings, ctx) => {
+    const phone = normalizePhone(settings.shop.phone, settings.region.phoneCode);
+    if (phone === null) {
+      ctx.issues.push({
+        code: "custom",
+        path: ["shop", "phone"],
+        input: settings.shop.phone,
+        message: "Номер неполный — проверьте цифры",
+      });
+      return z.NEVER;
+    }
+    return { ...settings, shop: { ...settings.shop, phone } };
+  });
+export type Settings = z.output<typeof SettingsSchema>;
+export type SettingsInput = z.input<typeof SettingsSchema>;
+
+/**
+ * Мастер первой настройки: страна, название, телефон, часы работы и меню (демо или пустое).
+ * Всё остальное — значения по умолчанию, их можно поменять потом в админке.
+ */
+export const SetupInputSchema = z.strictObject({
+  country: RegionCodeSchema.default("VN"),
+  shop: ShopInfoSchema,
+  hours: WeekHoursSchema.prefault({}),
+  menu: z.enum(["demo", "empty"]).default("demo"),
+});
+export type SetupInput = z.input<typeof SetupInputSchema>;
+
+export function settingsFromSetup(input: z.output<typeof SetupInputSchema>) {
+  return SettingsSchema.safeParse({
+    region: regionFor(input.country),
+    shop: input.shop,
+    hours: input.hours,
+  });
+}

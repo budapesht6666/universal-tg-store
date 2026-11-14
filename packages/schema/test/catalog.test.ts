@@ -2,9 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   type CatalogIssue,
+  canOrderProduct,
   catalogJsonSchema,
-  isSoldOut,
-  maxQtyFor,
   parseCatalog,
   serializeCatalog,
 } from "../src/index.ts";
@@ -31,47 +30,42 @@ function issuesOf(input: unknown): CatalogIssue[] {
 
 const minimal = {
   version: 1,
-  settings: { shop: { name: "Магазин" } },
-  products: [{ id: "tee", title: "Футболка", price: 199000 }],
+  categories: [{ id: "soups", title: "Супы" }],
+  products: [{ id: "pho", title: "Фо", price: 75000, categoryId: "soups" }],
 };
 
-describe("parseCatalog: корректные каталоги", () => {
-  it("пример из репозитория проходит проверку", () => {
+describe("parseCatalog: корректное меню", () => {
+  it("демо-меню из репозитория проходит проверку", () => {
     const r = parseCatalog(example);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.value.products).toHaveLength(15);
-    expect(r.value.categories.map((c) => c.id)).toEqual(["wear", "acc", "home", "paper"]);
-    expect(r.value.settings.delivery.shopPhone).toBe("+74950000000");
+    expect(r.value.categories.map((c) => c.id)).toEqual(["soups", "hot", "snacks", "drinks"]);
+    expect(r.value.products.filter((p) => !canOrderProduct(p)).map((p) => p.id)).toEqual([
+      "soup-of-the-day",
+      "banh-mi",
+    ]);
   });
 
-  it("минимальный каталог дополняется значениями по умолчанию", () => {
+  it("минимальное меню дополняется значениями по умолчанию", () => {
     const r = parseCatalog(minimal);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    const { settings, products } = r.value;
-    expect(settings.shop).toMatchObject({ locale: "ru-RU", currency: "RUB" });
-    expect(Object.values(settings.features).every(Boolean)).toBe(true);
-    expect(settings.catalog.defaultView).toBe("grid");
-    expect(settings.checkout.maxQtyPerItem).toBe(100);
-    expect(settings.checkout.fields.map((f) => f.key)).toEqual([
-      "name",
-      "phone",
-      "address",
-      "comment",
-    ]);
-    expect(settings.orders.customerCanCancel).toBe(true);
-    expect(settings.delivery.assignment).toBe("manual");
-    expect(products[0]).toMatchObject({
-      stock: null,
+    expect(r.value.products[0]).toEqual({
+      id: "pho",
+      title: "Фо",
+      description: "",
+      price: 75000,
+      categoryId: "soups",
+      badges: [],
+      available: true,
       isActive: true,
-      images: [],
+      sort: 0,
       attributes: {},
-      categoryIds: [],
     });
   });
 
-  it("экспорт → импорт даёт тот же каталог", () => {
+  it("экспорт → импорт даёт то же меню", () => {
     const first = parseCatalog(example);
     if (!first.ok) throw new Error("пример невалиден");
     const exported = JSON.parse(JSON.stringify(serializeCatalog(first.value)));
@@ -84,8 +78,8 @@ describe("parseCatalog: корректные каталоги", () => {
 
 describe("parseCatalog: ошибки с понятными путями", () => {
   it("не объект и без версии", () => {
-    expect(issuesOf([])[0]?.message).toBe("Каталог должен быть JSON-объектом");
-    expect(issuesOf({ settings: {} })).toEqual([
+    expect(issuesOf([])[0]?.message).toBe("Меню должно быть JSON-объектом");
+    expect(issuesOf({ products: [] })).toEqual([
       { path: "version", message: 'Укажите версию формата: "version": 1' },
     ]);
     expect(issuesOf({ ...minimal, version: 7 })[0]?.message).toMatch(/версии 7.*до 1/);
@@ -97,7 +91,8 @@ describe("parseCatalog: ошибки с понятными путями", () => 
         c.products[3].price = -100;
         c.products[0].title = "";
         c.products[1].prise = 100;
-        c.products[2].id = "Худи";
+        c.products[2].id = "Бун бо";
+        c.products[5].price = 70000.5;
       }),
     );
     expect(issues).toEqual(
@@ -107,8 +102,9 @@ describe("parseCatalog: ошибки с понятными путями", () => 
         { path: "products[1]", message: "Неизвестное поле «prise» — проверьте написание" },
         {
           path: "products[2].id",
-          message: "id — латиница в нижнем регистре, цифры и дефис, например tee-basic",
+          message: "id — латиница в нижнем регистре, цифры и дефис, например pho-bo",
         },
+        { path: "products[5].price", message: expect.stringMatching(/^Сумма — целое число/) },
       ]),
     );
   });
@@ -127,17 +123,15 @@ describe("parseCatalog: ошибки с понятными путями", () => 
     const issues = issuesOf(
       variant((c) => {
         c.products[1].id = c.products[0].id;
-        c.products[2].sku = c.products[0].sku;
-        c.products[0].categoryIds = ["wear", "shoes"];
-        c.categories.push({ id: "wear", title: "Ещё одежда" });
+        c.products[0].categoryId = "desserts";
+        c.categories.push({ id: "soups", title: "Ещё супы" });
       }),
     );
     expect(issues).toEqual(
       expect.arrayContaining([
-        { path: "products[1].id", message: "Товар «tee-base» уже есть (повтор, первый — №1)" },
-        { path: "products[2].sku", message: "Артикул «TB-001» уже есть (повтор, первый — №1)" },
-        { path: "products[0].categoryIds[1]", message: "Нет категории «shoes»" },
-        { path: "categories[4].id", message: "Категория «wear» уже есть (повтор, первый — №1)" },
+        { path: "products[1].id", message: "Блюдо «pho-bo» уже есть (повтор, первый — №1)" },
+        { path: "products[0].categoryId", message: "Нет категории «desserts»" },
+        { path: "categories[4].id", message: "Категория «soups» уже есть (повтор, первый — №1)" },
       ]),
     );
   });
@@ -145,21 +139,16 @@ describe("parseCatalog: ошибки с понятными путями", () => 
   it("характеристики проверяются по их описанию", () => {
     const issues = issuesOf(
       variant((c) => {
-        c.products[0].attributes.density = 5000;
-        c.products[0].attributes.material = "Шёлк";
-        c.products[1].attributes.colour = "red";
+        c.products[0].attributes.kcal = 9000;
+        c.products[1].attributes.spicy = true;
       }),
     );
     expect(issues).toEqual(
       expect.arrayContaining([
-        { path: "products[0].attributes.density", message: "Не больше 600" },
+        { path: "products[0].attributes.kcal", message: "Не больше 5000" },
         {
-          path: "products[0].attributes.material",
-          message: expect.stringMatching(/^Выберите один из вариантов/),
-        },
-        {
-          path: "products[1].attributes.colour",
-          message: expect.stringMatching(/^Нет такой характеристики\. Есть: material/),
+          path: "products[1].attributes.spicy",
+          message: expect.stringMatching(/^Нет такой характеристики\. Есть: portion, kcal/),
         },
       ]),
     );
@@ -167,36 +156,7 @@ describe("parseCatalog: ошибки с понятными путями", () => 
 
   it("обязательная характеристика", () => {
     const issues = issuesOf(variant((c) => (c.attributes[0].required = true)));
-    expect(issues.some((i) => i.path === "products[12].attributes.material")).toBe(true);
-  });
-
-  it("в оформлении обязателен телефон — курьер должен дозвониться", () => {
-    const issues = issuesOf(
-      variant((c) => {
-        c.settings.checkout.fields = [{ key: "name", label: "Имя", type: "text", required: true }];
-      }),
-    );
-    expect(issues[0]).toEqual({
-      path: "settings.checkout.fields",
-      message:
-        "Нужно ровно одно обязательное поле типа phone — без телефона курьер не сможет передать заказ",
-    });
-  });
-});
-
-describe("лимит количества", () => {
-  const settings = { features: { stock: true }, checkout: { maxQtyPerItem: 100 } } as const;
-
-  it("min(лимит, остаток)", () => {
-    expect(maxQtyFor({ stock: 3 }, settings)).toBe(3);
-    expect(maxQtyFor({ stock: 500 }, settings)).toBe(100);
-    expect(maxQtyFor({ stock: null }, settings)).toBe(100);
-  });
-
-  it("без учёта остатков — только лимит", () => {
-    expect(maxQtyFor({ stock: 3 }, { ...settings, features: { stock: false } })).toBe(100);
-    expect(isSoldOut({ stock: 0 }, { stock: false })).toBe(false);
-    expect(isSoldOut({ stock: 0 }, { stock: true })).toBe(true);
+    expect(issues.some((i) => i.path === "products[4].attributes.portion")).toBe(true);
   });
 });
 
