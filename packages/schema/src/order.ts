@@ -150,3 +150,54 @@ export type OrderItemSnapshot = {
 export function orderTotal(items: readonly Pick<OrderItemSnapshot, "price" | "qty">[]): Minor {
   return items.reduce((sum, item) => sum + item.price * item.qty, 0);
 }
+
+// ───────────── Действия магазина с заказом ─────────────
+
+const optionalComment = z.string().trim().max(500).optional();
+
+/**
+ * Что делает менеджер или курьер: принять, назначить курьера, «Забрал, еду», «Доставлен»,
+ * «Не получилось» (заказ возвращается менеджеру), отмена с причиной. Одна схема для экрана
+ * заказов и кнопок в боте; права и переходы проверяет сервер.
+ */
+export const StaffOrderActionSchema = z
+  .discriminatedUnion("action", [
+    z.strictObject({ action: z.literal("accept") }),
+    z.strictObject({ action: z.literal("assign"), courierId: z.int().positive() }),
+    z.strictObject({ action: z.literal("pickup") }),
+    z.strictObject({ action: z.literal("deliver") }),
+    z.strictObject({
+      action: z.literal("fail"),
+      reason: z.enum(DELIVERY_FAILURE_REASONS),
+      comment: optionalComment,
+    }),
+    z.strictObject({
+      action: z.literal("cancel"),
+      reason: z.enum(CANCEL_REASONS),
+      comment: optionalComment,
+    }),
+  ])
+  .superRefine((v, ctx) => {
+    if ((v.action === "cancel" || v.action === "fail") && v.reason === "other" && !v.comment) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["comment"],
+        message:
+          v.action === "cancel"
+            ? "Опишите причину — её увидит покупатель"
+            : "Опишите, что случилось",
+      });
+    }
+  });
+export type StaffOrderAction = z.output<typeof StaffOrderActionSchema>;
+export type StaffOrderActionName = StaffOrderAction["action"];
+
+/** События в истории заказа. */
+export const ORDER_EVENT_TYPES = [
+  "created",
+  "status",
+  "courier_assigned",
+  "cancel_requested",
+  "delivery_failed",
+] as const;
+export type OrderEventType = (typeof ORDER_EVENT_TYPES)[number];

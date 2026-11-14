@@ -28,44 +28,56 @@ export type Category = z.output<typeof CategorySchema>;
 
 const DateTimeSchema = z.iso.datetime({ offset: true });
 
-export const ProductSchema = z
-  .strictObject({
-    id: IdSchema,
-    title: z.string().trim().min(1).max(120),
-    description: z
-      .string()
-      .trim()
-      .max(1000)
-      .default("")
-      .meta({ description: "Состав и описание, обычный текст" }),
-    price: MoneySchema,
-    compareAtPrice: MoneySchema.optional().meta({
-      description: "Старая цена: показывается зачёркнутой рядом с «−20%»",
-    }),
-    image: ImageRefSchema.optional(),
-    categoryId: IdSchema,
-    badges: z
-      .array(z.string().trim().min(1).max(24))
-      .max(3)
-      .default([])
-      .meta({ description: "Метки на карточке: «Хит», «Острое 🌶», «Вег»" }),
-    available: z
-      .boolean()
-      .default(true)
-      .meta({ description: "false — «Закончилось»: блюдо видно в меню, но заказать нельзя" }),
-    isActive: z.boolean().default(true).meta({ description: "false — блюдо скрыто из меню" }),
-    sort: z.int().default(0),
-    attributes: z
-      .record(z.string(), z.unknown())
-      .default({})
-      .meta({ description: "Значения характеристик: ключ из attributes → значение" }),
-    createdAt: DateTimeSchema.optional(),
-    updatedAt: DateTimeSchema.optional(),
-  })
-  .refine((p) => p.compareAtPrice === undefined || p.compareAtPrice > p.price, {
-    error: "Старая цена должна быть больше текущей — иначе это не скидка",
-    path: ["compareAtPrice"],
-  });
+/** Поля блюда без межполевых проверок — основа и для формы админки (productInputSchema). */
+export const ProductBaseSchema = z.strictObject({
+  id: IdSchema,
+  title: z.string().trim().min(1).max(120),
+  description: z
+    .string()
+    .trim()
+    .max(1000)
+    .default("")
+    .meta({ description: "Состав и описание, обычный текст" }),
+  price: MoneySchema,
+  compareAtPrice: MoneySchema.optional().meta({
+    description: "Старая цена: показывается зачёркнутой рядом с «−20%»",
+  }),
+  image: ImageRefSchema.optional(),
+  categoryId: IdSchema,
+  badges: z
+    .array(z.string().trim().min(1).max(24))
+    .max(3)
+    .default([])
+    .meta({ description: "Метки на карточке: «Хит», «Острое 🌶», «Вег»" }),
+  available: z
+    .boolean()
+    .default(true)
+    .meta({ description: "false — «Закончилось»: блюдо видно в меню, но заказать нельзя" }),
+  isActive: z.boolean().default(true).meta({ description: "false — блюдо скрыто из меню" }),
+  sort: z.int().default(0),
+  attributes: z
+    .record(z.string(), z.unknown())
+    .default({})
+    .meta({ description: "Значения характеристик: ключ из attributes → значение" }),
+  createdAt: DateTimeSchema.optional(),
+  updatedAt: DateTimeSchema.optional(),
+});
+
+/** Старая цена больше текущей — иначе это не скидка. Общая проверка для меню и формы. */
+export function checkCompareAtPrice(
+  p: { price: number; compareAtPrice?: number | undefined },
+  ctx: z.core.$RefinementCtx,
+): void {
+  if (p.compareAtPrice !== undefined && p.compareAtPrice <= p.price) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["compareAtPrice"],
+      message: "Старая цена должна быть больше текущей — иначе это не скидка",
+    });
+  }
+}
+
+export const ProductSchema = ProductBaseSchema.superRefine(checkCompareAtPrice);
 export type Product = z.output<typeof ProductSchema>;
 
 export const CatalogSchema = z

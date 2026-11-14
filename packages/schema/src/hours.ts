@@ -154,3 +154,45 @@ export function shopStatus(
     opensAt: opening === null ? null : describeOpening(opening, t),
   };
 }
+
+/** Через сколько минут магазин закроется; null — сейчас закрыт. */
+export function minutesUntilClose(hours: WeekHours, timeZone: string, now: Date): number | null {
+  const t = localWeekMinute(now, timeZone);
+  const end = containing(intervals(hours), t);
+  return end === null ? null : end - t;
+}
+
+// ───────────── Пауза приёма заказов ─────────────
+
+export const PAUSE_OPTIONS = ["30m", "1h", "today", "off"] as const;
+export type PauseOption = (typeof PAUSE_OPTIONS)[number];
+
+export const PAUSE_LABELS: Record<PauseOption, string> = {
+  "30m": "На 30 минут",
+  "1h": "На час",
+  today: "До конца дня",
+  off: "Снять паузу",
+};
+
+export const PauseInputSchema = z.strictObject({ pause: z.enum(PAUSE_OPTIONS) });
+
+/**
+ * До какого момента пауза. «До конца дня» — до закрытия по расписанию (для ночной смены
+ * 18:00–02:00 это 02:00). null — паузы нет: сняли или магазин и так закрыт.
+ */
+export function pauseUntil(
+  option: PauseOption,
+  hours: WeekHours,
+  timeZone: string,
+  now: Date,
+): Date | null {
+  const minutes =
+    option === "30m"
+      ? 30
+      : option === "1h"
+        ? 60
+        : option === "today"
+          ? minutesUntilClose(hours, timeZone, now)
+          : null;
+  return minutes === null ? null : new Date(now.getTime() + minutes * 60_000);
+}
