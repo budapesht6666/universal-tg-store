@@ -39,11 +39,17 @@ describe("parseCatalog: корректное меню", () => {
     const r = parseCatalog(example);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.value.products).toHaveLength(15);
-    expect(r.value.categories.map((c) => c.id)).toEqual(["soups", "hot", "snacks", "drinks"]);
+    expect(r.value.products).toHaveLength(12);
+    expect(r.value.categories.map((c) => c.id)).toEqual([
+      "lunch",
+      "soups",
+      "hot",
+      "frozen",
+      "salads",
+      "desserts",
+    ]);
     expect(r.value.products.filter((p) => !canOrderProduct(p)).map((p) => p.id)).toEqual([
-      "soup-of-the-day",
-      "banh-mi",
+      "solyanka",
     ]);
   });
 
@@ -91,7 +97,7 @@ describe("parseCatalog: ошибки с понятными путями", () => 
         c.products[3].price = -100;
         c.products[0].title = "";
         c.products[1].prise = 100;
-        c.products[2].id = "Бун бо";
+        c.products[2].id = "Борщ";
         c.products[5].price = 70000.5;
       }),
     );
@@ -102,7 +108,7 @@ describe("parseCatalog: ошибки с понятными путями", () => 
         { path: "products[1]", message: "Неизвестное поле «prise» — проверьте написание" },
         {
           path: "products[2].id",
-          message: "id — латиница в нижнем регистре, цифры и дефис, например pho-bo",
+          message: "id — латиница в нижнем регистре, цифры и дефис, например borscht",
         },
         { path: "products[5].price", message: expect.stringMatching(/^Сумма — целое число/) },
       ]),
@@ -123,15 +129,15 @@ describe("parseCatalog: ошибки с понятными путями", () => 
     const issues = issuesOf(
       variant((c) => {
         c.products[1].id = c.products[0].id;
-        c.products[0].categoryId = "desserts";
+        c.products[0].categoryId = "drinks";
         c.categories.push({ id: "soups", title: "Ещё супы" });
       }),
     );
     expect(issues).toEqual(
       expect.arrayContaining([
-        { path: "products[1].id", message: "Блюдо «pho-bo» уже есть (повтор, первый — №1)" },
-        { path: "products[0].categoryId", message: "Нет категории «desserts»" },
-        { path: "categories[4].id", message: "Категория «soups» уже есть (повтор, первый — №1)" },
+        { path: "products[1].id", message: "Блюдо «lunch-set» уже есть (повтор, первый — №1)" },
+        { path: "products[0].categoryId", message: "Нет категории «drinks»" },
+        { path: "categories[6].id", message: "Категория «soups» уже есть (повтор, первый — №2)" },
       ]),
     );
   });
@@ -139,13 +145,13 @@ describe("parseCatalog: ошибки с понятными путями", () => 
   it("характеристики проверяются по их описанию", () => {
     const issues = issuesOf(
       variant((c) => {
-        c.products[0].attributes.kcal = 9000;
+        c.products[2].attributes.kcal = 9000;
         c.products[1].attributes.spicy = true;
       }),
     );
     expect(issues).toEqual(
       expect.arrayContaining([
-        { path: "products[0].attributes.kcal", message: "Не больше 5000" },
+        { path: "products[2].attributes.kcal", message: "Не больше 5000" },
         {
           path: "products[1].attributes.spicy",
           message: expect.stringMatching(/^Нет такой характеристики\. Есть: portion, kcal/),
@@ -155,8 +161,8 @@ describe("parseCatalog: ошибки с понятными путями", () => 
   });
 
   it("обязательная характеристика", () => {
-    const issues = issuesOf(variant((c) => (c.attributes[0].required = true)));
-    expect(issues.some((i) => i.path === "products[4].attributes.portion")).toBe(true);
+    const issues = issuesOf(variant((c) => (c.attributes[1].required = true)));
+    expect(issues.some((i) => i.path === "products[0].attributes.kcal")).toBe(true);
   });
 });
 

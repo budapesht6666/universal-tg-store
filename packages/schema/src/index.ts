@@ -1,6 +1,7 @@
 export * from "./catalog.ts";
 export * from "./errors.ts";
 export * from "./fields.ts";
+export * from "./geo.ts";
 export * from "./hours.ts";
 export * from "./json-schema.ts";
 export * from "./money.ts";

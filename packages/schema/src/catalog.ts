@@ -13,7 +13,7 @@ export const CATALOG_FORMAT_VERSION = 1;
 export const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const IdSchema = z.string().max(64).regex(ID_PATTERN, {
-  error: "id — латиница в нижнем регистре, цифры и дефис, например pho-bo",
+  error: "id — латиница в нижнем регистре, цифры и дефис, например borscht",
 });
 
 /** Сколько порций одного блюда можно положить в корзину. */

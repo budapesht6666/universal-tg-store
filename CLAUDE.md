@@ -49,6 +49,7 @@ pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест 
 - pnpm 11+: скрипты установки разрешаются через `allowBuilds` в `pnpm-workspace.yaml`. `onlyBuiltDependencies` удалён.
 - Biome 2.2+: чтобы исключить папку, пишем `!**/dir`, без `/**`.
 - TS 7: `types` по умолчанию `[]`, поэтому `@types/node` подключаем явно в tsconfig пакета.
+- Mini App: `readTextFromClipboard` работает только у ботов из меню вложений, поэтому ссылку на точку принимаем обычным полем ввода. Геопозиция — LocationManager (Bot API 8.0), отдаёт `horizontal_accuracy`. Короткие ссылки `maps.app.goo.gl` координат не содержат: сервер сам раскрывает перенаправление.
 
 ## Документация
 

@@ -7,7 +7,7 @@
       "label": "Порция",
       "type": "text",
       "maxLength": 40,
-      "placeholder": "400 г или 500 мл",
+      "placeholder": "450 мл, 1 кг или 1 обед",
       "showInCard": true
     },
     {
@@ -21,152 +21,128 @@
     }
   ],
   "categories": [
-    { "id": "soups", "title": "Супы", "sort": 10 },
-    { "id": "hot", "title": "Горячее", "sort": 20 },
-    { "id": "snacks", "title": "Закуски", "sort": 30 },
-    { "id": "drinks", "title": "Напитки", "sort": 40 }
+    { "id": "lunch", "title": "Обеды", "sort": 10 },
+    { "id": "soups", "title": "Супы", "sort": 20 },
+    { "id": "hot", "title": "Горячее", "sort": 30 },
+    { "id": "frozen", "title": "Заморозка", "sort": 40 },
+    { "id": "salads", "title": "Салаты", "sort": 50 },
+    { "id": "desserts", "title": "Десерты", "sort": 60 }
   ],
   "products": [
     {
-      "id": "pho-bo",
-      "title": "Фо бо",
-      "description": "Говяжий бульон, рисовая лапша, тонко нарезанная говядина, зелень, лайм и чили отдельно",
-      "price": 75000,
-      "categoryId": "soups",
+      "id": "lunch-set",
+      "title": "Комплексный обед",
+      "description": "Борщ, котлета с пюре, салат из свежей капусты",
+      "price": 160000,
+      "categoryId": "lunch",
       "badges": ["Хит"],
       "sort": 10,
-      "attributes": { "portion": "600 мл", "kcal": 450 }
+      "attributes": { "portion": "1 обед" }
     },
     {
-      "id": "pho-ga",
-      "title": "Фо га",
-      "description": "Куриный бульон, рисовая лапша, курица, зелёный лук, кинза",
-      "price": 65000,
-      "categoryId": "soups",
-      "sort": 20,
-      "attributes": { "portion": "600 мл", "kcal": 380 }
-    },
-    {
-      "id": "bun-bo-hue",
-      "title": "Бун бо Хюэ",
-      "description": "Пряный говяжий суп с лемонграссом, круглая рисовая лапша, говядина",
-      "price": 70000,
-      "categoryId": "soups",
-      "badges": ["Острое 🌶"],
-      "sort": 30,
-      "attributes": { "portion": "600 мл" }
-    },
-    {
-      "id": "tom-yum",
-      "title": "Том ям с креветками",
-      "description": "Кисло-острый суп на кокосовом молоке, креветки, грибы, рис отдельно",
-      "price": 95000,
-      "compareAtPrice": 110000,
-      "categoryId": "soups",
-      "badges": ["Острое 🌶"],
-      "sort": 40,
-      "attributes": { "portion": "500 мл" }
-    },
-    {
-      "id": "soup-of-the-day",
-      "title": "Суп дня",
-      "description": "Скрытое блюдо — пример: не показывается в меню",
-      "price": 50000,
-      "categoryId": "soups",
-      "isActive": false,
-      "sort": 50
-    },
-    {
-      "id": "bun-cha",
-      "title": "Бун ча",
-      "description": "Свинина на гриле, рисовая лапша, зелень и кисло-сладкий соус",
-      "price": 70000,
-      "categoryId": "hot",
-      "badges": ["Хит"],
-      "sort": 10,
-      "attributes": { "portion": "450 г", "kcal": 620 }
-    },
-    {
-      "id": "com-ga",
-      "title": "Ком га",
-      "description": "Рис с курицей, огурец, зелень, соус нуок мам",
-      "price": 60000,
-      "categoryId": "hot",
-      "sort": 20,
-      "attributes": { "portion": "400 г" }
-    },
-    {
-      "id": "bo-luc-lac",
-      "title": "Бо лук лак",
-      "description": "Кубики говядины с перцем и луком на сильном огне, рис, салат",
+      "id": "lunch-kids",
+      "title": "Обед для ребёнка",
+      "description": "Куриный суп, тефтели с гречкой. Без специй и соусов",
       "price": 120000,
-      "categoryId": "hot",
+      "categoryId": "lunch",
+      "badges": ["Детское"],
+      "sort": 20,
+      "attributes": { "portion": "1 обед" }
+    },
+    {
+      "id": "borscht",
+      "title": "Борщ с говядиной",
+      "description": "Со сметаной и чесночной пампушкой",
+      "price": 85000,
+      "compareAtPrice": 100000,
+      "categoryId": "soups",
+      "badges": ["Хит"],
+      "sort": 10,
+      "attributes": { "portion": "450 мл", "kcal": 420 }
+    },
+    {
+      "id": "solyanka",
+      "title": "Солянка мясная",
+      "description": "Копчёности, оливки, лимон. Пример стоп-листа: «Закончилось»",
+      "price": 95000,
+      "categoryId": "soups",
+      "available": false,
+      "sort": 20,
+      "attributes": { "portion": "450 мл" }
+    },
+    {
+      "id": "chicken-noodle-soup",
+      "title": "Куриный суп с лапшой",
+      "description": "Домашняя лапша, укроп",
+      "price": 70000,
+      "categoryId": "soups",
       "sort": 30,
+      "attributes": { "portion": "350 мл" }
+    },
+    {
+      "id": "cutlet-mash",
+      "title": "Котлета с картофельным пюре",
+      "description": "Котлета из свинины и говядины, пюре на сливочном масле",
+      "price": 110000,
+      "categoryId": "hot",
+      "sort": 10,
       "attributes": { "portion": "350 г" }
     },
     {
-      "id": "banh-xeo",
-      "title": "Баньсео",
-      "description": "Хрустящий рисовый блин с креветками, свининой и ростками фасоли",
-      "price": 55000,
+      "id": "golubtsy",
+      "title": "Голубцы",
+      "description": "Капустные листья с мясом и рисом в томатно-сметанном соусе",
+      "price": 120000,
       "categoryId": "hot",
-      "sort": 40,
-      "attributes": { "portion": "2 шт." }
-    },
-    {
-      "id": "nem-ran",
-      "title": "Нем ран",
-      "description": "Жареные роллы со свининой и грибами, соус для макания",
-      "price": 45000,
-      "categoryId": "snacks",
-      "sort": 10,
-      "attributes": { "portion": "5 шт." }
-    },
-    {
-      "id": "goi-cuon-tofu",
-      "title": "Свежие роллы с тофу",
-      "description": "Рисовая бумага, тофу, рисовая лапша, зелень, арахисовый соус",
-      "price": 45000,
-      "categoryId": "snacks",
-      "badges": ["Вег"],
       "sort": 20,
-      "attributes": { "portion": "4 шт." }
+      "attributes": { "portion": "3 шт." }
     },
     {
-      "id": "banh-mi",
-      "title": "Баньми с курицей",
-      "description": "Багет, курица, паштет, маринованные овощи, кинза. Пример стоп-листа: «Закончилось»",
-      "price": 35000,
-      "categoryId": "snacks",
-      "available": false,
-      "sort": 30
-    },
-    {
-      "id": "ca-phe-sua-da",
-      "title": "Кофе со сгущёнкой и льдом",
-      "description": "Вьетнамский кофе через фин, сгущённое молоко, лёд",
-      "price": 30000,
-      "categoryId": "drinks",
+      "id": "pelmeni",
+      "title": "Пельмени домашние",
+      "description": "Свинина и говядина, тонкое тесто. Варить 7 минут",
+      "price": 250000,
+      "categoryId": "frozen",
       "badges": ["Хит"],
       "sort": 10,
-      "attributes": { "portion": "300 мл" }
+      "attributes": { "portion": "1 кг" }
     },
     {
-      "id": "tra-chanh",
-      "title": "Чай с лаймом",
-      "description": "Холодный чёрный чай, лайм, немного сахара",
-      "price": 20000,
-      "categoryId": "drinks",
+      "id": "vareniki",
+      "title": "Вареники с картошкой",
+      "description": "С жареным луком. Варить 5 минут",
+      "price": 200000,
+      "categoryId": "frozen",
       "sort": 20,
-      "attributes": { "portion": "500 мл" }
+      "attributes": { "portion": "1 кг" }
     },
     {
-      "id": "coconut",
-      "title": "Кокос",
-      "description": "Молодой кокос, охлаждённый",
-      "price": 35000,
-      "categoryId": "drinks",
-      "sort": 30
+      "id": "olivier",
+      "title": "Оливье",
+      "description": "С варёной колбасой, домашний майонез",
+      "price": 75000,
+      "categoryId": "salads",
+      "sort": 10,
+      "attributes": { "portion": "250 г" }
+    },
+    {
+      "id": "vinegret",
+      "title": "Винегрет",
+      "description": "Свёкла, картофель, квашеная капуста, подсолнечное масло",
+      "price": 60000,
+      "categoryId": "salads",
+      "badges": ["Вег"],
+      "sort": 20,
+      "attributes": { "portion": "250 г" }
+    },
+    {
+      "id": "syrniki",
+      "title": "Сырники со сметаной",
+      "description": "Из домашнего творога, с ягодным вареньем",
+      "price": 80000,
+      "categoryId": "desserts",
+      "sort": 10,
+      "attributes": { "portion": "3 шт." }
     }
   ]
 }

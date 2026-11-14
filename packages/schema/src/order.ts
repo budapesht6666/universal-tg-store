@@ -3,6 +3,7 @@
  * Названия статусов — единственный словарь для магазина, админки и бота (docs/product-decisions.md).
  */
 import { IdSchema, MAX_QTY_PER_ITEM } from "./catalog.ts";
+import { DeliveryLocationSchema } from "./geo.ts";
 import type { Minor } from "./money.ts";
 import { phoneSchema } from "./phone.ts";
 import type { Settings } from "./settings.ts";
@@ -95,48 +96,6 @@ export const DELIVERY_FAILURE_LABELS: Record<DeliveryFailureReason, string> = {
   other: "Другое",
 };
 
-// ───────────── Точка на карте ─────────────
-
-const MAP_HOSTS = /^(maps\.app\.goo\.gl|goo\.gl|maps\.google\.[a-z.]+|(www\.)?google\.[a-z.]+)$/;
-
-/** Ссылка ведёт на Google Maps: короткая maps.app.goo.gl или google.com/maps, maps.google.com. */
-export function isGoogleMapsUrl(value: string): boolean {
-  if (!URL.canParse(value)) return false;
-  const url = new URL(value);
-  if (url.protocol !== "https:" && url.protocol !== "http:") return false;
-  const host = url.hostname.toLowerCase();
-  if (!MAP_HOSTS.test(host)) return false;
-  if (host === "goo.gl" || /^(www\.)?google\./.test(host)) return url.pathname.startsWith("/maps");
-  return true;
-}
-
-/** Ссылка на точку по координатам — так её собирает кнопка «Я сейчас здесь». */
-export function mapsUrlFromCoords(latitude: number, longitude: number): string {
-  return `https://maps.google.com/?q=${latitude.toFixed(6)},${longitude.toFixed(6)}`;
-}
-
-/**
- * Точка доставки. Из «Поделиться» в Google Maps часто приходит текст со ссылкой внутри
- * («Кафе Хоа — https://maps.app.goo.gl/…») — достаём первую ссылку.
- */
-export const MapLinkSchema = z
-  .string()
-  .trim()
-  .min(1, { error: "Добавьте точку на карте — так курьер быстрее вас найдёт" })
-  .transform((value, ctx) => {
-    const link = value.match(/https?:\/\/\S+/)?.[0] ?? value;
-    if (!isGoogleMapsUrl(link)) {
-      ctx.issues.push({
-        code: "custom",
-        input: value,
-        message:
-          "Нужна ссылка из Google Maps: поставьте точку, нажмите «Поделиться» → «Копировать ссылку»",
-      });
-      return z.NEVER;
-    }
-    return link;
-  });
-
 // ───────────── Оформление ─────────────
 
 export const OrderItemInputSchema = z.strictObject({
@@ -149,7 +108,8 @@ export const OrderItemInputSchema = z.strictObject({
 
 /**
  * Что присылает магазин при оформлении. Цен клиент не присылает: сервер берёт их из БД.
- * Форма фиксированная: имя, телефон, точка на карте, уточнение адреса, комментарий.
+ * Форма фиксированная: имя, телефон, точка на карте (координаты пина), уточнение адреса,
+ * комментарий. Ссылки клиент разбирает заранее (parseLocationText, короткие — через сервер).
  * Телефон нормализуется по коду страны магазина, поэтому схема строится от настроек.
  */
 export function createOrderInputSchema(settings: Pick<Settings, "region">) {
@@ -164,7 +124,7 @@ export function createOrderInputSchema(settings: Pick<Settings, "region">) {
     customer: z.strictObject({
       name: z.string().trim().min(1, { error: "Как к вам обращаться?" }).max(80),
       phone: phoneSchema(settings.region.phoneCode),
-      mapUrl: MapLinkSchema,
+      location: DeliveryLocationSchema,
       address: z
         .string()
         .trim()

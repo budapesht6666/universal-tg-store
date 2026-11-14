@@ -5,8 +5,6 @@ import {
   createOrderInputSchema,
   customerCancelMode,
   isFinalStatus,
-  isGoogleMapsUrl,
-  mapsUrlFromCoords,
   ORDER_STATUS_LABELS,
   ORDER_STATUSES,
   orderTotal,
@@ -61,31 +59,13 @@ describe("отмена", () => {
   });
 });
 
-describe("точка на карте", () => {
-  it("принимает ссылки Google Maps", () => {
-    expect(isGoogleMapsUrl("https://maps.app.goo.gl/AbC123")).toBe(true);
-    expect(isGoogleMapsUrl("https://www.google.com/maps/place/10.77,106.70")).toBe(true);
-    expect(isGoogleMapsUrl("https://maps.google.com/?q=10.776889,106.700806")).toBe(true);
-    expect(isGoogleMapsUrl("https://goo.gl/maps/xyz")).toBe(true);
-    expect(isGoogleMapsUrl("https://google.com/search?q=pho")).toBe(false);
-    expect(isGoogleMapsUrl("https://evil.com/maps.app.goo.gl")).toBe(false);
-    expect(isGoogleMapsUrl("javascript:alert(1)")).toBe(false);
-  });
-
-  it("кнопка «Я сейчас здесь» собирает ссылку по координатам", () => {
-    expect(mapsUrlFromCoords(10.7768889, 106.7008056)).toBe(
-      "https://maps.google.com/?q=10.776889,106.700806",
-    );
-  });
-});
-
 describe("оформление", () => {
   const schema = createOrderInputSchema({ region: regionFor("VN") });
   const items = [{ productId: "pho-bo", qty: 2 }];
   const customer = {
     name: "Анна",
     phone: "0912 345 678",
-    mapUrl: "Дом — https://maps.app.goo.gl/AbC123",
+    location: { lat: 15.8801, lng: 108.338, accuracy: 12, source: "gps" },
   };
 
   it("корзина: не пустая, без повторов, количество от 1 до 50", () => {
@@ -109,13 +89,13 @@ describe("оформление", () => {
     ).toBe("Не больше 50 порций одного блюда");
   });
 
-  it("нормализует телефон по стране магазина и достаёт ссылку из текста", () => {
+  it("нормализует телефон по стране магазина", () => {
     expect(schema.parse({ items, customer })).toEqual({
       items,
       customer: {
         name: "Анна",
         phone: "+84912345678",
-        mapUrl: "https://maps.app.goo.gl/AbC123",
+        location: { lat: 15.8801, lng: 108.338, accuracy: 12, source: "gps" },
         address: "",
         comment: "",
       },
@@ -124,17 +104,17 @@ describe("оформление", () => {
   });
 
   it("обязательные поля объясняют, зачем они", () => {
-    const r = schema.safeParse({ items, customer: { name: "", phone: "", mapUrl: "" } });
+    const r = schema.safeParse({ items, customer: { name: "", phone: "" } });
     expect(r.error?.issues.map((i) => [i.path.at(-1), i.message])).toEqual([
       ["name", "Как к вам обращаться?"],
       ["phone", "Без телефона курьер не сможет передать заказ"],
-      ["mapUrl", "Добавьте точку на карте — так курьер быстрее вас найдёт"],
+      ["location", "Поставьте точку на карте — так курьер быстрее вас найдёт"],
     ]);
-    const wrongLink = schema.safeParse({
+    const wrongPoint = schema.safeParse({
       items,
-      customer: { ...customer, mapUrl: "ул. Ле Лой, 5" },
+      customer: { ...customer, location: { lat: 95, lng: 108 } },
     });
-    expect(wrongLink.error?.issues[0]?.message).toMatch(/^Нужна ссылка из Google Maps/);
+    expect(wrongPoint.success).toBe(false);
   });
 
   it("сумма заказа", () => {
