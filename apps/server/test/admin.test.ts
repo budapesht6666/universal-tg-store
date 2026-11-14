@@ -225,3 +225,11 @@ describe("короткие ссылки Google Maps", () => {
     expect(notShort.status).toBe(400);
   });
 });
+
+describe("кеш статики", () => {
+  it("API не кешируется заголовком статики", async () => {
+    const t = setup();
+    const res = await t.app.request("/api/health");
+    expect(res.headers.get("cache-control")).toBeNull();
+  });
+});

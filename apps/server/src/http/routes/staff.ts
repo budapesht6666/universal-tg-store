@@ -2,7 +2,7 @@
 import { can, PauseInputSchema, pauseUntil, StaffOrderActionSchema } from "@store/schema";
 import { Hono } from "hono";
 import { AppError, parseInput } from "../../errors.ts";
-import { staffAction, staffBoard, staffView } from "../../orders/service.ts";
+import { getOrder, staffAction, staffBoard, staffView } from "../../orders/service.ts";
 import { getShop, setPause, statusOf } from "../../repo/settings.ts";
 import { staffWith } from "../../repo/team.ts";
 import { type AppEnv, requirePermission, requireUser } from "../auth.ts";
@@ -24,6 +24,17 @@ export const staffRoutes = new Hono<AppEnv>()
       pausedUntil: shop?.pausedUntil?.toISOString() ?? null,
       ...staffBoard(c.var.deps, user, mode),
     });
+  })
+
+  /** Один заказ — по кнопке «Открыть» из бота. Курьеру — только его доставки. */
+  .get("/staff/orders/:id", (c) => {
+    const user = requireUser(c);
+    const order = getOrder(c.var.deps.db, orderIdParam(c));
+    const manager = can(user.roles, "orders.manage");
+    if (!manager && !(can(user.roles, "delivery.work") && order.courierId === user.id)) {
+      throw new AppError(403, "Это не ваша доставка");
+    }
+    return c.json(staffView(c.var.deps.db, order, user));
   })
 
   .post("/staff/orders/:id/actions", async (c) => {

@@ -220,6 +220,10 @@ describe("менеджер и курьер", () => {
       name: `User${IVAN}`,
     });
 
+    expect((await t.call("GET", "/api/staff/orders/1001", { as: IVAN })).json.courier.id).toBe(
+      IVAN,
+    );
+    expect((await t.call("GET", "/api/staff/orders/1001", { as: ANNA })).status).toBe(403);
     const board = (await t.call("GET", "/api/staff/orders", { as: IVAN })).json;
     expect(board.mode).toBe("courier");
     expect(board.active.map((o: { id: number }) => o.id)).toEqual([1001]);

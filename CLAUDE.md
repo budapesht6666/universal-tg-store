@@ -11,7 +11,7 @@ pnpm 12 workspaces, TypeScript 7 (strict), Biome 2, Vitest.
 - `packages/schema` — **ядро**: zod-схемы формата каталога, FieldDefinition, `parseCatalog`, работа с деньгами, генерация JSON Schema.
 - `apps/server` — Hono, grammY (бот), Drizzle + better-sqlite3, sharp (загрузка картинок). Сервер раздаёт статику обоих SPA.
 - `apps/shop` — Mini App: React 19, Vite, Tailwind 4, `@tma.js/sdk-react`, TanStack Router/Query, Zustand.
-- `apps/admin` — веб-админка: React, shadcn/ui, react-hook-form + zod, TanStack Table.
+- `apps/admin` — админка (заказы на телефоне, меню/команда/настройки на компьютере): React, Tailwind, TanStack Router/Query.
 
 ## Команды
 
@@ -45,6 +45,10 @@ pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест 
 
 Подробно — `apps/shop/README.md`. Локально открывается в обычном браузере: сервер в `NODE_ENV=development` подписывает initData (`/api/dev/init-data`), магазин подменяет окружение Telegram. Типы ответов API берутся из сервера (`@store/server/api` + `hono/client`), запросы — обычным `fetch`.
 
+## apps/admin — как устроено
+
+Подробно — `apps/admin/README.md`. Одно приложение на `/admin` (Vite `base: "/admin/"`, роутер `basepath: "/admin"`): в Telegram — initData, в браузере — cookie после `/login`. Формы — на `useState` + схемы из `@store/schema` (без react-hook-form и shadcn: экранов мало, так быстрее); порядок — стрелками.
+
 ## Инварианты (не нарушать)
 
 1. **Деньги** — целые числа в минимальных единицах валюты (у донга дробной части нет: 65 000 ₫ = 65000; у рубля — копейки). Форматирование и ввод — только `formatMoney` / `toMinor` из `@store/schema`. Валюта задаётся при первой настройке и не меняется.
@@ -66,6 +70,7 @@ pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест 
 - TS 7: `types` по умолчанию `[]`, поэтому `@types/node` подключаем явно в tsconfig пакета.
 - `@tma.js/init-data-node` 2.x: `validate(raw, token, { expiresIn })` синхронный и бросает ошибку, `parse(raw)` отдаёт поля в snake_case (`user.first_name`), `sign()` — для тестов. `@tma.js/init-data` из примеров в документации — deprecated.
 - Hono: `serveStatic({ onFound })` вызывается после того, как ответ собран, — заголовки оттуда теряются; ставим их отдельным middleware после `next()`. `csrf()` отклоняет POST без `Content-Type` и без `Origin`, поэтому для запросов с `Authorization` её пропускаем (подделать заголовок чужой сайт не может).
+- Кеш статики (`src/app.ts`): HTML — `no-cache`, файлы сборки с хешем — `immutable`. Без этого после обновления браузер и WebView Telegram берут старый `index.html` со ссылками на удалённые файлы — пустая страница.
 - Ссылку входа из бота даём с токеном после `#`: превью ссылок в Telegram открывает URL и «сжёг» бы одноразовый токен из query.
 - `normalize("NFKD")` раскладывает «й» на «и» + знак: в `slugify` сначала транслит, потом снятие диакритики.
 - Карта: `tile.openstreetmap.org` из Вьетнама не открывается, растровые плитки CARTO теперь требуют ключ API. Берём MapLibre GL + OpenFreeMap (`tiles.openfreemap.org/styles/liberty`, без ключа). MapLibre v6 + Vite 8: воркер — `import("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url")` и `setWorkerUrl` (с `?url` в dev Vite вставляет в воркер свой клиент, и он падает). CSS MapLibre ставит контейнеру карты `position: relative` — классы позиционирования вешаем на обёртку.

@@ -1,0 +1,443 @@
+/**
+ * Карточка заказа на экране «Заказы». Раскрывается на месте: состав, сумма, контакты,
+ * кнопки Позвонить · Написать · Карта и одна большая кнопка следующего шага.
+ * Отмена и «Не получилось» — в меню «⋯».
+ */
+import {
+  CANCEL_REASON_LABELS,
+  CANCEL_REASONS,
+  type CancelReason,
+  DELIVERY_FAILURE_LABELS,
+  DELIVERY_FAILURE_REASONS,
+  type DeliveryFailureReason,
+  ORDER_STATUS_LABELS,
+  type StaffOrderAction,
+} from "@store/schema";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertTriangle,
+  ChevronDown,
+  Clock,
+  MapPin,
+  MessageCircle,
+  MoreHorizontal,
+  Phone,
+} from "lucide-react";
+import { useState } from "react";
+import { ApiError, api, type StaffOrder } from "../lib/api.ts";
+import { useMoney } from "../lib/session.ts";
+import { haptic, openExternal, openTelegram } from "../lib/telegram.ts";
+import { FieldError, PrimaryButton, SecondaryButton, Sheet } from "./ui.tsx";
+
+export type Mode = "manager" | "courier";
+
+export function waitingMinutes(iso: string, now = Date.now()): number {
+  return Math.max(0, Math.floor((now - new Date(iso).getTime()) / 60_000));
+}
+
+function portions(n: number) {
+  const m10 = n % 10;
+  const m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return `${n} порция`;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return `${n} порции`;
+  return `${n} порций`;
+}
+
+export function OrderCard({
+  order: o,
+  mode,
+  expanded,
+  onToggle,
+}: {
+  order: StaffOrder;
+  mode: Mode;
+  expanded: boolean;
+  onToggle?: () => void;
+}) {
+  const money = useMoney();
+  const queryClient = useQueryClient();
+  const [sheet, setSheet] = useState<null | "menu" | "cancel" | "fail" | "assign">(null);
+  const [error, setError] = useState<string | null>(null);
+  const count = o.items.reduce((n, i) => n + i.qty, 0);
+  const waiting = o.status === "new" ? waitingMinutes(o.createdAt) : null;
+  const finished = o.status === "done" || o.status === "cancelled";
+
+  const act = useMutation({
+    mutationFn: (a: StaffOrderAction) => api.action(o.id, a),
+    onMutate: () => setError(null),
+    onSuccess: (fresh) => {
+      haptic.success();
+      setSheet(null);
+      queryClient.setQueryData(["order", o.id], fresh);
+      void queryClient.invalidateQueries({ queryKey: ["board"] });
+    },
+    onError: (err) => {
+      haptic.error();
+      setError(err instanceof ApiError ? err.message : "Не получилось");
+      void queryClient.invalidateQueries({ queryKey: ["board"] });
+    },
+  });
+
+  // Главная кнопка: следующий шаг для этой роли.
+  let primary:
+    | { label: string; action: StaffOrderAction }
+    | { label: string; open: "assign" }
+    | null = null;
+  if (mode === "manager") {
+    if (o.status === "new") primary = { label: "Принять и готовить", action: { action: "accept" } };
+    else if (o.status === "processing" && !o.courier)
+      primary = { label: "Передать курьеру", open: "assign" };
+  } else {
+    if (o.status === "processing") primary = { label: "Забрал, еду", action: { action: "pickup" } };
+    else if (o.status === "shipping")
+      primary = { label: "Доставлен", action: { action: "deliver" } };
+  }
+
+  const highlight = o.status === "new" || o.cancelRequested || o.deliveryIssue;
+
+  if (!expanded) {
+    return (
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`flex w-full items-center gap-3 rounded-[18px] bg-card p-3.5 text-left ${
+          highlight ? "shadow-[inset_0_0_0_2px_var(--accent-soft)]" : ""
+        }`}
+      >
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <div className="flex items-center gap-2">
+            <span className="font-bold">#{o.id}</span>
+            <StatusChip order={o} waiting={waiting} />
+          </div>
+          <span className="truncate text-sm text-hint">
+            {o.customer.name} · {portions(count)}
+            {o.courier && mode === "manager" && !finished ? ` · ${o.courier.name}` : ""}
+          </span>
+        </div>
+        <span className="font-bold">{money(o.total)}</span>
+        <ChevronDown size={18} className="flex-none text-hint" />
+      </button>
+    );
+  }
+
+  return (
+    <article
+      className={`flex flex-col gap-3 rounded-[18px] bg-card p-3.5 ${
+        highlight ? "shadow-[inset_0_0_0_2px_var(--accent)]" : ""
+      }`}
+    >
+      <header className="flex items-center gap-2">
+        <button type="button" onClick={onToggle} className="flex items-center gap-2">
+          <span className="text-[17px] leading-[22px] font-bold">#{o.id}</span>
+          <StatusChip order={o} waiting={waiting} />
+        </button>
+        <span className="ml-auto text-[17px] font-bold">{money(o.total)}</span>
+        {!finished && (
+          <button
+            type="button"
+            aria-label="Ещё действия"
+            onClick={() => setSheet("menu")}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-hint"
+          >
+            <MoreHorizontal size={20} />
+          </button>
+        )}
+      </header>
+
+      {mode === "courier" && !finished && (
+        <div className="flex items-center justify-between rounded-xl bg-accent-soft px-3 py-2.5 text-accent-ink">
+          <span className="font-semibold">Получить при доставке</span>
+          <span className="text-[17px] font-bold">{money(o.total)}</span>
+        </div>
+      )}
+
+      {o.cancelRequested && (
+        <div className="flex items-center gap-2 rounded-xl bg-warn-bg px-3 py-2.5 text-sm text-warn-ink">
+          <AlertTriangle size={16} /> Покупатель просит отменить заказ
+        </div>
+      )}
+      {o.deliveryIssue && (
+        <div className="flex flex-col gap-0.5 rounded-xl bg-warn-bg px-3 py-2.5 text-sm text-warn-ink">
+          <span className="flex items-center gap-2 font-semibold">
+            <AlertTriangle size={16} /> Не получилось доставить
+          </span>
+          <span>
+            {o.deliveryIssue.text}
+            {o.deliveryIssue.by ? ` · ${o.deliveryIssue.by.name}` : ""}
+          </span>
+        </div>
+      )}
+
+      <ul className="m-0 flex list-none flex-col gap-1 p-0">
+        {o.items.map((i) => (
+          <li key={i.productId} className="flex gap-2">
+            <span className="w-7 flex-none font-bold">{i.qty}×</span>
+            <span className="flex-1">{i.title}</span>
+            <span className="text-hint">{money(i.price * i.qty)}</span>
+          </li>
+        ))}
+      </ul>
+
+      {o.customer.phone && (
+        <div className="flex flex-col gap-0.5 rounded-xl bg-page px-3 py-2.5 text-sm leading-[19px]">
+          <span>
+            <b>{o.customer.name}</b> · {o.customer.phone}
+            {o.customer.phoneFromTelegram && <span className="text-hint"> · из Telegram</span>}
+          </span>
+          {o.address && <span className="text-hint">{o.address}</span>}
+          {o.comment && <span className="text-hint">«{o.comment}»</span>}
+          {o.location?.accuracy && o.location.accuracy > 50 && (
+            <span className="text-warn-ink">
+              Точка неточная: ±{Math.round(o.location.accuracy)} м
+            </span>
+          )}
+        </div>
+      )}
+
+      {!finished && o.customer.phone && (
+        <div className={`grid gap-2 ${o.customer.username ? "grid-cols-3" : "grid-cols-2"}`}>
+          <a
+            href={`tel:${o.customer.phone}`}
+            className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-muted text-sm font-semibold text-ink"
+          >
+            <Phone size={16} /> Позвонить
+          </a>
+          {o.customer.username && (
+            <SecondaryButton onClick={() => openTelegram(`https://t.me/${o.customer.username}`)}>
+              <MessageCircle size={16} /> Написать
+            </SecondaryButton>
+          )}
+          {o.location && (
+            <SecondaryButton
+              tone={mode === "courier" ? "accent" : "plain"}
+              onClick={() => o.location && openExternal(o.location.mapsUrl)}
+            >
+              <MapPin size={16} /> Карта
+            </SecondaryButton>
+          )}
+        </div>
+      )}
+
+      {mode === "manager" && o.courier && !finished && (
+        <div className="flex items-center justify-between gap-2 text-sm">
+          <span className="text-hint">
+            Курьер: <b className="text-ink">{o.courier.name}</b>
+            {o.status === "processing" && " — заберёт, когда будет готово"}
+          </span>
+          {o.status === "processing" && (
+            <button
+              type="button"
+              className="font-semibold text-accent"
+              onClick={() => setSheet("assign")}
+            >
+              Сменить
+            </button>
+          )}
+        </div>
+      )}
+      {o.cancelReason && <span className="text-sm text-hint">{o.cancelReason}</span>}
+
+      {primary && (
+        <PrimaryButton
+          loading={act.isPending}
+          onClick={() =>
+            "action" in primary ? act.mutate(primary.action) : setSheet(primary.open)
+          }
+        >
+          {primary.label}
+        </PrimaryButton>
+      )}
+      <FieldError message={error ?? undefined} />
+
+      {sheet === "menu" && (
+        <Sheet title={`Заказ #${o.id}`} onClose={() => setSheet(null)}>
+          {mode === "manager" && o.status === "processing" && o.courier && (
+            <SecondaryButton onClick={() => act.mutate({ action: "pickup" })}>
+              Курьер забрал заказ
+            </SecondaryButton>
+          )}
+          {mode === "manager" && o.status === "shipping" && (
+            <SecondaryButton onClick={() => act.mutate({ action: "deliver" })}>
+              Отметить: доставлен
+            </SecondaryButton>
+          )}
+          {(o.status === "shipping" || o.status === "processing") && mode === "courier" && (
+            <SecondaryButton onClick={() => setSheet("fail")}>
+              Не получилось доставить
+            </SecondaryButton>
+          )}
+          {mode === "manager" && (
+            <SecondaryButton tone="danger" onClick={() => setSheet("cancel")}>
+              Отменить заказ
+            </SecondaryButton>
+          )}
+          <FieldError message={error ?? undefined} />
+        </Sheet>
+      )}
+      {sheet === "cancel" && (
+        <ReasonSheet
+          title={`Отменить заказ #${o.id}?`}
+          hint="Причина уйдёт покупателю"
+          reasons={CANCEL_REASONS}
+          labels={CANCEL_REASON_LABELS}
+          confirm="Отменить заказ"
+          pending={act.isPending}
+          error={error}
+          onClose={() => setSheet(null)}
+          onConfirm={(reason: CancelReason, comment) =>
+            act.mutate({ action: "cancel", reason, ...(comment && { comment }) })
+          }
+        />
+      )}
+      {sheet === "fail" && (
+        <ReasonSheet
+          title="Что случилось?"
+          hint="Заказ вернётся менеджеру"
+          reasons={DELIVERY_FAILURE_REASONS}
+          labels={DELIVERY_FAILURE_LABELS}
+          confirm="Сообщить менеджеру"
+          pending={act.isPending}
+          error={error}
+          onClose={() => setSheet(null)}
+          onConfirm={(reason: DeliveryFailureReason, comment) =>
+            act.mutate({ action: "fail", reason, ...(comment && { comment }) })
+          }
+        />
+      )}
+      {sheet === "assign" && (
+        <AssignSheet
+          current={o.courier?.id ?? null}
+          pending={act.isPending}
+          error={error}
+          onClose={() => setSheet(null)}
+          onPick={(courierId) => act.mutate({ action: "assign", courierId })}
+        />
+      )}
+    </article>
+  );
+}
+
+function StatusChip({ order: o, waiting }: { order: StaffOrder; waiting: number | null }) {
+  if (waiting !== null) {
+    return (
+      <span className="flex h-6 items-center gap-1 rounded-lg bg-accent-soft px-2 text-[13px] font-bold text-accent-ink">
+        <Clock size={13} /> ждёт {waiting} мин
+      </span>
+    );
+  }
+  const tone =
+    o.status === "cancelled"
+      ? "bg-muted text-hint"
+      : o.status === "done"
+        ? "bg-[#e3f2e7] text-[#17753a]"
+        : "bg-muted text-ink";
+  return (
+    <span className={`flex h-6 items-center rounded-lg px-2 text-[13px] font-semibold ${tone}`}>
+      {ORDER_STATUS_LABELS[o.status]}
+    </span>
+  );
+}
+
+function ReasonSheet<R extends string>({
+  title,
+  hint,
+  reasons,
+  labels,
+  confirm,
+  pending,
+  error,
+  onClose,
+  onConfirm,
+}: {
+  title: string;
+  hint: string;
+  reasons: readonly R[];
+  labels: Record<R, string>;
+  confirm: string;
+  pending: boolean;
+  error: string | null;
+  onClose: () => void;
+  onConfirm: (reason: R, comment: string) => void;
+}) {
+  const [reason, setReason] = useState<R | null>(null);
+  const [comment, setComment] = useState("");
+  return (
+    <Sheet title={title} onClose={onClose}>
+      <span className="text-[13px] text-hint">{hint}</span>
+      <div className="flex flex-col gap-2">
+        {reasons.map((r) => (
+          <button
+            key={r}
+            type="button"
+            onClick={() => setReason(r)}
+            className={`h-11 rounded-xl px-3.5 text-left font-medium ${
+              reason === r
+                ? "bg-accent-soft text-accent-ink shadow-[inset_0_0_0_2px_var(--accent)]"
+                : "bg-page"
+            }`}
+          >
+            {labels[r]}
+          </button>
+        ))}
+      </div>
+      {reason === "other" && (
+        <textarea
+          rows={2}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Опишите причину"
+          maxLength={500}
+          className="resize-none rounded-xl border border-line bg-card px-3.5 py-3 outline-none"
+        />
+      )}
+      <PrimaryButton
+        loading={pending}
+        disabled={!reason || (reason === "other" && !comment.trim())}
+        onClick={() => reason && onConfirm(reason, comment.trim())}
+      >
+        {confirm}
+      </PrimaryButton>
+      <FieldError message={error ?? undefined} />
+    </Sheet>
+  );
+}
+
+function AssignSheet({
+  current,
+  pending,
+  error,
+  onClose,
+  onPick,
+}: {
+  current: number | null;
+  pending: boolean;
+  error: string | null;
+  onClose: () => void;
+  onPick: (id: number) => void;
+}) {
+  const couriers = useQuery({ queryKey: ["couriers"], queryFn: api.couriers });
+  return (
+    <Sheet title="Кому передать?" onClose={onClose}>
+      {couriers.data?.couriers.length === 0 && (
+        <span className="text-sm text-hint">
+          Курьеров пока нет — пригласите в разделе «Команда».
+        </span>
+      )}
+      {couriers.data?.couriers.map((c) => (
+        <button
+          key={c.id}
+          type="button"
+          disabled={pending}
+          onClick={() => onPick(c.id)}
+          className={`h-12 rounded-xl px-3.5 text-left font-semibold ${
+            c.id === current ? "bg-accent-soft text-accent-ink" : "bg-page"
+          }`}
+        >
+          {c.name}
+          {c.id === current && " · сейчас"}
+        </button>
+      ))}
+      <FieldError message={error ?? undefined} />
+    </Sheet>
+  );
+}

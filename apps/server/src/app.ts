@@ -101,6 +101,19 @@ export function createApp(deps: Deps, options: AppOptions = {}) {
     }),
   );
 
+  // Кеш статики: файлы сборки с хешем в имени — навсегда; index.html — всегда свежий,
+  // иначе после обновления браузер (и WebView Telegram) грузит старый index.html со ссылками
+  // на удалённые файлы — и видна пустая страница.
+  app.use("*", async (c, next) => {
+    await next();
+    if (c.req.path.startsWith("/api/") || c.req.path.startsWith("/uploads/")) return;
+    if (/\/assets\/[^/]+-[\w-]{8,}\.\w+$/.test(c.req.path)) {
+      c.res.headers.set("Cache-Control", "public, max-age=31536000, immutable");
+    } else if (c.res.headers.get("content-type")?.startsWith("text/html")) {
+      c.res.headers.set("Cache-Control", "no-cache");
+    }
+  });
+
   // Собранные SPA: файлы как есть, остальные пути — index.html (маршрутизация на клиенте).
   if (existsSync(ADMIN_DIST)) {
     app.use(
