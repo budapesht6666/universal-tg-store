@@ -1,0 +1,29 @@
+# @store/shop
+
+Telegram Mini App покупателя: меню, корзина, оформление с точкой на карте, экран заказа, мои заказы.
+React 19 + Vite 8 + Tailwind 4, TanStack Router и Query, Zustand, `@tma.js/sdk-react`, MapLibre.
+
+```bash
+pnpm dev                              # из корня: сервер (:3000) и магазин (:5173)
+pnpm --filter @store/shop build       # dist/ раздаёт сервер по /
+```
+
+**Локально в браузере** магазин открывается без Telegram: при `NODE_ENV=development` сервер выдаёт подписанный initData (`/api/dev/init-data`), и магазин подменяет окружение Telegram (`mockTelegramEnv`). `API_URL=http://localhost:3997 pnpm dev` направит запросы на другой порт сервера.
+
+**В Telegram** нужен https: туннель (cloudflared) до порта Vite или сервера, адрес — в `PUBLIC_URL`.
+
+## Как устроено
+
+| Где                        | Что                                                                                     |
+| -------------------------- | --------------------------------------------------------------------------------------- |
+| `src/lib/telegram.ts`      | инициализация SDK, тема, «Назад», вибрация, телефон из Telegram, геопозиция             |
+| `src/lib/api.ts`           | запросы; типы ответов выводятся из маршрутов сервера (`@store/server/api`, hono/client) |
+| `src/lib/cart.ts`          | корзина и черновик оформления в localStorage                                            |
+| `src/lib/shop.ts`          | данные магазина, деньги, корзина, сверенная с меню, «Открыто до 22:00»                  |
+| `src/screens/`             | Меню · Корзина · Оформление · Заказ · Мои заказы                                        |
+| `src/components/MapPicker` | пин по центру карты; MapLibre + OpenFreeMap, грузится только на оформлении              |
+
+- Цвета — из темы Telegram (`--tg-theme-*`), от бренда только акцент: `src/index.css`, блок `:root`.
+- Город, где открывается карта, — `DEFAULT_CENTER` в `MapPicker.tsx`.
+- Проверка формы — той же схемой, что на сервере (`createOrderInputSchema`); ошибки сервера показываются у полей.
+- Своей шапки нет: «Назад» — нативная кнопка Telegram, главная кнопка экрана — внизу страницы, в цвет бренда.

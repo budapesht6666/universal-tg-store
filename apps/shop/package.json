@@ -1,0 +1,35 @@
+{
+  "name": "@store/shop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Telegram Mini App магазина: меню, корзина, оформление, мои заказы",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc -p . --noEmit"
+  },
+  "dependencies": {
+    "@store/schema": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "@tanstack/react-router": "catalog:",
+    "@tma.js/sdk-react": "catalog:",
+    "hono": "catalog:",
+    "lucide-react": "catalog:",
+    "maplibre-gl": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "zustand": "catalog:"
+  },
+  "devDependencies": {
+    "@store/server": "workspace:*",
+    "@tailwindcss/vite": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

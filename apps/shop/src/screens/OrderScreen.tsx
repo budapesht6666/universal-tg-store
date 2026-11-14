@@ -1,0 +1,202 @@
+/** Экран заказа: крупно — что сейчас и чего ждать, полоса прогресса, состав, отмена. */
+import { isFinalStatus, ORDER_FLOW, ORDER_STATUS_LABELS, type OrderStatus } from "@store/schema";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { Phone } from "lucide-react";
+import { useState } from "react";
+import { BottomBar, Screen, Spinner } from "../components/ui.tsx";
+import { api, type Order } from "../lib/api.ts";
+import { useMoney, useReadyShop } from "../lib/shop.ts";
+import { haptic } from "../lib/telegram.ts";
+
+const EXPECT: Record<OrderStatus, { title: string; text: (o: Order, sum: string) => string }> = {
+  new: {
+    title: "Заказ оформлен",
+    text: () => "Ждём, когда магазин примет заказ — обычно это пара минут.",
+  },
+  processing: { title: "Готовим", text: () => "Курьер привезёт, как только всё будет готово." },
+  shipping: { title: "Курьер в пути", text: (_o, sum) => `Приготовьте ${sum} — оплата курьеру.` },
+  done: { title: "Доставлен", text: () => "Приятного аппетита! Будем рады видеть снова." },
+  cancelled: { title: "Заказ отменён", text: (o) => o.cancelReason ?? "" },
+};
+
+function time(iso: string) {
+  return new Date(iso).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+}
+
+export function OrderScreen({ id }: { id: number }) {
+  const money = useMoney();
+  const shop = useReadyShop();
+  const queryClient = useQueryClient();
+  const [confirming, setConfirming] = useState(false);
+  const order = useQuery({
+    queryKey: ["order", id],
+    queryFn: () => api.order(id),
+    refetchInterval: (q) => (q.state.data && isFinalStatus(q.state.data.status) ? false : 15_000),
+  });
+  const cancel = useMutation({
+    mutationFn: () => api.cancelOrder(id),
+    onSuccess: (o) => {
+      haptic.success();
+      queryClient.setQueryData(["order", id], o);
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      setConfirming(false);
+    },
+    onError: () => haptic.error(),
+  });
+
+  if (order.isPending) return <Spinner />;
+  if (order.isError || !order.data) {
+    return (
+      <Screen>
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center text-hint">
+          {order.error?.message ?? "Заказ не найден"}
+          <Link to="/" className="font-semibold text-accent">
+            В меню
+          </Link>
+        </div>
+      </Screen>
+    );
+  }
+
+  const o = order.data;
+  const sum = money(o.total);
+  const step = ORDER_FLOW.indexOf(o.status as (typeof ORDER_FLOW)[number]);
+  const at = new Map(o.history.map((h) => [h.status, h.at]));
+  const expect = EXPECT[o.status];
+
+  return (
+    <Screen>
+      <div className="flex flex-col gap-4 p-4 pb-32">
+        <div className="flex flex-col gap-3 rounded-2xl bg-card p-4">
+          <span className="text-[13px] text-hint">
+            Заказ #{o.id} · {time(o.createdAt)}
+          </span>
+          <h1
+            className={`m-0 text-2xl leading-7 font-bold ${o.status === "cancelled" ? "text-hint" : ""}`}
+          >
+            {expect.title}
+          </h1>
+          <p className="m-0 text-[15px] text-ink">{expect.text(o, sum)}</p>
+          {o.status !== "cancelled" && (
+            <ol className="m-0 flex list-none gap-1.5 p-0" aria-label="Ход заказа">
+              {ORDER_FLOW.map((s, i) => (
+                <li key={s} className="flex flex-1 flex-col gap-1.5">
+                  <span className={`h-1.5 rounded-full ${i <= step ? "bg-accent" : "bg-muted"}`} />
+                  <span
+                    className={`text-[11px] leading-[14px] ${i <= step ? "font-semibold text-ink" : "text-hint"}`}
+                  >
+                    {ORDER_STATUS_LABELS[s]}
+                    {at.get(s) && (
+                      <span className="block font-normal text-hint">{time(at.get(s) ?? "")}</span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+          {o.cancelRequested && o.status !== "cancelled" && (
+            <span className="rounded-xl bg-warn-bg px-3 py-2 text-[13px] text-warn-ink">
+              Попросили отменить — магазин свяжется с вами
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-col rounded-2xl bg-card">
+          {o.items.map((i) => (
+            <div
+              key={i.productId}
+              className="flex justify-between gap-3 border-b border-line px-4 py-3"
+            >
+              <span>
+                {i.title} <span className="text-hint">× {i.qty}</span>
+              </span>
+              <span className="flex-none">{money(i.price * i.qty)}</span>
+            </div>
+          ))}
+          <div className="flex justify-between px-4 py-3 text-[17px] font-bold">
+            <span>Итого</span>
+            <span>{sum}</span>
+          </div>
+          <span className="px-4 pb-3 text-[13px] text-hint">
+            Доставка бесплатно · оплата курьеру при получении
+          </span>
+        </div>
+
+        <div className="flex flex-col gap-1 rounded-2xl bg-card px-4 py-3 text-[15px]">
+          <span className="text-[13px] text-hint">Доставка</span>
+          <span>
+            {o.name} · {o.phone}
+          </span>
+          {o.address && <span>{o.address}</span>}
+          {o.comment && <span className="text-hint">«{o.comment}»</span>}
+        </div>
+
+        <a
+          href={`tel:${shop.shop.phone}`}
+          className="flex h-11 items-center justify-center gap-2 rounded-xl bg-card font-semibold text-accent"
+        >
+          <Phone size={18} /> Позвонить в магазин
+        </a>
+        <span className="text-center text-[13px] text-hint">
+          Или напишите в чат с ботом — ответит менеджер
+        </span>
+
+        {o.cancelMode !== "none" && !(o.cancelMode === "request" && o.cancelRequested) && (
+          <div className="flex flex-col gap-2">
+            {confirming ? (
+              <div className="flex flex-col gap-2 rounded-2xl bg-card p-4">
+                <span className="font-semibold">
+                  {o.cancelMode === "cancel"
+                    ? "Отменить заказ?"
+                    : "Попросить магазин отменить заказ?"}
+                </span>
+                {o.cancelMode === "request" && (
+                  <span className="text-[13px] text-hint">
+                    Заказ уже готовят — менеджер свяжется с вами.
+                  </span>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => cancel.mutate()}
+                    disabled={cancel.isPending}
+                    className="h-11 flex-1 rounded-xl bg-danger font-semibold text-white disabled:opacity-60"
+                  >
+                    {o.cancelMode === "cancel" ? "Да, отменить" : "Да, попросить"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirming(false)}
+                    className="h-11 flex-1 rounded-xl bg-page font-semibold"
+                  >
+                    Нет
+                  </button>
+                </div>
+                {cancel.error && (
+                  <span className="text-[13px] text-danger">{cancel.error.message}</span>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirming(true)}
+                className="h-11 rounded-xl font-semibold text-danger"
+              >
+                {o.cancelMode === "cancel" ? "Отменить заказ" : "Попросить отменить"}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+      <BottomBar>
+        <Link
+          to="/"
+          className="flex h-[52px] items-center justify-center rounded-[14px] bg-accent-soft text-base font-semibold text-accent-ink"
+        >
+          В меню
+        </Link>
+      </BottomBar>
+    </Screen>
+  );
+}

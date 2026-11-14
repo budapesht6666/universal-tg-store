@@ -1,0 +1,180 @@
+/**
+ * Telegram Mini App: инициализация SDK, тема, кнопка «Назад», вибрация, телефон, геопозиция.
+ * Вне Telegram (локальная разработка в браузере) окружение подменяется: initData подписывает
+ * сервер (/api/dev/init-data, только NODE_ENV=development).
+ */
+import {
+  backButton,
+  hapticFeedback,
+  init,
+  isTMA,
+  locationManager,
+  miniApp,
+  mockTelegramEnv,
+  requestContactFp,
+  retrieveRawInitData,
+  swipeBehavior,
+  themeParams,
+  viewport,
+} from "@tma.js/sdk-react";
+
+let rawInitData = "";
+
+/** Не падаем, если метод не поддерживается этой версией Telegram. */
+function attempt(fn: () => unknown): void {
+  try {
+    const r = fn();
+    if (r instanceof Promise) r.catch(() => {});
+  } catch {
+    // метод недоступен — ничего страшного
+  }
+}
+
+async function mockOutsideTelegram(): Promise<void> {
+  const res = await fetch("/api/dev/init-data");
+  if (!res.ok) throw new Error("Откройте магазин из Telegram");
+  const initData = await res.text();
+  const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  mockTelegramEnv({
+    launchParams: {
+      tgWebAppData: initData,
+      tgWebAppVersion: "9.1",
+      tgWebAppPlatform: "tdesktop",
+      tgWebAppThemeParams: dark
+        ? {
+            bg_color: "#1c1c1e",
+            secondary_bg_color: "#000000",
+            text_color: "#ffffff",
+            hint_color: "#98989f",
+          }
+        : {
+            bg_color: "#ffffff",
+            secondary_bg_color: "#f2f2f7",
+            text_color: "#0b0b0c",
+            hint_color: "#6b6b73",
+          },
+    },
+  });
+}
+
+export async function initTelegram(): Promise<void> {
+  if (!(await isTMA("complete"))) {
+    if (!import.meta.env.DEV) throw new Error("Откройте магазин из Telegram");
+    await mockOutsideTelegram();
+  }
+  init();
+  rawInitData = retrieveRawInitData() ?? "";
+
+  attempt(() => {
+    miniApp.mount();
+    themeParams.bindCssVars();
+    miniApp.bindCssVars();
+  });
+  const applyScheme = () => {
+    document.documentElement.dataset.theme = miniApp.isDark() ? "dark" : "light";
+  };
+  attempt(() => {
+    applyScheme();
+    miniApp.isDark.sub(applyScheme);
+  });
+  attempt(() => miniApp.setHeaderColor("bg_color"));
+  attempt(() => miniApp.setBgColor("secondary_bg_color"));
+  attempt(() => miniApp.setBottomBarColor("secondary_bg_color"));
+  attempt(async () => {
+    await viewport.mount();
+    viewport.bindCssVars();
+    viewport.expand();
+  });
+  // Карту двигают пальцем: вертикальный свайп не должен закрывать приложение.
+  attempt(() => {
+    swipeBehavior.mount();
+    swipeBehavior.disableVertical();
+  });
+  attempt(() => backButton.mount());
+  attempt(() => miniApp.ready());
+}
+
+export function authHeader(): Record<string, string> {
+  return rawInitData ? { authorization: `tma ${rawInitData}` } : {};
+}
+
+export function setBackButton(visible: boolean, onClick: () => void): () => void {
+  let off = () => {};
+  attempt(() => {
+    if (visible) {
+      backButton.show();
+      off = backButton.onClick(onClick);
+    } else {
+      backButton.hide();
+    }
+  });
+  return () => off();
+}
+
+export const haptic = {
+  tap: () => attempt(() => hapticFeedback.impactOccurred("light")),
+  success: () => attempt(() => hapticFeedback.notificationOccurred("success")),
+  error: () => attempt(() => hapticFeedback.notificationOccurred("error")),
+};
+
+/** Номер из Telegram (кнопка «Взять из Telegram»). null — отказ или не поддерживается. */
+export async function requestPhone(): Promise<string | null> {
+  try {
+    const r = await requestContactFp({ timeout: 60_000 })();
+    return r._tag === "Right" ? r.right.contact.phone_number : null;
+  } catch {
+    return null;
+  }
+}
+
+export type GpsResult =
+  | { ok: true; lat: number; lng: number; accuracy: number | undefined }
+  | { ok: false; reason: "unsupported" | "denied" | "unavailable" };
+
+/** «Я сейчас здесь»: геопозиция через Telegram (Bot API 8.0), с погрешностью. */
+export async function requestGps(): Promise<GpsResult> {
+  try {
+    if (!locationManager.isSupported()) return browserGps();
+    if (!locationManager.isMounted()) await locationManager.mount();
+    if (!locationManager.isAvailable()) return { ok: false, reason: "unavailable" };
+    const loc = await locationManager.requestLocation({ timeout: 30_000 });
+    if (!loc) {
+      return { ok: false, reason: locationManager.isAccessGranted() ? "unavailable" : "denied" };
+    }
+    return {
+      ok: true,
+      lat: loc.latitude,
+      lng: loc.longitude,
+      accuracy: loc.horizontal_accuracy ?? undefined,
+    };
+  } catch {
+    return { ok: false, reason: "unavailable" };
+  }
+}
+
+export function openLocationSettings(): void {
+  attempt(() => locationManager.openSettings());
+}
+
+/** Старые версии Telegram и браузер при разработке — обычный Geolocation API. */
+function browserGps(): Promise<GpsResult> {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) return resolve({ ok: false, reason: "unsupported" });
+    navigator.geolocation.getCurrentPosition(
+      (p) =>
+        resolve({
+          ok: true,
+          lat: p.coords.latitude,
+          lng: p.coords.longitude,
+          accuracy: p.coords.accuracy,
+        }),
+      (e) =>
+        resolve({ ok: false, reason: e.code === e.PERMISSION_DENIED ? "denied" : "unavailable" }),
+      { enableHighAccuracy: true, timeout: 20_000 },
+    );
+  });
+}
+
+export function closeApp(): void {
+  attempt(() => miniApp.close());
+}

@@ -41,6 +41,10 @@ pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест 
 - Смена статуса — условный `UPDATE … WHERE status = <ожидаемый>`. better-sqlite3 синхронный и с одним соединением: запросы к `db` внутри `db.transaction(() => …)` идут в той же транзакции.
 - После правки `src/db/schema.ts` — `pnpm --filter @store/server db:generate`, миграция применяется при запуске.
 
+## apps/shop — как устроено
+
+Подробно — `apps/shop/README.md`. Локально открывается в обычном браузере: сервер в `NODE_ENV=development` подписывает initData (`/api/dev/init-data`), магазин подменяет окружение Telegram. Типы ответов API берутся из сервера (`@store/server/api` + `hono/client`), запросы — обычным `fetch`.
+
 ## Инварианты (не нарушать)
 
 1. **Деньги** — целые числа в минимальных единицах валюты (у донга дробной части нет: 65 000 ₫ = 65000; у рубля — копейки). Форматирование и ввод — только `formatMoney` / `toMinor` из `@store/schema`. Валюта задаётся при первой настройке и не меняется.
@@ -64,6 +68,8 @@ pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест 
 - Hono: `serveStatic({ onFound })` вызывается после того, как ответ собран, — заголовки оттуда теряются; ставим их отдельным middleware после `next()`. `csrf()` отклоняет POST без `Content-Type` и без `Origin`, поэтому для запросов с `Authorization` её пропускаем (подделать заголовок чужой сайт не может).
 - Ссылку входа из бота даём с токеном после `#`: превью ссылок в Telegram открывает URL и «сжёг» бы одноразовый токен из query.
 - `normalize("NFKD")` раскладывает «й» на «и» + знак: в `slugify` сначала транслит, потом снятие диакритики.
+- Карта: `tile.openstreetmap.org` из Вьетнама не открывается, растровые плитки CARTO теперь требуют ключ API. Берём MapLibre GL + OpenFreeMap (`tiles.openfreemap.org/styles/liberty`, без ключа). MapLibre v6 + Vite 8: воркер — `import("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url")` и `setWorkerUrl` (с `?url` в dev Vite вставляет в воркер свой клиент, и он падает). CSS MapLibre ставит контейнеру карты `position: relative` — классы позиционирования вешаем на обёртку.
+- `@tma.js/sdk` 3.x: цвет фона — `miniApp.setBgColor`, а не `setBackgroundColor`. `requestContact` типизирован как TaskEither — удобнее `requestContactFp(...)()` и проверка `_tag === "Right"`.
 - Mini App: `readTextFromClipboard` работает только у ботов из меню вложений, поэтому ссылку на точку принимаем обычным полем ввода. Геопозиция — LocationManager (Bot API 8.0), отдаёт `horizontal_accuracy`. Короткие ссылки `maps.app.goo.gl` координат не содержат: сервер сам раскрывает перенаправление.
 
 ## Документация
