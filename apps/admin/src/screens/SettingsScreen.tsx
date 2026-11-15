@@ -21,6 +21,7 @@ import {
   Toggle,
 } from "../components/ui.tsx";
 import { ApiError, api, type Settings } from "../lib/api.ts";
+import { atUsername, fromAtInput } from "../lib/telegram.ts";
 
 export function SettingsScreen() {
   const settings = useQuery({ queryKey: ["settings"], queryFn: api.settings });
@@ -122,8 +123,8 @@ function SettingsForm({ initial }: { initial: Settings }) {
             </div>
             <TextField
               label="Telegram менеджера — необязательно"
-              value={shop.manager ?? ""}
-              onChange={(manager) => setShop({ ...shop, manager })}
+              value={atUsername(shop.manager)}
+              onChange={(v) => setShop({ ...shop, manager: fromAtInput(v) })}
               placeholder="@pechka_manager"
               autoCapitalize="none"
               autoCorrect="off"

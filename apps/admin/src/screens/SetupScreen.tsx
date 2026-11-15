@@ -17,7 +17,7 @@ import {
   TextField,
 } from "../components/ui.tsx";
 import { ApiError, api } from "../lib/api.ts";
-import { openTelegram } from "../lib/telegram.ts";
+import { atUsername, fromAtInput, openTelegram } from "../lib/telegram.ts";
 
 export function SetupScreen() {
   const navigate = useNavigate();
@@ -116,8 +116,8 @@ export function SetupScreen() {
           />
           <TextField
             label="Telegram менеджера — необязательно"
-            value={manager}
-            onChange={setManager}
+            value={atUsername(manager)}
+            onChange={(v) => setManager(fromAtInput(v))}
             placeholder="@pechka_manager"
             autoCapitalize="none"
             autoCorrect="off"

@@ -405,14 +405,6 @@ function DoneColumn({
           ))}
         </div>
       )}
-      {mode === "manager" && orders.some((o) => o.review) && (
-        <p className="m-0 flex flex-col px-1 text-xs leading-[17px] text-hint">
-          <span>
-            Новый отзыв подсвечен, пока заказ не раскрыли. Звука нет — это не новый заказ.
-          </span>
-          <span>Курьеру отзывы не показываются.</span>
-        </p>
-      )}
       {delivered.length > 0 && (
         <p className="m-0 px-1 text-xs leading-[17px] text-hint">
           Доставлено: {delivered.length} · {money(delivered.reduce((s, o) => s + o.total, 0))}

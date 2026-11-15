@@ -4,6 +4,8 @@
  * - в браузере на компьютере — вход по cookie после ссылки из /login;
  * - локально в браузере без cookie — подписанный сервером initData (/api/dev/init-data).
  */
+
+import { normalizeTelegramUsername } from "@store/schema";
 import {
   backButton,
   hapticFeedback,
@@ -194,4 +196,17 @@ export async function copyText(text: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * Поле «Telegram менеджера»: храним имя без @, в поле показываем с @ — как в подсказке
+ * и плейсхолдере. Ссылку t.me/… сразу превращаем в имя.
+ */
+export function atUsername(stored: string | undefined): string {
+  return stored ? `@${stored}` : "";
+}
+
+export function fromAtInput(input: string): string {
+  const raw = input.trim().replace(/^@+/, "");
+  return /t(?:elegram)?\.me\//i.test(raw) ? (normalizeTelegramUsername(raw) ?? raw) : raw;
 }
