@@ -77,6 +77,12 @@ pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест 
 - `@tma.js/sdk` 3.x: цвет фона — `miniApp.setBgColor`, а не `setBackgroundColor`. `requestContact` типизирован как TaskEither — удобнее `requestContactFp(...)()` и проверка `_tag === "Right"`.
 - Mini App: `readTextFromClipboard` работает только у ботов из меню вложений, поэтому ссылку на точку принимаем обычным полем ввода. Геопозиция — LocationManager (Bot API 8.0), отдаёт `horizontal_accuracy`. Короткие ссылки `maps.app.goo.gl` координат не содержат: сервер сам раскрывает перенаправление.
 
+## Прод
+
+- https://pechka.p1gog.duckdns.org (админка — `/admin`), бот @pechka_hoian_bot, вебхук.
+- Сервер — общий VPS по скиллу `vps-ops` (`ssh vps`, Токио): приложение `pechka` в `/srv/apps/pechka` (`.env` там же, база и фото — `data/`). Выкатка: push в `main`, затем `ssh vps 'vps deploy pechka'`; логи — `vps logs pechka`.
+- Локальный сервер с боевым токеном бота не запускается (вебхук занят): для разработки — тестовый бот или `BOT_MODE=off`.
+
 ## Документация
 
 `README.md` — быстрый старт и адаптация шаблона. `docs/catalog-format.md` — формат JSON-каталога.
