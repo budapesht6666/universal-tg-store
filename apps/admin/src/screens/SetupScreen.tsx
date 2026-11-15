@@ -14,6 +14,7 @@ import {
   PrimaryButton,
   SecondaryButton,
   Spinner,
+  scrollToFirstError,
   TextField,
 } from "../components/ui.tsx";
 import { ApiError, api } from "../lib/api.ts";
@@ -41,6 +42,7 @@ export function SetupScreen() {
     },
     onError: (err) => {
       if (err instanceof ApiError) setErrors(issuesToErrors(err.issues));
+      scrollToFirstError();
     },
   });
 

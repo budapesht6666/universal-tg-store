@@ -20,6 +20,7 @@ import {
   issuesToErrors,
   PrimaryButton,
   SecondaryButton,
+  scrollToFirstError,
   TEXTAREA,
   TextField,
   Toggle,
@@ -108,6 +109,7 @@ export function ProductForm({
     onError: (err) => {
       if (err instanceof ApiError && err.issues.length) setErrors(issuesToErrors(err.issues));
       else setErrors({ form: err.message });
+      scrollToFirstError();
     },
   });
 

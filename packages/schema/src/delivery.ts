@@ -66,9 +66,12 @@ export function inDeliveryZone(zone: DeliveryZone, point: GeoPoint): boolean {
   return zone.circles.some((c) => distanceKm(c, point) <= c.radiusKm);
 }
 
-/** Строка для покупателя: «Доставка: Дананг и Хойан». null — зона выключена или без названия. */
-export function deliveryAreaLine(zone: DeliveryZone): string | null {
-  return zone.enabled && zone.label ? `Доставка: ${zone.label}` : null;
+/**
+ * Строка для покупателя: «Доставка: Дананг и Хойан». Зависит только от названия: его можно
+ * показывать и без ограничения заказов кругами. null — названия нет.
+ */
+export function deliveryAreaLine(zone: Pick<DeliveryZone, "label">): string | null {
+  return zone.label ? `Доставка: ${zone.label}` : null;
 }
 
 /** Почему заказ сюда не оформить. */

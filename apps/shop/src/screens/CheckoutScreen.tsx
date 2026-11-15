@@ -140,7 +140,7 @@ export function CheckoutScreen() {
           title="Куда привезти"
           hint={[
             "Курьер приедет туда, где стоит пин. Поставьте его на свой вход.",
-            zone.enabled && zone.label ? `Доставляем: ${zone.label}.` : null,
+            zone.label ? `Доставляем: ${zone.label}.` : null,
           ]}
         >
           <LocationField

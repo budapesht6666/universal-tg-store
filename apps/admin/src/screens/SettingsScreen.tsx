@@ -19,6 +19,7 @@ import {
   issuesToErrors,
   PrimaryButton,
   Spinner,
+  scrollToFirstError,
   TEXTAREA,
   TextField,
   Toggle,
@@ -69,12 +70,14 @@ function SettingsForm({ initial }: { initial: Settings }) {
       void queryClient.invalidateQueries({ queryKey: ["shop"] });
       void queryClient.invalidateQueries({ queryKey: ["board"] });
     },
-    onError: (err) =>
+    onError: (err) => {
       setErrors(
         err instanceof ApiError && err.issues.length
           ? issuesToErrors(err.issues)
           : { form: err.message },
-      ),
+      );
+      scrollToFirstError();
+    },
   });
 
   const region = initial.region;

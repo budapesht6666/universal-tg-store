@@ -40,6 +40,8 @@ describe("зона доставки", () => {
     expect(inDeliveryZone(off, HUE)).toBe(true);
     expect(deliveryAreaLine(off)).toBeNull();
     expect(deliveryAreaLine(zone)).toBe("Доставка: Дананг и Хойан");
+    // Название показываем и без ограничения заказов кругами.
+    expect(deliveryAreaLine({ ...off, label: "Дананг и Хойан" })).toBe("Доставка: Дананг и Хойан");
   });
 
   it("включённая зона без кругов — ошибка", () => {

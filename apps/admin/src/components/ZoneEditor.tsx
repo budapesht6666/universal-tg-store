@@ -242,7 +242,9 @@ export function ZoneEditor({
   };
 
   const remove = (i: number) => {
-    onChange({ ...value, circles: value.circles.filter((_, j) => j !== i) });
+    const circles = value.circles.filter((_, j) => j !== i);
+    // Без кругов ограничивать заказы нечем — зона выключается сама.
+    onChange({ ...value, circles, enabled: value.enabled && circles.length > 0 });
     setSelected(0);
   };
 
@@ -251,9 +253,15 @@ export function ZoneEditor({
   return (
     <div className="flex flex-col gap-3.5">
       <div className="flex items-center gap-3">
-        <span className="flex-1 font-semibold">Принимать заказы только в зоне</span>
+        <div className="flex flex-1 flex-col">
+          <span className="font-semibold">Принимать заказы только в зоне</span>
+          {value.circles.length === 0 && (
+            <span className="text-xs text-hint">Сначала добавьте круг на карте</span>
+          )}
+        </div>
         <Toggle
           checked={value.enabled}
+          disabled={value.circles.length === 0 && !value.enabled}
           onChange={(enabled) => onChange({ ...value, enabled })}
           label="Принимать заказы только в зоне"
         />
@@ -284,7 +292,7 @@ export function ZoneEditor({
             onChange={(label) => onChange({ ...value, label })}
             placeholder="Дананг и Хойан"
             maxLength={60}
-            hint={`В шапке магазина и на карте: «Доставка: ${value.label || "…"}».`}
+            hint={`В шапке магазина: «Доставка: ${value.label || "…"}». Показывается, даже если заказы не ограничены кругами.`}
             error={errors["delivery.label"]}
           />
           <div className="flex flex-col gap-1.5">

@@ -139,7 +139,20 @@ export function Section({
 
 export function FieldError({ message }: { message: string | undefined }) {
   if (!message) return null;
-  return <span className="text-[13px] leading-[18px] text-danger">{message}</span>;
+  return (
+    <span data-field-error className="text-[13px] leading-[18px] text-danger">
+      {message}
+    </span>
+  );
+}
+
+/** После неудачного сохранения — прокрутить к первой ошибке (она появляется после рендера). */
+export function scrollToFirstError(): void {
+  requestAnimationFrame(() =>
+    document
+      .querySelector("[data-field-error]")
+      ?.scrollIntoView({ behavior: "smooth", block: "center" }),
+  );
 }
 
 export function Screen({ children }: { children: ReactNode }) {
