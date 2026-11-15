@@ -81,7 +81,6 @@ export const staff = sqliteTable("staff", {
     .references(() => users.id),
   roles: text("roles", { mode: "json" }).$type<Role[]>().notNull(),
   active: bool("active").notNull().default(true),
-  phone: text("phone"),
   createdAt: ms("created_at").notNull(),
 });
 
@@ -92,8 +91,6 @@ export const invites = sqliteTable("invites", {
   createdBy: integer("created_by").notNull(),
   createdAt: ms("created_at").notNull(),
   expiresAt: ms("expires_at").notNull(),
-  /** Кто открыл ссылку и должен поделиться номером. */
-  claimedBy: integer("claimed_by"),
   usedBy: integer("used_by"),
   usedAt: ms("used_at"),
 });

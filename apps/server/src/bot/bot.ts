@@ -2,19 +2,18 @@
  * Бот: /start (меню, первая настройка, приглашение в команду), /login (вход на компьютере),
  * кнопки в уведомлениях («Принять», «Забрал, еду», «Доставлен») и переписка покупателя
  * с магазином: сообщение покупателя уходит менеджерам, ответ менеджера — покупателю.
- * Писать можно только по заказу в работе (и сутки после него) — иначе бот вежливо отказывает.
+ * Писать можно только по заказу в работе (и 2 часа после доставки) — иначе бот вежливо отказывает.
  */
-import { can, normalizePhone, type StaffOrderActionName } from "@store/schema";
+import { can, type StaffOrderActionName } from "@store/schema";
 import { and, eq } from "drizzle-orm";
-import { Bot, type Context, InlineKeyboard, Keyboard } from "grammy";
+import { Bot, type Context, InlineKeyboard } from "grammy";
 import { botMessages, orders } from "../db/schema.ts";
 import type { Deps } from "../deps.ts";
 import { AppError } from "../errors.ts";
 import { chatOrder, staffAction } from "../orders/service.ts";
 import { getShop } from "../repo/settings.ts";
 import {
-  claimInvite,
-  completeInvite,
+  acceptInvite,
   createLoginToken,
   displayName,
   rolesOf,
@@ -83,24 +82,29 @@ export function createBot(deps: Deps): Bot {
     const payload = ctx.match.trim();
 
     if (payload.startsWith("inv_")) {
+      let joined: ReturnType<typeof acceptInvite>;
       try {
-        const role = claimInvite(db, env, payload.slice(4), ctx.from.id, deps.now());
-        const shopName = getShop(db)?.settings.shop.name ?? "магазин";
-        await ctx.reply(
-          `Вас приглашают в «${esc(shopName)}» — ${roleLabel(role)}.\nПоделитесь номером: по нему с вами свяжутся по заказам.`,
-          {
-            parse_mode: "HTML",
-            reply_markup: new Keyboard()
-              .requestContact("📱 Поделиться номером")
-              .oneTime()
-              .resized(),
-          },
-        );
+        joined = acceptInvite(db, env, payload.slice(4), ctx.from.id, deps.now());
       } catch (err) {
         await ctx.reply(
           err instanceof AppError ? err.message : "Не получилось открыть приглашение",
         );
+        return;
       }
+      const shopName = getShop(db)?.settings.shop.name ?? "магазин";
+      // remove_keyboard — убрать кнопку «Поделиться номером» из старых приглашений.
+      await ctx.reply(
+        `Готово, вы в команде «${esc(shopName)}» — ${roleLabel(joined.role)}.\nЗаказы — кнопка «Заказы» внизу.`,
+        { parse_mode: "HTML", reply_markup: { remove_keyboard: true } },
+      );
+      await setStaffMenuButton(ctx, deps);
+      await ctx.api
+        .sendMessage(
+          joined.createdBy,
+          `👋 ${esc(displayName({ firstName: ctx.from.first_name, lastName: ctx.from.last_name ?? null }))} в команде — ${roleLabel(joined.role)}`,
+          { parse_mode: "HTML", disable_notification: true },
+        )
+        .catch(() => {});
       return;
     }
 
@@ -142,39 +146,6 @@ export function createBot(deps: Deps): Bot {
       `Ссылка для входа в админку на компьютере — действует 5 минут, один раз:\n${esc(url)}\n\nНикому её не пересылайте.`,
       { parse_mode: "HTML", link_preview_options: { is_disabled: true } },
     );
-  });
-
-  pm.on("message:contact", async (ctx) => {
-    const contact = ctx.message.contact;
-    if (contact.user_id !== ctx.from.id) {
-      await ctx.reply("Отправьте свой номер кнопкой ниже.");
-      return;
-    }
-    const code = getShop(db)?.settings.region.phoneCode ?? "84";
-    const phone =
-      normalizePhone(contact.phone_number, code) ?? `+${contact.phone_number.replace(/\D/g, "")}`;
-    const joined = completeInvite(db, ctx.from.id, phone, deps.now());
-    if (!joined) {
-      await ctx.reply("Спасибо!", { reply_markup: { remove_keyboard: true } });
-      return;
-    }
-    await ctx.reply(
-      `Готово, вы в команде — ${roleLabel(joined.role)}. Заказы — кнопка «Заказы» внизу.`,
-      {
-        reply_markup: { remove_keyboard: true },
-      },
-    );
-    await setStaffMenuButton(ctx, deps);
-    await ctx.api
-      .sendMessage(
-        joined.createdBy,
-        `👋 ${esc(displayName({ firstName: ctx.from.first_name, lastName: ctx.from.last_name ?? null }))} в команде — ${roleLabel(joined.role)}`,
-        {
-          parse_mode: "HTML",
-          disable_notification: true,
-        },
-      )
-      .catch(() => {});
   });
 
   bot.callbackQuery(/^([apd]):(\d+)$/, async (ctx) => {

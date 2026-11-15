@@ -1,6 +1,6 @@
 /**
  * «Команда»: кто работает, роли, выключить доступ, пригласить курьера или менеджера
- * одноразовой ссылкой на 24 часа (человек открывает её в Telegram и делится номером).
+ * одноразовой ссылкой на 24 часа (человек открывает её в Telegram — и сразу в команде).
  */
 import { type InviteRole, ROLE_LABELS } from "@store/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,7 +8,6 @@ import { Copy, Send, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { FieldError, SecondaryButton, Spinner, Toggle } from "../components/ui.tsx";
 import { api, type Invite, type Member } from "../lib/api.ts";
-import { usePhone } from "../lib/session.ts";
 import { openTelegram } from "../lib/telegram.ts";
 
 export function TeamScreen() {
@@ -65,7 +64,7 @@ export function TeamScreen() {
           </h2>
           <p className="m-0 flex flex-col text-[13px] leading-[18px] text-hint">
             <span>Ссылка одноразовая, на 24 часа.</span>
-            <span>Человек открывает её в Telegram, делится номером — и он в команде.</span>
+            <span>Человек открывает её в Telegram — и сразу в команде.</span>
           </p>
           <div className="grid grid-cols-2 gap-2">
             {/* Курьеров зовут чаще — их кнопка главная (макет AdminTeamMvp). */}
@@ -139,7 +138,6 @@ function InviteLink({ link, role }: { link: string; role: InviteRole }) {
 function MemberRow({ member: m }: { member: Member }) {
   const queryClient = useQueryClient();
   const isOwner = m.roles.includes("owner");
-  const phone = usePhone();
   const update = useMutation({
     mutationFn: (body: { roles?: InviteRole[]; active?: boolean }) => api.updateMember(m.id, body),
     onSuccess: () => {
@@ -173,7 +171,6 @@ function MemberRow({ member: m }: { member: Member }) {
           {m.active
             ? m.roles.map((r) => ROLE_LABELS[r]).join(", ") || "Без роли"
             : "Доступ выключен"}
-          {m.phone ? ` · ${phone(m.phone)}` : ""}
         </span>
       </div>
       <div className="flex flex-wrap gap-1.5 lg:w-[200px]">

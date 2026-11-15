@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { settings } from "../src/db/schema.ts";
 import { dueReminders, dueWaitingNotices } from "../src/orders/service.ts";
-import { claimInvite, completeInvite, createInvite } from "../src/repo/team.ts";
+import { acceptInvite, createInvite } from "../src/repo/team.ts";
 import {
   ANNA,
   IVAN,
@@ -17,8 +17,7 @@ import {
 async function addCourier(t: TestCtx, id: number) {
   await t.call("GET", "/api/me", { as: id }); // пользователь появился в БД
   const { token } = createInvite(t.deps.db, t.env, "courier", OWNER, NOON);
-  claimInvite(t.deps.db, t.env, token, id, NOON);
-  completeInvite(t.deps.db, id, "+84900000001", NOON);
+  acceptInvite(t.deps.db, t.env, token, id, NOON);
 }
 
 describe("первая настройка", () => {

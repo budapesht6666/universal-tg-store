@@ -22,6 +22,13 @@
       "when": 1794754408171,
       "tag": "0002_order_waiting_notice",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794758580920,
+      "tag": "0003_staff_no_phone",
+      "breakpoints": true
     }
   ]
 }

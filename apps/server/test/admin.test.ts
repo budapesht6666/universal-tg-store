@@ -1,6 +1,12 @@
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
-import { createLoginToken } from "../src/repo/team.ts";
+import {
+  acceptInvite,
+  createInvite,
+  createLoginToken,
+  rolesOf,
+  upsertUser,
+} from "../src/repo/team.ts";
 import { ANNA, NOON, OWNER, openShop, PUBLIC_URL, setup } from "./helpers.ts";
 
 describe("меню в админке", () => {
@@ -122,6 +128,22 @@ describe("меню в админке", () => {
 });
 
 describe("команда", () => {
+  it("по ссылке — сразу в команде, без номера; второй раз ссылка не работает", async () => {
+    const t = setup();
+    await openShop(t);
+    upsertUser(t.deps.db, { id: ANNA, firstName: "Анна" }, NOON); // в боте — middleware
+    const { token } = createInvite(t.deps.db, t.env, "courier", OWNER, NOON);
+    expect(acceptInvite(t.deps.db, t.env, token, ANNA, NOON)).toEqual({
+      role: "courier",
+      createdBy: OWNER,
+    });
+    expect(rolesOf(t.deps.db, t.env, ANNA)).toEqual(["courier"]);
+    expect(() => acceptInvite(t.deps.db, t.env, token, 777, NOON)).toThrow(/устарела/);
+    const late = createInvite(t.deps.db, t.env, "manager", OWNER, NOON);
+    const dayLater = new Date(NOON.getTime() + 25 * 3600_000);
+    expect(() => acceptInvite(t.deps.db, t.env, late.token, ANNA, dayLater)).toThrow(/устарела/);
+  });
+
   it("приглашение — ссылка на бота, роль владельца не выдать", async () => {
     const t = setup();
     await openShop(t);

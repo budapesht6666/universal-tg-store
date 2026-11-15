@@ -95,7 +95,7 @@ a{color:#8F3520}a:hover{color:#6E2817}
         </h2>
         <p style="margin: 0; display: flex; flex-direction: column; font-size: 13px; line-height: 18px; color: #52525B">
           <span>Ссылка одноразовая, на 24 часа.</span>
-          <span>Человек открывает её в Telegram, делится номером — и он в команде.</span>
+          <span>Человек открывает её в Telegram — и сразу в команде.</span>
         </p>
         <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
           <button style="height: 40px; border: 0; border-radius: 8px; background: #B5482A; color: #FFFFFF; font-weight: 600; cursor: pointer">Курьера</button>
@@ -133,10 +133,10 @@ class Component extends DCLogic {
     return {
       nav: nav,
       members: [
-        m('Павел', '@pavel', 'Владелец · +84 39 338 55 04', [role('Владелец', true, true), role('Курьер', true)], { canToggle: false, avatarBg: '#FBE9E2', avatarFg: '#8F3520' }),
-        m('Лан', '@lan_hoian', 'Менеджер · +84 90 111 22 33', [role('Менеджер', true), role('Курьер', false)]),
-        m('Минь', '', 'Курьер · +84 93 444 55 66 · в команде с 15 ноября', [role('Менеджер', false), role('Курьер', true)]),
-        m('Туан', '@tuan_bike', 'Доступ выключен · +84 98 777 88 99', [role('Менеджер', false), role('Курьер', true)], { active: 'false', track: '#D4D4D8', knob: '3px', opacity: '0.55' })
+        m('Павел', '@pavel', 'Владелец', [role('Владелец', true, true), role('Курьер', true)], { canToggle: false, avatarBg: '#FBE9E2', avatarFg: '#8F3520' }),
+        m('Лан', '@lan_hoian', 'Менеджер', [role('Менеджер', true), role('Курьер', false)]),
+        m('Минь', '', 'Курьер · в команде с 15 ноября', [role('Менеджер', false), role('Курьер', true)]),
+        m('Туан', '@tuan_bike', 'Доступ выключен', [role('Менеджер', false), role('Курьер', true)], { active: 'false', track: '#D4D4D8', knob: '3px', opacity: '0.55' })
       ]
     };
   }

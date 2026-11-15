@@ -72,7 +72,6 @@ export type StaffMember = {
   id: number;
   name: string;
   username: string | null;
-  phone: string | null;
   roles: Role[];
   active: boolean;
 };
@@ -87,7 +86,6 @@ export function listStaff(db: Db, env: Env): StaffMember[] {
       id: s.userId,
       name: displayName(u),
       username: u.username,
-      phone: s.phone,
       roles:
         s.userId === env.OWNER_TELEGRAM_ID && !s.roles.includes("owner")
           ? ["owner", ...s.roles]
@@ -142,56 +140,37 @@ export function createInvite(db: Db, env: Env, role: InviteRole, createdBy: numb
   return { token, expiresAt };
 }
 
-/** Человек открыл ссылку-приглашение: запоминаем его и ждём номер телефона. */
-export function claimInvite(
+/** Человек открыл ссылку-приглашение — сразу в команде. Ссылка одноразовая. */
+export function acceptInvite(
   db: Db,
   env: Env,
   token: string,
   userId: number,
   now: Date,
-): InviteRole {
-  const row = db
-    .select()
-    .from(invites)
-    .where(eq(invites.tokenHash, hashToken(token, env.SESSION_SECRET)))
-    .get();
-  if (!row || row.usedAt || row.expiresAt <= now) {
-    throw new AppError(409, "Ссылка-приглашение устарела. Попросите новую");
-  }
-  if (row.claimedBy !== null && row.claimedBy !== userId) {
-    throw new AppError(409, "По этой ссылке уже присоединился другой человек");
-  }
-  db.update(invites).set({ claimedBy: userId }).where(eq(invites.tokenHash, row.tokenHash)).run();
-  return row.role;
-}
-
-/** Номер получен — человек в команде. null — открытого приглашения нет. */
-export function completeInvite(
-  db: Db,
-  userId: number,
-  phone: string,
-  now: Date,
-): { role: InviteRole; createdBy: number } | null {
+): { role: InviteRole; createdBy: number } {
   return db.transaction((tx) => {
     const row = tx
-      .select()
-      .from(invites)
-      .where(and(eq(invites.claimedBy, userId), isNull(invites.usedAt), gt(invites.expiresAt, now)))
-      .get();
-    if (!row) return null;
-    tx.update(invites)
+      .update(invites)
       .set({ usedBy: userId, usedAt: now })
-      .where(eq(invites.tokenHash, row.tokenHash))
-      .run();
+      .where(
+        and(
+          eq(invites.tokenHash, hashToken(token, env.SESSION_SECRET)),
+          isNull(invites.usedAt),
+          gt(invites.expiresAt, now),
+        ),
+      )
+      .returning()
+      .get();
+    if (!row) throw new AppError(409, "Ссылка-приглашение устарела. Попросите новую");
     const existing = tx.select().from(staff).where(eq(staff.userId, userId)).get();
     if (existing) {
       const roles = existing.roles.includes(row.role)
         ? existing.roles
         : [...existing.roles, row.role];
-      tx.update(staff).set({ roles, active: true, phone }).where(eq(staff.userId, userId)).run();
+      tx.update(staff).set({ roles, active: true }).where(eq(staff.userId, userId)).run();
     } else {
       tx.insert(staff)
-        .values({ userId, roles: [row.role], active: true, phone, createdAt: now })
+        .values({ userId, roles: [row.role], active: true, createdAt: now })
         .run();
     }
     return { role: row.role, createdBy: row.createdBy };
