@@ -61,7 +61,7 @@ describe("переписка покупателя с магазином", () => 
     expect(toManager(sent)).toEqual([]);
     const replies = sent.filter((s) => s.method === "sendMessage" && s.payload.chat_id === ANNA);
     expect(replies).toHaveLength(1);
-    expect(replies[0]?.payload.text).toContain("для вопросов по заказу в работе");
+    expect(replies[0]?.payload.text).toContain("для вопросов по текущему заказу");
     expect(replies[0]?.payload.text).toContain(
       "напишите менеджеру: @pechka_manager — ответит в рабочее время, как только освободится",
     );
@@ -74,7 +74,7 @@ describe("переписка покупателя с магазином", () => 
     ).toHaveLength(2);
   });
 
-  it("по заказу в работе — уходит менеджеру; после доставки — нет, отвечает бот", async () => {
+  it("по заказу — уходит менеджеру; 2 часа после доставки — тоже, потом — нет", async () => {
     const t = setup();
     await openShop(t);
     await t.call("POST", "/api/orders", { as: ANNA, body: ORDER_BODY });
@@ -87,13 +87,30 @@ describe("переписка покупателя с магазином", () => 
     for (const action of ["accept", "pickup", "deliver"]) {
       await t.call("POST", "/api/staff/orders/1001/actions", { as: OWNER, body: { action } });
     }
-    const before = toManager(sent).length;
+    t.clock.now = new Date(NOON.getTime() + 119 * 60_000);
+    await write(ANNA, "привезли не тот соус");
+    expect(toManager(sent)).toHaveLength(4);
+    expect((await t.call("GET", "/api/orders/1001", { as: ANNA })).json.chatOpen).toBe(true);
+
+    t.clock.now = new Date(NOON.getTime() + 121 * 60_000);
     await write(ANNA, "спасибо, всё вкусно");
-    expect(toManager(sent)).toHaveLength(before);
+    expect(toManager(sent)).toHaveLength(4);
     const last = sent
       .filter((s) => s.method === "sendMessage" && s.payload.chat_id === ANNA)
       .at(-1);
     expect(last?.payload.text).toContain("@pechka_manager");
+    expect((await t.call("GET", "/api/orders/1001", { as: ANNA })).json.chatOpen).toBe(false);
+  });
+
+  it("после отмены менеджеру не уходит сразу", async () => {
+    const t = setup();
+    await openShop(t);
+    await t.call("POST", "/api/orders", { as: ANNA, body: ORDER_BODY });
+    await t.call("POST", "/api/orders/1001/cancel", { as: ANNA });
+    const { sent, write } = await botWithFakeApi(t);
+
+    await write(ANNA, "почему отменили?");
+    expect(toManager(sent)).toEqual([]);
     expect((await t.call("GET", "/api/orders/1001", { as: ANNA })).json.chatOpen).toBe(false);
   });
 });

@@ -232,7 +232,7 @@ export function createBot(deps: Deps): Bot {
 
     const shop = getShop(db);
     if (!shop) return;
-    const lastOrder = chatOrder(db, ctx.from.id);
+    const lastOrder = chatOrder(db, ctx.from.id, deps.now());
     if (!lastOrder) {
       // Без заказа менеджерам не пишем — иначе бот превращается в канал для спама.
       const now = deps.now().getTime();
@@ -242,7 +242,7 @@ export function createBot(deps: Deps): Bot {
       const { manager } = shop.settings.shop;
       await ctx.reply(
         [
-          "Здравствуйте! Этот чат — для вопросов по заказу в работе, остальные сообщения менеджер здесь не получает.",
+          "Здравствуйте! Этот чат — для вопросов по текущему заказу, остальные сообщения менеджер здесь не получает.",
           manager
             ? `По другим вопросам напишите менеджеру: @${esc(manager)} — ответит в рабочее время, как только освободится.`
             : null,
