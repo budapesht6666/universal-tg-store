@@ -88,6 +88,22 @@ describe("первая настройка", () => {
     expect(r.status).toBe(200);
     expect(r.json.shop.manager).toBe("pechka_manager");
   });
+
+  it("старое приветствие «напишите сюда» уточняется: пишут только по заказу", async () => {
+    const t = setup();
+    await t.call("POST", "/api/setup", { as: OWNER, body: SETUP_BODY });
+    const row = t.deps.db.select().from(settings).get();
+    if (!row) throw new Error("нет настроек");
+    const greeting = "Привет!\n\nЕсть вопрос? Просто напишите сюда — ответит менеджер.";
+    t.deps.db
+      .update(settings)
+      .set({ data: { ...row.data, shop: { ...row.data.shop, greeting } } })
+      .run();
+    const saved = (await t.call("GET", "/api/admin/settings", { as: OWNER })).json;
+    expect(saved.shop.greeting).toBe(
+      "Привет!\n\nВопрос по заказу? Напишите сюда — ответит менеджер.",
+    );
+  });
 });
 
 describe("вход", () => {

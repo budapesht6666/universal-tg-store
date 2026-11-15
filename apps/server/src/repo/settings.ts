@@ -14,14 +14,23 @@ export function getShop(db: Db): ShopState | null {
   return { settings: parsed.success ? parsed.data : row.data, pausedUntil: row.pausedUntil };
 }
 
-/** Убранные поля старых настроек. Иначе strictObject отверг бы их, и сохранить настройки было бы нельзя. */
+/** Строка старого приветствия по умолчанию: обещала ответ на любой вопрос, а пишут теперь только по заказу. */
+const OLD_GREETING_LINE = "Есть вопрос? Просто напишите сюда — ответит менеджер.";
+const NEW_GREETING_LINE = "Вопрос по заказу? Напишите сюда — ответит менеджер.";
+
+/**
+ * Старые настройки → текущий формат. Убранные поля отрезаем, иначе strictObject отверг бы их,
+ * и сохранить настройки было бы нельзя.
+ */
 function upgrade(data: unknown): unknown {
   if (typeof data !== "object" || data === null || !("shop" in data)) return data;
-  const shop = data.shop;
-  if (typeof shop !== "object" || shop === null || !("phone" in shop)) return data;
+  if (typeof data.shop !== "object" || data.shop === null) return data;
   // Телефон магазина больше не храним и не показываем (15.11.2026) — контакт теперь shop.manager.
-  const { phone: _phone, ...rest } = shop;
-  return { ...data, shop: rest };
+  const { phone: _phone, ...shop } = data.shop as Record<string, unknown>;
+  if (typeof shop.greeting === "string") {
+    shop.greeting = shop.greeting.replace(OLD_GREETING_LINE, NEW_GREETING_LINE);
+  }
+  return { ...data, shop };
 }
 
 export function saveSettings(db: Db, data: Settings, now: Date): void {

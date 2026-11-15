@@ -71,31 +71,31 @@ export const shopRoutes = new Hono<AppEnv>()
   .post("/orders", async (c) => {
     const user = requireUser(c);
     const order = createOrder(c.var.deps, user.id, await jsonBody(c));
-    return c.json(customerView(c.var.deps.db, order, c.var.deps.now()), 201);
+    return c.json(customerView(c.var.deps.db, order), 201);
   })
 
   .get("/orders", (c) => {
     const user = requireUser(c);
-    return c.json({ orders: listCustomerOrders(c.var.deps.db, user.id, c.var.deps.now()) });
+    return c.json({ orders: listCustomerOrders(c.var.deps.db, user.id) });
   })
 
   .get("/orders/:id", (c) => {
     const user = requireUser(c);
     const order = getOrder(c.var.deps.db, orderIdParam(c));
     if (order.customerId !== user.id) throw new AppError(404, "Заказ не найден");
-    return c.json(customerView(c.var.deps.db, order, c.var.deps.now()));
+    return c.json(customerView(c.var.deps.db, order));
   })
 
   /** «Отменить» (пока «Оформлен») или «Попросить отменить» — сервер решает сам. */
   .post("/orders/:id/cancel", (c) => {
     const user = requireUser(c);
     const order = customerCancel(c.var.deps, user.id, orderIdParam(c));
-    return c.json(customerView(c.var.deps.db, order, c.var.deps.now()));
+    return c.json(customerView(c.var.deps.db, order));
   })
 
   /** Оценка и отзыв после доставки. */
   .post("/orders/:id/review", async (c) => {
     const user = requireUser(c);
     const order = customerReview(c.var.deps, user.id, orderIdParam(c), await jsonBody(c));
-    return c.json(customerView(c.var.deps.db, order, c.var.deps.now()));
+    return c.json(customerView(c.var.deps.db, order));
   });

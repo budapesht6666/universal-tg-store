@@ -27,8 +27,8 @@ import { esc, roleLabel, shopAppUrl, staffAppUrl, webAppButton } from "./texts.t
 const CUSTOMER_COMMANDS = [{ command: "start", description: "Меню и как заказать" }];
 const LOGIN_COMMAND = { command: "login", description: "Админка на компьютере" };
 
-/** Отказ «пишите по заказу» — не чаще раза в 10 минут одному человеку. */
-const NO_ORDER_REPLY_EVERY_MS = 10 * 60 * 1000;
+/** Автоответ без заказа — не чаще раза в минуту одному человеку (поток сообщений не плодит ответы). */
+const NO_ORDER_REPLY_EVERY_MS = 60 * 1000;
 
 const CALLBACK_ACTIONS: Record<string, StaffOrderActionName> = {
   a: "accept",
@@ -232,7 +232,7 @@ export function createBot(deps: Deps): Bot {
 
     const shop = getShop(db);
     if (!shop) return;
-    const lastOrder = chatOrder(db, ctx.from.id, deps.now());
+    const lastOrder = chatOrder(db, ctx.from.id);
     if (!lastOrder) {
       // Без заказа менеджерам не пишем — иначе бот превращается в канал для спама.
       const now = deps.now().getTime();
@@ -242,9 +242,11 @@ export function createBot(deps: Deps): Bot {
       const { manager } = shop.settings.shop;
       await ctx.reply(
         [
-          "Писать магазину можно по текущему заказу — тогда сообщение сразу увидит менеджер.",
-          "Чтобы заказать, нажмите «Меню» внизу.",
-          manager ? `Другой вопрос — напишите менеджеру: @${esc(manager)}` : null,
+          "Здравствуйте! Этот чат — для вопросов по заказу в работе, остальные сообщения менеджер здесь не получает.",
+          manager
+            ? `По другим вопросам напишите менеджеру: @${esc(manager)} — ответит в рабочее время, как только освободится.`
+            : null,
+          "Сделать заказ — кнопка «Меню» внизу.",
         ]
           .filter(Boolean)
           .join("\n"),

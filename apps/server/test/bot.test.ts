@@ -51,7 +51,7 @@ const toManager = (sent: Sent[]) =>
   );
 
 describe("переписка покупателя с магазином", () => {
-  it("без заказа менеджеру не уходит, отказ — не чаще раза в 10 минут", async () => {
+  it("без заказа менеджеру не уходит, бот отвечает контактом менеджера — не чаще раза в минуту", async () => {
     const t = setup();
     await openShop(t);
     const { sent, write } = await botWithFakeApi(t);
@@ -61,18 +61,20 @@ describe("переписка покупателя с магазином", () => 
     expect(toManager(sent)).toEqual([]);
     const replies = sent.filter((s) => s.method === "sendMessage" && s.payload.chat_id === ANNA);
     expect(replies).toHaveLength(1);
-    expect(replies[0]?.payload.text).toContain("Писать магазину можно по текущему заказу");
-    expect(replies[0]?.payload.text).toContain("напишите менеджеру: @pechka_manager");
+    expect(replies[0]?.payload.text).toContain("для вопросов по заказу в работе");
+    expect(replies[0]?.payload.text).toContain(
+      "напишите менеджеру: @pechka_manager — ответит в рабочее время, как только освободится",
+    );
     expect(replies[0]?.payload.text).not.toContain("+84");
 
-    t.clock.now = new Date(NOON.getTime() + 11 * 60_000);
+    t.clock.now = new Date(NOON.getTime() + 61_000);
     await write(ANNA, "алло");
     expect(
       sent.filter((s) => s.method === "sendMessage" && s.payload.chat_id === ANNA),
     ).toHaveLength(2);
   });
 
-  it("по заказу — уходит менеджеру; сутки после доставки — тоже, потом — нет", async () => {
+  it("по заказу в работе — уходит менеджеру; после доставки — нет, отвечает бот", async () => {
     const t = setup();
     await openShop(t);
     await t.call("POST", "/api/orders", { as: ANNA, body: ORDER_BODY });
@@ -85,14 +87,13 @@ describe("переписка покупателя с магазином", () => 
     for (const action of ["accept", "pickup", "deliver"]) {
       await t.call("POST", "/api/staff/orders/1001/actions", { as: OWNER, body: { action } });
     }
-    t.clock.now = new Date(NOON.getTime() + 23 * 3600_000);
-    await write(ANNA, "привезли не тот соус");
-    expect(toManager(sent)).toHaveLength(4);
-    expect((await t.call("GET", "/api/orders/1001", { as: ANNA })).json.chatOpen).toBe(true);
-
-    t.clock.now = new Date(NOON.getTime() + 25 * 3600_000);
-    await write(ANNA, "спасибо");
-    expect(toManager(sent)).toHaveLength(4);
+    const before = toManager(sent).length;
+    await write(ANNA, "спасибо, всё вкусно");
+    expect(toManager(sent)).toHaveLength(before);
+    const last = sent
+      .filter((s) => s.method === "sendMessage" && s.payload.chat_id === ANNA)
+      .at(-1);
+    expect(last?.payload.text).toContain("@pechka_manager");
     expect((await t.call("GET", "/api/orders/1001", { as: ANNA })).json.chatOpen).toBe(false);
   });
 });

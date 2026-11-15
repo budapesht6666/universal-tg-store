@@ -16,6 +16,7 @@ import {
   isFinalStatus,
   mapsUrlFromCoords,
   ORDER_STATUS_LABELS,
+  ORDER_STATUSES,
   type OrderItemSnapshot,
   OrderReviewInputSchema,
   type OrderStatus,
@@ -36,27 +37,26 @@ export type OrderRow = typeof orders.$inferSelect;
 export type Actor = { id: number; roles: Role[] };
 
 /**
- * Писать магазину через бота можно, пока заказ в работе, и сутки после доставки или отмены
- * («привезли не то»). Без заказа сообщения менеджерам не уходят — защита от спама.
+ * Писать магазину через бота можно, только пока заказ в работе. После доставки или отмены и без
+ * заказа сообщения менеджерам не уходят — защита от спама; бот сам отвечает контактом менеджера.
  */
-export const CHAT_AFTER_CLOSE_MS = 24 * 60 * 60 * 1000;
-
-export function chatOpen(order: Pick<OrderRow, "status" | "updatedAt">, now: Date): boolean {
-  return (
-    !isFinalStatus(order.status) || now.getTime() - order.updatedAt.getTime() < CHAT_AFTER_CLOSE_MS
-  );
+export function chatOpen(order: Pick<OrderRow, "status">): boolean {
+  return !isFinalStatus(order.status);
 }
 
-/** Последний заказ покупателя, если по нему ещё можно писать магазину. */
-export function chatOrder(db: Db, customerId: number, now: Date): OrderRow | null {
-  const last = db
-    .select()
-    .from(orders)
-    .where(eq(orders.customerId, customerId))
-    .orderBy(desc(orders.createdAt))
-    .limit(1)
-    .get();
-  return last && chatOpen(last, now) ? last : null;
+const ACTIVE_STATUSES = ORDER_STATUSES.filter((s) => !isFinalStatus(s));
+
+/** Последний заказ покупателя в работе — по нему можно писать магазину. */
+export function chatOrder(db: Db, customerId: number): OrderRow | null {
+  return (
+    db
+      .select()
+      .from(orders)
+      .where(and(eq(orders.customerId, customerId), inArray(orders.status, ACTIVE_STATUSES)))
+      .orderBy(desc(orders.createdAt))
+      .limit(1)
+      .get() ?? null
+  );
 }
 
 /** Напоминание менеджерам о непринятом заказе — каждые 3 минуты. */
@@ -449,7 +449,7 @@ function reviewOf(order: OrderRow) {
 }
 
 /** Заказ глазами покупателя. */
-export function customerView(db: Db, order: OrderRow, now: Date) {
+export function customerView(db: Db, order: OrderRow) {
   const shop = getShop(db);
   const reviewsOn = shop?.settings.features.reviews ?? false;
   return {
@@ -470,7 +470,7 @@ export function customerView(db: Db, order: OrderRow, now: Date) {
     review: reviewOf(order),
     canReview: reviewsOn && order.status === "done" && order.rating === null,
     /** Можно ли сейчас написать магазину в чат с ботом. */
-    chatOpen: chatOpen(order, now),
+    chatOpen: chatOpen(order),
     history: history(db, order.id)
       .filter((e) => e.type === "status" || e.type === "created")
       .map((e) => ({ status: e.status, at: e.createdAt.toISOString() })),
@@ -478,7 +478,7 @@ export function customerView(db: Db, order: OrderRow, now: Date) {
 }
 export type CustomerOrderView = ReturnType<typeof customerView>;
 
-export function listCustomerOrders(db: Db, customerId: number, now: Date) {
+export function listCustomerOrders(db: Db, customerId: number) {
   return db
     .select()
     .from(orders)
@@ -486,7 +486,7 @@ export function listCustomerOrders(db: Db, customerId: number, now: Date) {
     .orderBy(desc(orders.createdAt))
     .limit(30)
     .all()
-    .map((o) => customerView(db, o, now));
+    .map((o) => customerView(db, o));
 }
 
 /** Данные последнего заказа — чтобы второй заказ оформлялся одним нажатием. */
