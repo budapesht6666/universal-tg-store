@@ -81,7 +81,7 @@ function SettingsForm({ initial }: { initial: Settings }) {
         <label className="flex flex-col gap-1.5">
           <span className="text-[13px] text-hint">Приветствие бота на /start</span>
           <textarea
-            rows={3}
+            rows={8}
             value={shop.greeting}
             onChange={(e) => setShop({ ...shop, greeting: e.target.value })}
             maxLength={1000}
@@ -89,6 +89,29 @@ function SettingsForm({ initial }: { initial: Settings }) {
           />
           <FieldError message={errors["shop.greeting"]} />
         </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[13px] text-hint">
+            Описание бота — видно в пустом чате до первого /start
+          </span>
+          <textarea
+            rows={8}
+            value={shop.botDescription}
+            onChange={(e) => setShop({ ...shop, botDescription: e.target.value })}
+            maxLength={512}
+            className="resize-y rounded-xl border border-line bg-card px-3.5 py-3 outline-none focus:border-accent"
+          />
+          <FieldError message={errors["shop.botDescription"]} />
+        </label>
+        <TextField
+          label="«О себе» в профиле бота — до 120 символов"
+          value={shop.botAbout}
+          onChange={(botAbout) => setShop({ ...shop, botAbout })}
+          maxLength={120}
+          error={errors["shop.botAbout"]}
+        />
+        <span className="text-[13px] text-hint">
+          Название, описание и «О себе» бот обновит сам после сохранения.
+        </span>
         <span className="text-[13px] text-hint">
           {regionLabel} · валюта {region.currency} · {region.timeZone} · +{region.phoneCode}. Страну
           и валюту после настройки не поменять: от них зависят все цены.

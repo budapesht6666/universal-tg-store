@@ -5,6 +5,7 @@ import { webhookCallback } from "grammy";
 import { type AppOptions, createApp } from "./app.ts";
 import { createBot, setupBotUi } from "./bot/bot.ts";
 import { createBotNotifier } from "./bot/notifier.ts";
+import { syncBotProfile } from "./bot/profile.ts";
 import { startReminders } from "./bot/reminders.ts";
 import { closeDb, openDb } from "./db/client.ts";
 import type { Deps } from "./deps.ts";
@@ -21,6 +22,7 @@ const deps: Deps = {
   notifier: silentNotifier,
   fetch,
   botUsername: null,
+  syncBotProfile: () => {},
 };
 
 const ALLOWED_UPDATES = ["message", "callback_query"] as const;
@@ -53,6 +55,12 @@ if (probe && !takenBy) {
   deps.botUsername = bot.botInfo.username;
   deps.notifier = createBotNotifier(bot.api, deps);
   await setupBotUi(bot, deps);
+  deps.syncBotProfile = () => {
+    syncBotProfile(bot.api, deps).catch((err) =>
+      console.error("Бот: не обновился профиль:", String(err)),
+    );
+  };
+  deps.syncBotProfile();
   const stopReminders = startReminders(deps);
 
   if (env.BOT_MODE === "webhook") {

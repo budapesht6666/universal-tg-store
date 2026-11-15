@@ -122,6 +122,7 @@ export const adminRoutes = new Hono<AppEnv>()
     const update = parseInput(SettingsUpdateSchema, await jsonBody(c));
     const settings = parseInput(SettingsSchema, { ...update, region: shop.settings.region });
     saveSettings(db, settings, c.var.deps.now());
+    c.var.deps.syncBotProfile();
     return c.json(settings);
   })
 

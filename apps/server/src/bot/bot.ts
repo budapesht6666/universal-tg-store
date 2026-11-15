@@ -23,15 +23,30 @@ import {
 import { rememberRelay } from "./notifier.ts";
 import { esc, roleLabel, shopAppUrl, staffAppUrl, webAppButton } from "./texts.ts";
 
+const CUSTOMER_COMMANDS = [{ command: "start", description: "Меню и как заказать" }];
+const LOGIN_COMMAND = { command: "login", description: "Админка на компьютере" };
+
 const CALLBACK_ACTIONS: Record<string, StaffOrderActionName> = {
   a: "accept",
   p: "pickup",
   d: "deliver",
 };
 
-/** Кнопка меню в чате: у команды — «Заказы», у покупателей — «Меню» (общая, ставится при запуске). */
+/**
+ * Чат сотрудника: кнопка меню «Заказы» (у покупателей — общая «Меню», ставится при запуске)
+ * и /login в списке команд у тех, кому доступна админка.
+ */
 async function setStaffMenuButton(ctx: Context, deps: Deps) {
-  if (!ctx.chat || !deps.env.WEB_APP_ENABLED) return;
+  if (!ctx.chat || !ctx.from) return;
+  const roles = rolesOf(deps.db, deps.env, ctx.from.id);
+  if (can(roles, "catalog.manage") || can(roles, "settings.manage")) {
+    await ctx.api
+      .setMyCommands([...CUSTOMER_COMMANDS, LOGIN_COMMAND], {
+        scope: { type: "chat", chat_id: ctx.chat.id },
+      })
+      .catch(() => {});
+  }
+  if (!deps.env.WEB_APP_ENABLED) return;
   await ctx.api
     .setChatMenuButton({
       chat_id: ctx.chat.id,
@@ -252,7 +267,7 @@ export function createBot(deps: Deps): Bot {
 
 /** Общая кнопка меню «Меню» и список команд — при запуске. */
 export async function setupBotUi(bot: Bot, deps: Deps): Promise<void> {
-  await bot.api.setMyCommands([{ command: "start", description: "Открыть меню" }]);
+  await bot.api.setMyCommands(CUSTOMER_COMMANDS);
   if (!deps.env.WEB_APP_ENABLED) {
     console.warn(
       "PUBLIC_URL без https: бот работает, но кнопок Mini App нет. Для них нужен https-адрес (туннель).",

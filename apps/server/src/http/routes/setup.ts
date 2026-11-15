@@ -33,5 +33,6 @@ export const setupRoutes = new Hono<AppEnv>()
       saveSettings(db, settings, now);
       ensureOwner(db, env, now);
     });
+    c.var.deps.syncBotProfile();
     return c.json({ ok: true }, 201);
   });
