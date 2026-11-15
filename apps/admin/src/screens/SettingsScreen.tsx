@@ -1,7 +1,7 @@
 /** «Настройки»: магазин, часы работы, отмена покупателем, фичи меню. Регион — только для чтения. */
 import { FEATURE_LABELS, type FeatureKey, REGIONS, type WeekHours } from "@store/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { HoursEditor } from "../components/HoursEditor.tsx";
 import { ImageUpload } from "../components/ImageUpload.tsx";
 import {
@@ -29,19 +29,24 @@ function SettingsForm({ initial }: { initial: Settings }) {
   const [features, setFeatures] = useState(initial.features);
   const [orders, setOrders] = useState(initial.orders);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => setSaved(false), [shop, hours, features, orders]);
+  // «Сохранено», пока форма совпадает с тем, что вернул сервер; любая правка — снова «Сохранить».
+  const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
+  const saved = savedSnapshot === JSON.stringify({ shop, hours, features, orders });
 
   const save = useMutation({
     mutationFn: () => api.saveSettings({ shop, hours, features, orders }),
     onMutate: () => setErrors({}),
     onSuccess: (s) => {
       setShop(s.shop);
+      setHours(s.hours);
+      setFeatures(s.features);
+      setOrders(s.orders);
+      setSavedSnapshot(
+        JSON.stringify({ shop: s.shop, hours: s.hours, features: s.features, orders: s.orders }),
+      );
       queryClient.setQueryData(["settings"], s);
       void queryClient.invalidateQueries({ queryKey: ["shop"] });
       void queryClient.invalidateQueries({ queryKey: ["board"] });
-      setSaved(true);
     },
     onError: (err) =>
       setErrors(

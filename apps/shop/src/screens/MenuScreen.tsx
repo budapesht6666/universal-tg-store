@@ -222,7 +222,6 @@ function DishRow({ product: p }: { product: Product }) {
   const add = useCart((s) => s.add);
   const remove = useCart((s) => s.remove);
   const attrs = useCardAttributes(p);
-  const badge = p.badges[0];
 
   return (
     <article
@@ -230,10 +229,17 @@ function DishRow({ product: p }: { product: Product }) {
     >
       <div className="relative">
         <DishImage product={p} size={92} />
-        {badge && (
-          <span className="absolute top-1.5 left-1.5 flex h-5 items-center rounded-md bg-white px-1.5 text-[11px] font-bold text-[#8f3520]">
-            {badge}
-          </span>
+        {p.badges.length > 0 && (
+          <div className="absolute inset-x-1.5 top-1.5 flex flex-col items-start gap-1">
+            {p.badges.map((b) => (
+              <span
+                key={b}
+                className="flex h-5 max-w-full items-center truncate rounded-md bg-white px-1.5 text-[11px] font-bold text-[#8f3520]"
+              >
+                {b}
+              </span>
+            ))}
+          </div>
         )}
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">

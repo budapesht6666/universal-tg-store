@@ -340,6 +340,18 @@ function Products({
                   )}
                   {!p.available && <span className="text-xs">· закончилось</span>}
                 </span>
+                {p.badges.length > 0 && (
+                  <span className="flex flex-wrap gap-1 pt-0.5">
+                    {p.badges.map((b) => (
+                      <span
+                        key={b}
+                        className="rounded bg-accent-soft px-1.5 text-xs font-semibold text-accent-ink"
+                      >
+                        {b}
+                      </span>
+                    ))}
+                  </span>
+                )}
               </span>
             </button>
             <span className="hidden items-center md:flex">

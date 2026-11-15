@@ -381,9 +381,9 @@ function LocationField({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="co-link" className="text-[13px] leading-[18px] text-hint">
-          Вставьте ссылку из Google Maps — пин встанет туда сам. В картах: выберите место →
-          «Поделиться» → «Копировать».
+        <label htmlFor="co-link" className="flex flex-col text-[13px] leading-[18px] text-hint">
+          <span>Вставьте ссылку из Google Maps — пин встанет туда сам.</span>
+          <span>В картах: выберите место → «Поделиться» → «Копировать».</span>
         </label>
         <div className="flex h-11 items-center gap-2 rounded-xl bg-card pr-1.5 pl-3.5">
           <Link2 size={16} className="flex-none text-hint" />
