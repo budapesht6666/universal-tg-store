@@ -247,7 +247,7 @@ a{color:#8F3520}a:hover{color:#6E2817}
           <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; line-height: 18px">
             <span style="display: flex; align-items: center; gap: 6px">
               <span style="font-size: 13px; font-weight: 600; color: #17753A">Доставлен</span>
-              <span style="height: 20px; padding: 0 6px; display: flex; align-items: center; gap: 3px; border-radius: 6px; background: #FBE9E2; color: #8F3520; font-size: 12px; font-weight: 700">
+              <span style="height: 20px; padding: 0 6px; display: flex; align-items: center; gap: 3px; border-radius: 6px; background: #FBE9E2; color: #8F3520; font-size: 12px; font-weight: 700; white-space: nowrap">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"></path></svg>5 · новый отзыв
               </span>
             </span>
@@ -257,7 +257,7 @@ a{color:#8F3520}a:hover{color:#6E2817}
         </article>
 
         <div style="display: flex; flex-direction: column; border-radius: 14px; background: #FFFFFF; box-shadow: inset 0 0 0 1px #E4E4E7; overflow: hidden">
-          <sc-for list="{done}" as="d" hint-placeholder-count="3">
+          <sc-for list="{{done}}" as="d" hint-placeholder-count="3">
             <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid #F0F0F2">
               <span style="width: 52px; font-weight: 700">{{d.id}}</span>
               <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 18px">

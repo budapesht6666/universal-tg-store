@@ -244,6 +244,14 @@
       "w": 390,
       "x": 1410,
       "y": 1200
+    },
+    "BotCustomer.dc.html": {
+      "h": 960,
+      "page": "mvp",
+      "title": "Бот — сообщения покупателю",
+      "w": 1330,
+      "x": 2350,
+      "y": 2500
     }
   },
   "createdOnFiles": {
@@ -295,7 +303,7 @@
     },
     "m_staff": {
       "kind": "title1",
-      "maxW": 2270,
+      "maxW": 3680,
       "page": "mvp",
       "text": "Команда на телефоне и бот",
       "w": 240,
@@ -367,7 +375,8 @@
     "AdminTeamMvp.dc.html",
     "AdminSettingsMvp.dc.html",
     "AdminLogin.dc.html",
-    "ShopOrder.dc.html"
+    "ShopOrder.dc.html",
+    "BotCustomer.dc.html"
   ],
   "pages": [
     {

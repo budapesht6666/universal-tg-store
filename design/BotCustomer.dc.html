@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Сообщения бота покупателю</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit}
+</style>
+</helmet>
+<div style="width: 1330px; height: 960px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; padding: 40px; background: #F4F4F5; color: #0B0B0C; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 15px; line-height: 20px">
+
+  <sc-for list="{{chats}}" as="c" hint-placeholder-count="3">
+    <section style="display: flex; flex-direction: column; gap: 12px; min-width: 0">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <h2 style="margin: 0; font-size: 17px; line-height: 22px; font-weight: 700">{{c.title}}</h2>
+        <span style="font-size: 13px; line-height: 18px; color: #5E5E66">{{c.sub}}</span>
+      </div>
+      <div style="height: 800px; display: flex; flex-direction: column; border-radius: 28px; overflow: hidden; background: #E3E9DC; box-shadow: 0 0 0 1px #D4D4D8">
+        <div style="height: 56px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 14px; background: #FFFFFF; border-bottom: 1px solid #E4E4EA">
+          <span style="width: 38px; height: 38px; flex: none; border-radius: 19px; background: #B5482A; display: flex; align-items: center; justify-content: center">
+            <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true">
+              <rect x="38" y="6" width="9" height="16" rx="2" fill="#FBF4EC"></rect>
+              <rect x="10" y="18" width="44" height="38" rx="7" fill="#FBF4EC"></rect>
+              <path d="M21 50V40a11 11 0 0 1 22 0v10z" fill="#B5482A"></path>
+              <path d="M32 48c-3.6 0-6-2.5-6-5.6 0-3.6 3.4-5.4 3.6-9.4 2.9 1.8 8.4 5.6 8.4 9.6 0 3-2.4 5.4-6 5.4z" fill="#F2A541"></path>
+            </svg>
+          </span>
+          <div style="display: flex; flex-direction: column; line-height: 18px">
+            <span style="font-weight: 600">Печка</span>
+            <span style="font-size: 13px; color: #6B6B73">бот</span>
+          </div>
+        </div>
+        <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; padding: 14px 12px">
+          <sc-for list="{{c.msgs}}" as="m" hint-placeholder-count="3">
+            <div style="display: flex; flex-direction: column; gap: 4px; align-self: {{m.align}}; max-width: 320px">
+              <sc-if value="{{m.hasTag}}" hint-placeholder-val="{{ false }}">
+                <span style="align-self: {{m.align}}; height: 20px; padding: 0 8px; display: flex; align-items: center; gap: 4px; border-radius: 10px; background: {{m.tagBg}}; color: #FFFFFF; font-size: 11px; font-weight: 700">{{m.tag}}</span>
+              </sc-if>
+              <div style="padding: 8px 12px 6px; border-radius: {{m.radius}}; background: {{m.bg}}; box-shadow: 0 1px 1px rgba(0,0,0,0.08)">
+                <sc-if value="{{m.hasQuote}}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-bottom: 6px; padding: 2px 8px; border-left: 3px solid #3E8E3A; border-radius: 4px; background: rgba(62,142,58,0.10); font-size: 13px; line-height: 17px">
+                    <span style="display: block; color: #2E6B2B; font-weight: 600">Печка</span>
+                    <span style="color: #3F3F46">{{m.quote}}</span>
+                  </div>
+                </sc-if>
+                <div style="white-space: pre-line; font-size: 15px; line-height: 20px">{{m.text}}</div>
+                <div style="text-align: right; font-size: 11px; line-height: 14px; color: #6B6B73">{{m.time}}</div>
+              </div>
+              <sc-if value="{{m.hasKb}}" hint-placeholder-val="{{ false }}">
+                <div style="display: grid; grid-template-columns: {{m.kbCols}}; gap: 4px">
+                  <sc-for list="{{m.kb}}" as="k" hint-placeholder-count="2">
+                    <button style="height: 40px; border: 0; border-radius: 10px; background: #56645A; color: #FFFFFF; font-size: 14px; font-weight: 600; cursor: pointer">{{k}}</button>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1330,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const inR = '16px 16px 16px 6px';
+    const outR = '16px 16px 6px 16px';
+    const bot = (text, time, extra) => Object.assign({ text: text, time: time, align: 'flex-start', radius: inR, bg: '#FFFFFF', hasKb: false, kb: [], kbCols: 'repeat(2, minmax(0, 1fr))', hasTag: false, tag: '', tagBg: '#B5482A', hasQuote: false, quote: '' }, extra || {});
+    const me = (text, time, extra) => Object.assign(bot(text, time), { align: 'flex-end', radius: outR, bg: '#E1F5CF' }, extra || {});
+        const quiet = { hasTag: true, tag: 'без звука', tagBg: '#6B6B73' };
+    return {
+      chats: [
+        {
+          title: 'Приветствие на /start',
+          sub: 'Текст меняется в «Настройках» админки. Кнопка «Меню» открывает магазин.',
+          msgs: [
+            me('/start', '12:00'),
+            bot('Привет! Здесь можно заказать еду с доставкой.\n\nКак заказать:\n1. Нажмите «Меню» и выберите блюда.\n2. Укажите адрес и телефон. Оплата курьеру при получении.\n3. Статус заказа придёт сюда, в этот чат.\n\nВопрос по заказу? Напишите сюда — ответит менеджер.', '12:00', { hasKb: true, kb: ['Меню'], kbCols: '1fr' })
+          ]
+        },
+        {
+          title: 'Статусы заказа и оценка',
+          sub: 'Каждая смена статуса — сообщением. Если отзывы включены, после доставки — кнопка «Оценить заказ».',
+          msgs: [
+            bot('Заказ #1042 оформлен · 330 000 ₫\nОплата курьеру при получении. Напишем, когда начнём готовить.', '12:05', quiet),
+            bot('👨‍🍳 Готовим ваш заказ #1042', '12:09'),
+            bot('🛵 Курьер везёт заказ #1042. Приготовьте 330 000 ₫', '12:31'),
+            bot('✅ Заказ #1042 доставлен. Приятного аппетита!\nКак всё прошло? Поставьте оценку — это пара секунд.', '12:48', { hasKb: true, kb: ['⭐ Оценить заказ'], kbCols: '1fr' })
+          ]
+        },
+        {
+          title: 'Сообщение без заказа',
+          sub: 'Нет заказа в работе и прошло больше суток после последнего — менеджерам не уходит, бот отвечает сам (не чаще раза в 10 минут).',
+          msgs: [
+            me('Здравствуйте! А торт на заказ можно?', '15:20'),
+            bot('Писать магазину можно по текущему заказу — тогда сообщение сразу увидит менеджер.\nЧтобы заказать, нажмите «Меню» внизу.\nДругой вопрос — позвоните или напишите: +84393385504', '15:20', { hasTag: true, tag: 'автоответ', tagBg: '#6B6B73' }),
+            me('А в выходные работаете?', '15:22'),
+            bot('Повторный автоответ — не раньше чем через 10 минут.', '', { hasTag: true, tag: 'тишина', tagBg: '#A1A1AA', bg: 'transparent' })
+          ]
+        }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
