@@ -11,6 +11,7 @@ import { Move } from "lucide-react";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import type { DraftLocation } from "../lib/cart.ts";
+import { canLocate } from "../lib/telegram.ts";
 
 /** Где открыть карту, пока точки нет. Для другого города — поменять здесь. */
 export const DEFAULT_CENTER = { lat: 15.8801, lng: 108.338 };
@@ -137,7 +138,9 @@ export function MapPicker({ value, onChange }: Props) {
       </div>
       {failed && (
         <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-[13px] text-hint">
-          Карта не загрузилась. Нажмите «Я сейчас здесь» или вставьте ссылку из Google Maps.
+          {canLocate()
+            ? "Карта не загрузилась. Нажмите «Я сейчас здесь» или вставьте ссылку из Google Maps."
+            : "Карта не загрузилась. Вставьте ссылку из Google Maps."}
         </div>
       )}
       {/* Пин по центру: остриё — ровно в центре карты */}

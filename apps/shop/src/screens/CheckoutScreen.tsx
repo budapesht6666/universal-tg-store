@@ -11,14 +11,14 @@ import {
 } from "@store/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { AlertCircle, Check, Link2, Navigation, Phone } from "lucide-react";
+import { AlertCircle, Check, Link2, Navigation } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { MapPicker } from "../components/MapPicker.tsx";
 import { BottomBar, FieldError, PrimaryButton, Screen, Section } from "../components/ui.tsx";
 import { ApiError, api } from "../lib/api.ts";
 import { type DraftLocation, useCart } from "../lib/cart.ts";
 import { useCartLines, useMoney, useReadyShop } from "../lib/shop.ts";
-import { haptic, openLocationSettings, requestGps, requestPhone } from "../lib/telegram.ts";
+import { canLocate, haptic, openLocationSettings, requestGps } from "../lib/telegram.ts";
 import { ClosedNotice } from "./CartScreen.tsx";
 
 type Errors = Record<string, string>;
@@ -61,7 +61,6 @@ export function CheckoutScreen() {
       address: draft.address,
       comment: draft.comment,
     },
-    phoneFromTelegram: draft.phoneFromTelegram,
   };
 
   const submit = useMutation({
@@ -172,7 +171,7 @@ export function CheckoutScreen() {
               <span className="w-[76px] flex-none text-hint">Телефон</span>
               <input
                 value={draft.phone}
-                onChange={(e) => setDraft({ phone: e.target.value, phoneFromTelegram: false })}
+                onChange={(e) => setDraft({ phone: e.target.value })}
                 onBlur={() => {
                   const n = normalizePhone(draft.phone, shop.region.phoneCode);
                   if (n) setDraft({ phone: n });
@@ -184,28 +183,6 @@ export function CheckoutScreen() {
                 aria-label="Телефон"
                 className="h-11 min-w-0 flex-1 bg-transparent outline-none placeholder:text-hint"
               />
-              {draft.phoneFromTelegram ? (
-                <span className="flex h-6 items-center rounded-lg bg-accent-soft px-2 text-xs font-semibold text-accent-ink">
-                  из Telegram
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const phone = await requestPhone();
-                    if (phone) {
-                      setDraft({
-                        phone: normalizePhone(phone, shop.region.phoneCode) ?? phone,
-                        phoneFromTelegram: true,
-                      });
-                      setErrors(({ phone: _, ...rest }) => rest);
-                    }
-                  }}
-                  className="flex h-8 flex-none items-center gap-1 rounded-lg bg-accent-soft px-2.5 text-[13px] font-semibold text-accent-ink"
-                >
-                  <Phone size={14} /> Из Telegram
-                </button>
-              )}
             </label>
           </div>
           <FieldError message={errors.name} />
@@ -251,7 +228,7 @@ function portions(n: number) {
   return "порций";
 }
 
-/** Карта + «Я сейчас здесь» + ИЛИ + ссылка Google Maps / координаты. */
+/** Карта + «Я сейчас здесь» (только на телефоне) + ИЛИ + ссылка Google Maps / координаты. */
 function LocationField({
   value,
   onChange,
@@ -262,6 +239,7 @@ function LocationField({
   error: string | undefined;
 }) {
   const [gpsState, setGpsState] = useState<"idle" | "loading" | "denied" | "unavailable">("idle");
+  const [gpsShown] = useState(canLocate);
   const [link, setLink] = useState("");
   const [linkState, setLinkState] = useState<{ loading: boolean; error: string | null }>({
     loading: false,
@@ -334,7 +312,9 @@ function LocationField({
             </span>
             <span className="text-[13px] leading-[17px] text-hint">
               {!value
-                ? "Подвиньте карту, нажмите «Я сейчас здесь» или вставьте ссылку"
+                ? gpsShown
+                  ? "Подвиньте карту, нажмите «Я сейчас здесь» или вставьте ссылку"
+                  : "Подвиньте карту или вставьте ссылку"
                 : poor
                   ? "Подвиньте карту, чтобы пин встал на ваш дом"
                   : `${value.lat.toFixed(5)}, ${value.lng.toFixed(5)}`}
@@ -344,32 +324,36 @@ function LocationField({
       </div>
       <FieldError message={error} />
 
-      <button
-        type="button"
-        onClick={locate}
-        disabled={gpsState === "loading"}
-        className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-accent-soft font-semibold text-accent-ink disabled:opacity-60"
-      >
-        <Navigation size={18} />
-        {gpsState === "loading" ? "Определяем…" : "Я сейчас здесь"}
-      </button>
-      {gpsState === "denied" && (
-        <span className="text-[13px] text-hint">
-          Нет доступа к геопозиции.{" "}
+      {gpsShown && (
+        <>
           <button
             type="button"
-            className="font-semibold text-accent"
-            onClick={openLocationSettings}
+            onClick={locate}
+            disabled={gpsState === "loading"}
+            className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-accent-soft font-semibold text-accent-ink disabled:opacity-60"
           >
-            Разрешить
-          </button>{" "}
-          или подвиньте карту вручную.
-        </span>
-      )}
-      {gpsState === "unavailable" && (
-        <span className="text-[13px] text-hint">
-          Не получилось определить место — подвиньте карту вручную.
-        </span>
+            <Navigation size={18} />
+            {gpsState === "loading" ? "Определяем…" : "Я сейчас здесь"}
+          </button>
+          {gpsState === "denied" && (
+            <span className="text-[13px] text-hint">
+              Нет доступа к геопозиции.{" "}
+              <button
+                type="button"
+                className="font-semibold text-accent"
+                onClick={openLocationSettings}
+              >
+                Разрешить
+              </button>{" "}
+              или подвиньте карту вручную.
+            </span>
+          )}
+          {gpsState === "unavailable" && (
+            <span className="text-[13px] text-hint">
+              Не получилось определить место — подвиньте карту вручную.
+            </span>
+          )}
+        </>
       )}
 
       <div className="my-0.5 flex items-center gap-3">

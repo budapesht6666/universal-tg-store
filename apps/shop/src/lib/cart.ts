@@ -16,7 +16,6 @@ export type DraftLocation = {
 export type Draft = {
   name: string;
   phone: string;
-  phoneFromTelegram: boolean;
   location: DraftLocation | null;
   address: string;
   comment: string;
@@ -35,7 +34,6 @@ type CartState = {
 const emptyDraft: Draft = {
   name: "",
   phone: "",
-  phoneFromTelegram: false,
   location: null,
   address: "",
   comment: "",

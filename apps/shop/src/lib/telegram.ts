@@ -1,5 +1,5 @@
 /**
- * Telegram Mini App: инициализация SDK, тема, кнопка «Назад», вибрация, телефон, геопозиция.
+ * Telegram Mini App: инициализация SDK, тема, кнопка «Назад», вибрация, геопозиция.
  * Вне Telegram (локальная разработка в браузере) окружение подменяется: initData подписывает
  * сервер (/api/dev/init-data, только NODE_ENV=development).
  */
@@ -11,7 +11,7 @@ import {
   locationManager,
   miniApp,
   mockTelegramEnv,
-  requestContactFp,
+  retrieveLaunchParams,
   retrieveRawInitData,
   swipeBehavior,
   themeParams,
@@ -39,7 +39,8 @@ async function mockOutsideTelegram(): Promise<void> {
     launchParams: {
       tgWebAppData: initData,
       tgWebAppVersion: "9.1",
-      tgWebAppPlatform: "tdesktop",
+      // Как веб-версия Telegram: в браузере работает геопозиция, кнопка «Я сейчас здесь» видна.
+      tgWebAppPlatform: "weba",
       tgWebAppThemeParams: dark
         ? {
             bg_color: "#1c1c1e",
@@ -117,13 +118,17 @@ export const haptic = {
   error: () => attempt(() => hapticFeedback.notificationOccurred("error")),
 };
 
-/** Номер из Telegram (кнопка «Взять из Telegram»). null — отказ или не поддерживается. */
-export async function requestPhone(): Promise<string | null> {
+/**
+ * Telegram на компьютере геопозицию не отдаёт (Windows, Linux, macOS), да и точка ноутбука
+ * по Wi-Fi неточная — там кнопку «Я сейчас здесь» не показываем, остаются карта и ссылка.
+ */
+const DESKTOP_PLATFORMS = new Set(["tdesktop", "macos", "unigram"]);
+
+export function canLocate(): boolean {
   try {
-    const r = await requestContactFp({ timeout: 60_000 })();
-    return r._tag === "Right" ? r.right.contact.phone_number : null;
+    return !DESKTOP_PLATFORMS.has(retrieveLaunchParams().tgWebAppPlatform);
   } catch {
-    return null;
+    return true;
   }
 }
 
