@@ -1,4 +1,4 @@
-import { can, formatMoney, type Permission } from "@store/schema";
+import { can, formatMoney, formatPhone, type Permission } from "@store/schema";
 import { useQuery } from "@tanstack/react-query";
 import { api, type Me } from "./api.ts";
 
@@ -15,6 +15,13 @@ export function useStaff(): Me & { can: (p: Permission) => boolean } {
 
 export function useShopInfo() {
   return useQuery({ queryKey: ["shop"], queryFn: api.shop, staleTime: 60_000 });
+}
+
+/** Телефон для показа: «+84 91 234 56 78» (код страны — из настроек магазина). */
+export function usePhone() {
+  const { data } = useShopInfo();
+  const code = data?.ready ? data.region.phoneCode : "84";
+  return (phone: string) => formatPhone(phone, code);
 }
 
 export function useMoney() {

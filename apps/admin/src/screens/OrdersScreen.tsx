@@ -7,11 +7,11 @@ import { PAUSE_LABELS, type PauseOption } from "@store/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { type Mode, OrderCard } from "../components/OrderCard.tsx";
+import { DoneRow, type Mode, OrderCard } from "../components/OrderCard.tsx";
 import { FieldError, SecondaryButton, Sheet, Spinner } from "../components/ui.tsx";
-import { api, type Board } from "../lib/api.ts";
+import { api, type Board, type StaffOrder } from "../lib/api.ts";
 import { useIsDesktop } from "../lib/media.ts";
-import { useStaff } from "../lib/session.ts";
+import { useMoney, useStaff } from "../lib/session.ts";
 import { beep } from "../lib/telegram.ts";
 
 type Tab = "new" | "active" | "done";
@@ -228,17 +228,16 @@ export function OrdersScreen() {
                         : "За сутки ничего не закрыто"}
                   </div>
                 )}
-                {orders.map((o) => (
-                  <OrderCard
-                    key={o.id}
-                    order={o}
+                {col.key === "done" ? (
+                  <DoneColumn
+                    orders={orders}
                     mode={mode}
-                    expanded={col.key !== "done" || open === o.id}
-                    {...(col.key === "done" && {
-                      onToggle: () => setOpen(open === o.id ? null : o.id),
-                    })}
+                    open={open}
+                    onOpen={(id) => setOpen(open === id ? null : id)}
                   />
-                ))}
+                ) : (
+                  orders.map((o) => <OrderCard key={o.id} order={o} mode={mode} expanded />)
+                )}
                 {col.key === "new" && (
                   <p className="m-0 flex flex-col px-1 text-xs leading-[17px] text-hint">
                     <span>Новые заказы появляются сами — со звуком, пока страница открыта.</span>
@@ -369,5 +368,56 @@ export function OrdersScreen() {
 
       {pauseSheetEl}
     </div>
+  );
+}
+
+/**
+ * «Готово» на компьютере (макет AdminOrdersBoard): раскрытый заказ — карточкой,
+ * непрочитанные отзывы — строками с рамкой, остальное — одним списком через разделитель.
+ */
+function DoneColumn({
+  orders,
+  mode,
+  open,
+  onOpen,
+}: {
+  orders: StaffOrder[];
+  mode: Mode;
+  open: number | null;
+  onOpen: (id: number) => void;
+}) {
+  const money = useMoney();
+  const rest = orders.filter((o) => o.id !== open && !(o.review && !o.review.seen));
+  const delivered = orders.filter((o) => o.status === "done");
+  return (
+    <>
+      {orders.map((o) =>
+        o.id === open ? (
+          <OrderCard key={o.id} order={o} mode={mode} expanded onToggle={() => onOpen(o.id)} />
+        ) : o.review && !o.review.seen ? (
+          <DoneRow key={o.id} order={o} boxed onOpen={() => onOpen(o.id)} />
+        ) : null,
+      )}
+      {rest.length > 0 && (
+        <div className="flex flex-col overflow-hidden rounded-[14px] bg-card shadow-[inset_0_0_0_1px_var(--line)]">
+          {rest.map((o) => (
+            <DoneRow key={o.id} order={o} boxed={false} onOpen={() => onOpen(o.id)} />
+          ))}
+        </div>
+      )}
+      {mode === "manager" && orders.some((o) => o.review) && (
+        <p className="m-0 flex flex-col px-1 text-xs leading-[17px] text-hint">
+          <span>
+            Новый отзыв подсвечен, пока заказ не раскрыли. Звука нет — это не новый заказ.
+          </span>
+          <span>Курьеру отзывы не показываются.</span>
+        </p>
+      )}
+      {delivered.length > 0 && (
+        <p className="m-0 px-1 text-xs leading-[17px] text-hint">
+          Доставлено: {delivered.length} · {money(delivered.reduce((s, o) => s + o.total, 0))}
+        </p>
+      )}
+    </>
   );
 }

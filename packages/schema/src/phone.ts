@@ -46,3 +46,25 @@ export function phoneSchema(countryCode = "84") {
       return phone;
     });
 }
+
+/**
+ * Номер для показа: +84912345678 → «+84 91 234 56 78», +79993334455 → «+7 999 333 44 55».
+ * Хранится номер без пробелов (normalizePhone), этот вид — только на экране.
+ * Код страны берётся из настроек магазина; чужой или непонятный номер возвращается как есть.
+ */
+export function formatPhone(phone: string, countryCode = "84"): string {
+  const m = /^\+(\d{10,15})$/.exec(phone);
+  if (!m?.[1]) return phone;
+  const digits = m[1];
+  const code = digits.startsWith(countryCode)
+    ? countryCode
+    : digits.length === 11 && digits.startsWith("7")
+      ? "7"
+      : null;
+  if (code === null) return phone;
+  const rest = digits.slice(code.length);
+  if (rest.length < 7) return phone;
+  const tail = [rest.slice(-7, -4), rest.slice(-4, -2), rest.slice(-2)];
+  const head = rest.slice(0, -7);
+  return [`+${code}`, head, ...tail].filter(Boolean).join(" ");
+}

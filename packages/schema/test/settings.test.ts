@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatPhone,
   normalizePhone,
   phoneSchema,
   SettingsSchema,
@@ -28,6 +29,15 @@ const closedWeek: WeekHours = {
 };
 
 describe("телефон", () => {
+  it("для показа — группами, хранится без пробелов", () => {
+    expect(formatPhone("+84912345678")).toBe("+84 91 234 56 78");
+    expect(formatPhone("+84393385504")).toBe("+84 39 338 55 04");
+    expect(formatPhone("+79993334455")).toBe("+7 999 333 44 55");
+    expect(formatPhone("+79993334455", "7")).toBe("+7 999 333 44 55");
+    expect(formatPhone("+442079460958")).toBe("+442079460958");
+    expect(formatPhone("не номер")).toBe("не номер");
+  });
+
   it("местные вьетнамские номера получают +84", () => {
     expect(normalizePhone("0912 345 678")).toBe("+84912345678");
     expect(normalizePhone("912345678")).toBe("+84912345678");

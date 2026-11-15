@@ -30,13 +30,13 @@ function attempt(fn: () => unknown): void {
   }
 }
 
+/**
+ * В браузере (компьютер) админка всегда светлая, как в макетах. По prefers-color-scheme
+ * тёмными становились только наши токены (--line, --accent), а фон и текст из запасных
+ * значений tg-theme оставались светлыми — границы полей пропадали.
+ */
 function applyBrowserTheme() {
-  const dark = window.matchMedia("(prefers-color-scheme: dark)");
-  const set = () => {
-    document.documentElement.dataset.theme = dark.matches ? "dark" : "light";
-  };
-  set();
-  dark.addEventListener("change", set);
+  document.documentElement.dataset.theme = "light";
 }
 
 async function hasBrowserSession(): Promise<boolean> {

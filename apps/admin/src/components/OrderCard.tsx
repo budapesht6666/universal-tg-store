@@ -25,11 +25,12 @@ import {
   MapPin,
   MessageCircle,
   MoreHorizontal,
+  Navigation,
   Star,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ApiError, api, type StaffOrder } from "../lib/api.ts";
-import { useMoney } from "../lib/session.ts";
+import { useMoney, usePhone } from "../lib/session.ts";
 import { copyText, haptic, openExternal, openTelegram } from "../lib/telegram.ts";
 import { FieldError, PrimaryButton, SecondaryButton, Sheet } from "./ui.tsx";
 
@@ -59,6 +60,7 @@ export function OrderCard({
   onToggle?: () => void;
 }) {
   const money = useMoney();
+  const phone = usePhone();
   const queryClient = useQueryClient();
   const [sheet, setSheet] = useState<null | "menu" | "cancel" | "fail" | "assign">(null);
   const [error, setError] = useState<string | null>(null);
@@ -114,8 +116,12 @@ export function OrderCard({
       <button
         type="button"
         onClick={onToggle}
-        className={`flex w-full items-center gap-3 rounded-[18px] bg-card p-3.5 text-left ${
-          highlight ? "shadow-[inset_0_0_0_2px_var(--accent-soft)]" : ""
+        className={`flex w-full items-center gap-3 rounded-[18px] bg-card p-3.5 text-left lg:rounded-[14px] ${
+          newReview
+            ? "shadow-[inset_0_0_0_2px_var(--accent)]"
+            : highlight
+              ? "shadow-[inset_0_0_0_2px_#ebc2b3]"
+              : ""
         }`}
       >
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -137,7 +143,7 @@ export function OrderCard({
 
   return (
     <article
-      className={`flex flex-col gap-3 rounded-[18px] bg-card p-3.5 ${
+      className={`flex flex-col gap-3 rounded-[18px] bg-card p-3.5 lg:rounded-[14px] ${
         highlight ? "shadow-[inset_0_0_0_2px_var(--accent)]" : ""
       }`}
     >
@@ -161,9 +167,9 @@ export function OrderCard({
       </header>
 
       {mode === "courier" && !finished && (
-        <div className="flex items-center justify-between rounded-xl bg-accent-soft px-3 py-2.5 text-accent-ink">
+        <div className="flex items-center justify-between rounded-[14px] bg-warn-bg px-3.5 py-3 text-warn-ink">
           <span className="font-semibold">Получить при доставке</span>
-          <span className="text-[17px] font-bold">{money(o.total)}</span>
+          <span className="text-[22px] leading-7 font-extrabold">{money(o.total)}</span>
         </div>
       )}
 
@@ -185,71 +191,121 @@ export function OrderCard({
       )}
 
       {o.review && (
-        <div className="flex flex-col gap-1 rounded-xl bg-accent-soft px-3 py-2.5 text-sm">
+        <div className="flex flex-col gap-1 rounded-[10px] bg-page px-3 py-2.5 text-sm">
           <span className="flex items-center gap-2">
-            <span className="font-semibold text-accent-ink">Отзыв</span>
+            <span className="text-[13px] font-bold">Отзыв</span>
             <span className="flex" role="img" aria-label={`${o.review.rating} из ${RATING_MAX}`}>
               {Array.from({ length: RATING_MAX }, (_, i) => (
                 <Star
                   key={i}
                   size={15}
-                  className={i < (o.review?.rating ?? 0) ? "fill-accent text-accent" : "text-hint"}
+                  strokeWidth={1.8}
+                  className={`text-accent ${i < (o.review?.rating ?? 0) ? "fill-accent" : ""}`}
                 />
               ))}
             </span>
             <span className="ml-auto text-xs text-hint">{reviewTime(o.review.at)}</span>
           </span>
           {o.review.text ? (
-            <span className="whitespace-pre-line">{o.review.text}</span>
+            <span className="text-[13px] leading-[18px] whitespace-pre-line">
+              «{o.review.text}»
+            </span>
           ) : (
             <span className="text-hint">Без текста — только оценка</span>
           )}
         </div>
       )}
 
-      <ul className="m-0 flex list-none flex-col gap-1 p-0">
-        {o.items.map((i) => (
-          <li key={i.productId} className="flex gap-2">
-            <span className="w-7 flex-none font-bold">{i.qty}×</span>
-            <span className="flex-1">{i.title}</span>
-            <span className="text-hint">{money(i.price * i.qty)}</span>
-          </li>
-        ))}
-      </ul>
-
-      {o.customer.phone && (
-        <div className="flex flex-col gap-0.5 rounded-xl bg-page px-3 py-2.5 text-sm leading-[19px]">
-          <span>
-            <b>{o.customer.name}</b> · {o.customer.phone}
-            {o.customer.phoneFromTelegram && <span className="text-hint"> · из Telegram</span>}
-          </span>
-          {o.address && <span className="text-hint">{o.address}</span>}
-          {o.comment && <span className="text-hint">«{o.comment}»</span>}
-          {o.location?.accuracy && o.location.accuracy > 50 && (
-            <span className="text-warn-ink">
-              Точка неточная: ±{Math.round(o.location.accuracy)} м
-            </span>
-          )}
-        </div>
-      )}
-
-      {!finished && o.customer.phone && (
-        <div className={`grid gap-2 ${o.customer.username ? "grid-cols-3" : "grid-cols-2"}`}>
-          <CopyPhone phone={o.customer.phone} />
-          {o.customer.username && (
-            <SecondaryButton onClick={() => openTelegram(`https://t.me/${o.customer.username}`)}>
-              <MessageCircle size={16} /> Написать
-            </SecondaryButton>
+      {mode === "courier" && !finished ? (
+        <>
+          {o.customer.phone && (
+            <div className="flex flex-col gap-0.5 text-sm leading-[19px]">
+              <span>
+                <b>{o.customer.name}</b> · {phone(o.customer.phone)}
+              </span>
+              {o.address && <span className="text-[#4a4a52]">{o.address}</span>}
+              {o.comment && <span className="text-[#4a4a52]">«{o.comment}»</span>}
+              {o.location?.accuracy && o.location.accuracy > 50 && (
+                <span className="text-warn-ink">
+                  Точка неточная: ±{Math.round(o.location.accuracy)} м
+                </span>
+              )}
+            </div>
           )}
           {o.location && (
-            <SecondaryButton
-              tone={mode === "courier" ? "accent" : "plain"}
+            <button
+              type="button"
               onClick={() => o.location && openExternal(o.location.mapsUrl)}
+              className="flex h-[52px] items-center justify-center gap-2 rounded-[14px] bg-[#1f73d6] text-base font-bold text-white"
             >
-              <MapPin size={16} /> Карта
-            </SecondaryButton>
+              <Navigation size={20} strokeWidth={2.2} /> Открыть в Google Maps
+            </button>
           )}
-        </div>
+          {o.customer.phone && (
+            <div className={`grid gap-2 ${o.customer.username ? "grid-cols-2" : "grid-cols-1"}`}>
+              <CopyPhone phone={o.customer.phone} />
+              {o.customer.username && (
+                <SecondaryButton
+                  onClick={() => openTelegram(`https://t.me/${o.customer.username}`)}
+                >
+                  <MessageCircle size={16} /> Написать
+                </SecondaryButton>
+              )}
+            </div>
+          )}
+          <details className="text-sm">
+            <summary className="cursor-pointer text-hint">Состав · {portions(count)}</summary>
+            <div className="pt-1.5 text-[#4a4a52]">
+              {o.items.map((i) => `${i.qty}× ${i.title}`).join(" · ")}
+            </div>
+          </details>
+        </>
+      ) : (
+        <>
+          <ul className="m-0 flex list-none flex-col gap-1 p-0">
+            {o.items.map((i) => (
+              <li key={i.productId} className="flex gap-2">
+                <span className="w-7 flex-none font-bold">{i.qty}×</span>
+                <span className="flex-1">{i.title}</span>
+                <span className="text-hint">{money(i.price * i.qty)}</span>
+              </li>
+            ))}
+          </ul>
+
+          {o.customer.phone && (
+            <div className="flex flex-col gap-0.5 rounded-xl bg-page px-3 py-2.5 text-sm leading-[19px]">
+              <span>
+                <b>{o.customer.name}</b> · {phone(o.customer.phone)}
+                {o.customer.phoneFromTelegram && <span className="text-hint"> · из Telegram</span>}
+              </span>
+              {o.address && <span className="text-[#4a4a52]">{o.address}</span>}
+              {o.comment && <span className="text-[#4a4a52]">«{o.comment}»</span>}
+              {o.location?.accuracy && o.location.accuracy > 50 && (
+                <span className="text-warn-ink">
+                  Точка неточная: ±{Math.round(o.location.accuracy)} м
+                </span>
+              )}
+            </div>
+          )}
+
+          {!finished && o.customer.phone && (
+            <div className={`grid gap-2 ${o.customer.username ? "grid-cols-3" : "grid-cols-2"}`}>
+              <CopyPhone phone={o.customer.phone} />
+              {o.customer.username && (
+                <SecondaryButton
+                  onClick={() => openTelegram(`https://t.me/${o.customer.username}`)}
+                >
+                  <MessageCircle size={16} /> Написать
+                </SecondaryButton>
+              )}
+              {o.location && (
+                <SecondaryButton onClick={() => o.location && openExternal(o.location.mapsUrl)}>
+                  <MapPin size={16} /> Карта
+                </SecondaryButton>
+              )}
+            </div>
+          )}
+        </>
       )}
 
       {mode === "manager" && o.courier && !finished && (
@@ -271,8 +327,20 @@ export function OrderCard({
       )}
       {o.cancelReason && <span className="text-sm text-hint">{o.cancelReason}</span>}
 
-      {primary && (
+      {/* Покупатель просит отменить — отмена главной кнопкой, искать в «⋯» не нужно. */}
+      {mode === "manager" && o.cancelRequested && !finished && (
+        <button
+          type="button"
+          onClick={() => setSheet("cancel")}
+          className="h-11 rounded-xl bg-[#fdecec] font-bold text-[#b42318] lg:rounded-[10px]"
+        >
+          Отменить заказ
+        </button>
+      )}
+      {primary && !(mode === "manager" && o.cancelRequested) && (
         <PrimaryButton
+          tone={mode === "courier" && o.status === "shipping" ? "ok" : "accent"}
+          compactOnDesktop
           loading={act.isPending}
           onClick={() =>
             "action" in primary ? act.mutate(primary.action) : setSheet(primary.open)
@@ -351,6 +419,55 @@ export function OrderCard({
   );
 }
 
+/**
+ * Строка колонки «Готово» на компьютере: №, статус цветом, «★ 4», время · имя · курьер, сумма.
+ * Непрочитанный отзыв — отдельной строкой-карточкой с рамкой (boxed).
+ */
+export function DoneRow({
+  order: o,
+  boxed,
+  onOpen,
+}: {
+  order: StaffOrder;
+  boxed: boolean;
+  onOpen: () => void;
+}) {
+  const money = useMoney();
+  const cancelled = o.status === "cancelled";
+  const time = new Date(o.updatedAt).toLocaleTimeString("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const meta = [time, o.customer.name, o.courier && `курьер ${o.courier.name}`]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className={`flex w-full items-center gap-2.5 px-3.5 py-3 text-left ${
+        boxed
+          ? "rounded-[14px] bg-card shadow-[inset_0_0_0_2px_var(--accent)]"
+          : "border-b border-[#f0f0f2] last:border-b-0"
+      }`}
+    >
+      <span className="w-[52px] flex-none font-bold">#{o.id}</span>
+      <span className="flex min-w-0 flex-1 flex-col leading-[18px]">
+        <span className="flex items-center gap-1.5">
+          <span className={`text-[13px] font-semibold ${cancelled ? "text-[#b42318]" : "text-ok"}`}>
+            {ORDER_STATUS_LABELS[o.status]}
+          </span>
+          {o.review && <RatingChip rating={o.review.rating} fresh={!o.review.seen} />}
+        </span>
+        <span className="truncate text-xs text-hint">{meta}</span>
+      </span>
+      <span className={`flex-none font-semibold ${cancelled ? "text-[#a1a1aa]" : ""}`}>
+        {money(o.total)}
+      </span>
+    </button>
+  );
+}
+
 function StatusChip({ order: o, waiting }: { order: StaffOrder; waiting: number | null }) {
   if (waiting !== null) {
     return (
@@ -383,16 +500,18 @@ function reviewTime(iso: string) {
   });
 }
 
-/** «★ 4» у статуса; новый (непрочитанный) отзыв — ярче и с подписью. */
-function RatingChip({ rating, fresh }: { rating: number; fresh: boolean }) {
+/** «★ 4» у статуса; новый (непрочитанный) отзыв — мягкий чип с подписью. */
+export function RatingChip({ rating, fresh }: { rating: number; fresh: boolean }) {
+  if (!fresh) {
+    return (
+      <span className="flex items-center gap-0.5 text-xs font-semibold text-hint">
+        <Star size={11} className="fill-accent text-accent" /> {rating}
+      </span>
+    );
+  }
   return (
-    <span
-      className={`flex h-6 items-center gap-1 rounded-lg px-2 text-[13px] font-semibold ${
-        fresh ? "bg-accent text-white" : "bg-accent-soft text-accent-ink"
-      }`}
-    >
-      <Star size={12} className="fill-current" /> {rating}
-      {fresh && " · новый отзыв"}
+    <span className="flex h-6 items-center gap-1 rounded-lg bg-accent-soft px-2 text-[13px] font-bold whitespace-nowrap text-accent-ink lg:h-5 lg:rounded-md lg:px-1.5 lg:text-xs">
+      <Star size={12} className="fill-current" /> {rating} · новый отзыв
     </span>
   );
 }

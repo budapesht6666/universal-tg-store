@@ -1,5 +1,6 @@
 /** Экран заказа: крупно — что сейчас и чего ждать, полоса прогресса, оценка, состав, отмена. */
 import {
+  formatPhone,
   isFinalStatus,
   ORDER_FLOW,
   ORDER_STATUS_LABELS,
@@ -139,7 +140,7 @@ export function OrderScreen({ id }: { id: number }) {
         <div className="flex flex-col gap-1 rounded-2xl bg-card px-4 py-3 text-[15px]">
           <span className="text-[13px] text-hint">Доставка</span>
           <span>
-            {o.name} · {o.phone}
+            {o.name} · {formatPhone(o.phone, shop.region.phoneCode)}
           </span>
           {o.address && <span>{o.address}</span>}
           {o.comment && <span className="text-hint">«{o.comment}»</span>}

@@ -8,6 +8,7 @@ import { Copy, Send, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { FieldError, SecondaryButton, Spinner, Toggle } from "../components/ui.tsx";
 import { api, type Invite, type Member } from "../lib/api.ts";
+import { usePhone } from "../lib/session.ts";
 import { openTelegram } from "../lib/telegram.ts";
 
 export function TeamScreen() {
@@ -39,6 +40,11 @@ export function TeamScreen() {
           aria-label="Кто работает"
           className="flex min-w-0 flex-[3_1_480px] flex-col overflow-hidden rounded-2xl bg-card lg:rounded-xl lg:shadow-[inset_0_0_0_1px_var(--line)]"
         >
+          <div className="hidden items-center gap-3 border-b border-line px-4 py-2.5 text-xs font-semibold text-hint lg:flex">
+            <span className="flex-1">Человек</span>
+            <span className="w-[200px]">Роли</span>
+            <span className="w-16 text-right">Доступ</span>
+          </div>
           {members.map((m) => (
             <MemberRow key={m.id} member={m} />
           ))}
@@ -62,20 +68,23 @@ export function TeamScreen() {
             <span>Человек открывает её в Telegram, делится номером — и он в команде.</span>
           </p>
           <div className="grid grid-cols-2 gap-2">
-            <SecondaryButton
-              tone="accent"
+            {/* Курьеров зовут чаще — их кнопка главная (макет AdminTeamMvp). */}
+            <button
+              type="button"
               disabled={create.isPending}
               onClick={() => create.mutate("courier")}
+              className="h-11 rounded-xl bg-accent font-semibold text-white disabled:opacity-60 lg:h-10 lg:rounded-lg"
             >
               Курьера
-            </SecondaryButton>
-            <SecondaryButton
-              tone="accent"
+            </button>
+            <button
+              type="button"
               disabled={create.isPending}
               onClick={() => create.mutate("manager")}
+              className="h-11 rounded-xl bg-accent-soft font-semibold text-accent-ink disabled:opacity-60 lg:h-10 lg:rounded-lg"
             >
               Менеджера
-            </SecondaryButton>
+            </button>
           </div>
           {invite?.link && <InviteLink link={invite.link} role={invite.role} />}
           {invite && !invite.link && (
@@ -130,6 +139,7 @@ function InviteLink({ link, role }: { link: string; role: InviteRole }) {
 function MemberRow({ member: m }: { member: Member }) {
   const queryClient = useQueryClient();
   const isOwner = m.roles.includes("owner");
+  const phone = usePhone();
   const update = useMutation({
     mutationFn: (body: { roles?: InviteRole[]; active?: boolean }) => api.updateMember(m.id, body),
     onSuccess: () => {
@@ -163,7 +173,7 @@ function MemberRow({ member: m }: { member: Member }) {
           {m.active
             ? m.roles.map((r) => ROLE_LABELS[r]).join(", ") || "Без роли"
             : "Доступ выключен"}
-          {m.phone ? ` · ${m.phone}` : ""}
+          {m.phone ? ` · ${phone(m.phone)}` : ""}
         </span>
       </div>
       <div className="flex flex-wrap gap-1.5 lg:w-[200px]">
@@ -187,7 +197,7 @@ function MemberRow({ member: m }: { member: Member }) {
           </button>
         ))}
       </div>
-      <div className="flex w-11 justify-end">
+      <div className="flex w-11 justify-end lg:w-16">
         {!isOwner && (
           <Toggle
             checked={m.active}

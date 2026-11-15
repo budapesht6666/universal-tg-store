@@ -74,25 +74,39 @@ export function BottomBar({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Главная кнопка. tone="ok" — зелёная крупная «Доставлен» у курьера;
+ * compactOnDesktop — 44px на компьютере (карточки заказов в колонках).
+ */
 export function PrimaryButton({
   children,
   disabled,
   loading,
   onClick,
   type = "button",
+  tone = "accent",
+  compactOnDesktop = false,
 }: {
   children: ReactNode;
   disabled?: boolean;
   loading?: boolean;
   onClick?: () => void;
   type?: "button" | "submit";
+  tone?: "accent" | "ok";
+  compactOnDesktop?: boolean;
 }) {
+  const look =
+    tone === "ok"
+      ? "h-14 bg-ok text-[17px] font-bold"
+      : "h-[52px] bg-accent text-base font-semibold";
   return (
     <button
       type={type}
       disabled={disabled || loading}
       onClick={onClick}
-      className="flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] bg-accent px-[18px] text-base font-semibold text-white disabled:bg-muted disabled:text-hint"
+      className={`flex w-full items-center justify-center gap-2 rounded-[14px] px-[18px] text-white disabled:bg-muted disabled:text-hint ${look} ${
+        compactOnDesktop ? "lg:h-11 lg:rounded-xl lg:text-[15px]" : ""
+      }`}
     >
       {loading ? (
         <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
