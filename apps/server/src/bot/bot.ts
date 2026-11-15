@@ -239,12 +239,15 @@ export function createBot(deps: Deps): Bot {
       const last = noOrderRepliedAt.get(ctx.from.id);
       if (last !== undefined && now - last < NO_ORDER_REPLY_EVERY_MS) return;
       noOrderRepliedAt.set(ctx.from.id, now);
+      const { manager } = shop.settings.shop;
       await ctx.reply(
         [
           "Писать магазину можно по текущему заказу — тогда сообщение сразу увидит менеджер.",
           "Чтобы заказать, нажмите «Меню» внизу.",
-          `Другой вопрос — позвоните или напишите: ${esc(shop.settings.shop.phone)}`,
-        ].join("\n"),
+          manager ? `Другой вопрос — напишите менеджеру: @${esc(manager)}` : null,
+        ]
+          .filter(Boolean)
+          .join("\n"),
         { parse_mode: "HTML" },
       );
       return;

@@ -26,13 +26,13 @@ export function SetupScreen() {
   const [step, setStep] = useState(1);
   const [country, setCountry] = useState<RegionCode>("VN");
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [manager, setManager] = useState("");
   const [hours, setHours] = useState<WeekHours>(defaultHours);
   const [menu, setMenu] = useState<"demo" | "empty">("demo");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
 
-  const body = { country, shop: { name, phone }, hours, menu };
+  const body = { country, shop: { name, manager }, hours, menu };
   const save = useMutation({
     mutationFn: () => api.setup(body),
     onSuccess: async () => {
@@ -115,13 +115,14 @@ export function SetupScreen() {
             error={errors["shop.name"]}
           />
           <TextField
-            label="Телефон магазина — покажем покупателям"
-            value={phone}
-            onChange={setPhone}
-            type="tel"
-            inputMode="tel"
-            placeholder={`+${region.phoneCode} …`}
-            error={errors["shop.phone"]}
+            label="Telegram менеджера — необязательно"
+            value={manager}
+            onChange={setManager}
+            placeholder="@pechka_manager"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            error={errors["shop.manager"]}
           />
         </>
       )}

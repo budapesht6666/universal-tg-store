@@ -11,6 +11,7 @@ import {
   locationManager,
   miniApp,
   mockTelegramEnv,
+  openTelegramLink,
   retrieveLaunchParams,
   retrieveRawInitData,
   swipeBehavior,
@@ -19,6 +20,8 @@ import {
 } from "@tma.js/sdk-react";
 
 let rawInitData = "";
+/** false — локальная разработка в браузере (окружение Telegram подменено). */
+let inTelegram = false;
 
 /** Не падаем, если метод не поддерживается этой версией Telegram. */
 function attempt(fn: () => unknown): void {
@@ -59,7 +62,8 @@ async function mockOutsideTelegram(): Promise<void> {
 }
 
 export async function initTelegram(): Promise<void> {
-  if (!(await isTMA("complete"))) {
+  inTelegram = await isTMA("complete");
+  if (!inTelegram) {
     if (!import.meta.env.DEV) throw new Error("Откройте магазин из Telegram");
     await mockOutsideTelegram();
   }
@@ -182,6 +186,19 @@ function browserGps(): Promise<GpsResult> {
 
 export function closeApp(): void {
   attempt(() => miniApp.close());
+}
+
+/** Чат по ссылке t.me (менеджер магазина): Telegram открывает переписку, Mini App закрывается. */
+export function openTelegramChat(url: string): void {
+  if (inTelegram) {
+    try {
+      openTelegramLink(url);
+      return;
+    } catch {
+      // ниже — запасной путь
+    }
+  }
+  window.open(url, "_blank", "noopener");
 }
 
 /**

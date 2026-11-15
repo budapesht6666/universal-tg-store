@@ -54,8 +54,8 @@ describe("телефон", () => {
 });
 
 describe("первая настройка", () => {
-  it("из страны, названия и телефона получаются полные настройки", () => {
-    const input: SetupInput = { shop: { name: "Фо на углу", phone: "0912 345 678" } };
+  it("из страны, названия и Telegram менеджера получаются полные настройки", () => {
+    const input: SetupInput = { shop: { name: "Фо на углу", manager: "@Pho_Manager" } };
     const r = settingsFromSetup(SetupInputSchema.parse(input));
     expect(r.success).toBe(true);
     if (!r.success) return;
@@ -66,24 +66,28 @@ describe("первая настройка", () => {
       phoneCode: "84",
       locale: "ru-RU",
     });
-    expect(r.data.shop.phone).toBe("+84912345678");
+    expect(r.data.shop.manager).toBe("Pho_Manager");
     expect(r.data.hours.mon).toEqual({ from: "10:00", to: "22:00" });
     expect(r.data.features).toEqual({ discounts: true, badges: true, reviews: true });
     expect(r.data.orders.customerCanCancel).toBe(true);
   });
 
-  it("без названия и телефона не обойтись", () => {
-    const r = SetupInputSchema.safeParse({ shop: { name: "", phone: "" } });
-    expect(r.error?.issues.map((i) => i.message)).toEqual([
-      "Как называется магазин?",
-      "Нужен телефон — по нему покупатель свяжется с магазином",
-    ]);
+  it("без названия не обойтись, Telegram менеджера — необязательно", () => {
+    const r = SetupInputSchema.safeParse({ shop: { name: "", manager: "" } });
+    expect(r.error?.issues.map((i) => i.message)).toEqual(["Как называется магазин?"]);
+    const ok = SetupInputSchema.parse({ shop: { name: "М", manager: "  " } });
+    expect(ok.shop.manager).toBeUndefined();
+  });
+
+  it("телефона магазина в настройках нет", () => {
+    const r = SetupInputSchema.safeParse({ shop: { name: "М", phone: "0912345678" } });
+    expect(r.success).toBe(false);
   });
 
   it("неизвестный часовой пояс — ошибка", () => {
     const r = SettingsSchema.safeParse({
       region: { timeZone: "Mars/Olympus" },
-      shop: { name: "М", phone: "0912345678" },
+      shop: { name: "М" },
     });
     expect(r.error?.issues[0]?.message).toMatch(/часовой пояс/);
   });

@@ -10,8 +10,18 @@ export function getShop(db: Db): ShopState | null {
   const row = db.select().from(settings).where(eq(settings.id, 1)).get();
   if (!row) return null;
   // Настройки, сохранённые до появления нового флага, получают его значение по умолчанию.
-  const parsed = SettingsSchema.safeParse(row.data);
+  const parsed = SettingsSchema.safeParse(upgrade(row.data));
   return { settings: parsed.success ? parsed.data : row.data, pausedUntil: row.pausedUntil };
+}
+
+/** Убранные поля старых настроек. Иначе strictObject отверг бы их, и сохранить настройки было бы нельзя. */
+function upgrade(data: unknown): unknown {
+  if (typeof data !== "object" || data === null || !("shop" in data)) return data;
+  const shop = data.shop;
+  if (typeof shop !== "object" || shop === null || !("phone" in shop)) return data;
+  // Телефон магазина больше не храним и не показываем (15.11.2026) — контакт теперь shop.manager.
+  const { phone: _phone, ...rest } = shop;
+  return { ...data, shop: rest };
 }
 
 export function saveSettings(db: Db, data: Settings, now: Date): void {

@@ -35,7 +35,7 @@ describe("первая настройка", () => {
     const shop = (await t.call("GET", "/api/shop")).json;
     expect(shop).toMatchObject({
       ready: true,
-      shop: { name: "Печка", phone: "+84905123456" },
+      shop: { name: "Печка", manager: "pechka_manager" },
       region: { currency: "VND", timeZone: "Asia/Ho_Chi_Minh" },
       status: { open: true, closesAt: "22:00" },
     });
@@ -49,12 +49,44 @@ describe("первая настройка", () => {
     const t = setup();
     const r = await t.call("POST", "/api/setup", {
       as: OWNER,
-      body: { shop: { name: "", phone: "1" } },
+      body: { shop: { name: "", manager: "+84905123456" } },
     });
     expect(r.status).toBe(400);
     expect(r.json.issues).toEqual(
-      expect.arrayContaining([{ path: "shop.name", message: "Как называется магазин?" }]),
+      expect.arrayContaining([
+        { path: "shop.name", message: "Как называется магазин?" },
+        {
+          path: "shop.manager",
+          message: "Нужно имя пользователя Telegram, например @pechka_manager",
+        },
+      ]),
     );
+  });
+
+  it("старые настройки с телефоном магазина читаются и сохраняются без него", async () => {
+    const t = setup();
+    await t.call("POST", "/api/setup", { as: OWNER, body: SETUP_BODY });
+    const row = t.deps.db.select().from(settings).get();
+    if (!row) throw new Error("нет настроек");
+    // Как на проде до 15.11.2026: в настройках лежал телефон магазина.
+    const legacy = { ...row.data, shop: { name: "Печка", phone: "+84905123456" } };
+    t.deps.db
+      .update(settings)
+      .set({ data: legacy as unknown as typeof row.data })
+      .run();
+
+    const shop = (await t.call("GET", "/api/shop")).json;
+    expect(shop.shop).toEqual({ name: "Печка" });
+    const { region: _region, ...saved } = (
+      await t.call("GET", "/api/admin/settings", { as: OWNER })
+    ).json;
+    expect(saved.shop.phone).toBeUndefined();
+    const r = await t.call("PUT", "/api/admin/settings", {
+      as: OWNER,
+      body: { ...saved, shop: { ...saved.shop, manager: "t.me/pechka_manager" } },
+    });
+    expect(r.status).toBe(200);
+    expect(r.json.shop.manager).toBe("pechka_manager");
   });
 });
 

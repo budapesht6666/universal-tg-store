@@ -5,7 +5,7 @@
  */
 import { ImageRefSchema } from "./fields.ts";
 import { WeekHoursSchema } from "./hours.ts";
-import { normalizePhone } from "./phone.ts";
+import { telegramUsernameSchema } from "./telegram.ts";
 import { z } from "./zod.ts";
 
 export const REGIONS = {
@@ -54,10 +54,10 @@ export function regionFor(country: RegionCode): Region {
 
 export const ShopInfoSchema = z.strictObject({
   name: z.string().trim().min(1, { error: "Как называется магазин?" }).max(64),
-  phone: z
-    .string()
-    .trim()
-    .min(1, { error: "Нужен телефон — по нему покупатель свяжется с магазином" }),
+  /** Телефона магазина нет намеренно: покупателю показываем только Telegram менеджера. */
+  manager: telegramUsernameSchema.meta({
+    description: "Telegram менеджера (без @) — покупатель напишет или позвонит по вопросам",
+  }),
   logo: ImageRefSchema.optional().meta({
     description: "Логотип в шапке магазина — квадрат, обычно тот же, что аватар бота",
   }),
@@ -135,32 +135,18 @@ export const OrderSettingsSchema = z.strictObject({
     .meta({ description: "Покупатель может сам отменить заказ, пока он в статусе «Оформлен»" }),
 });
 
-export const SettingsSchema = z
-  .strictObject({
-    region: RegionSchema.prefault({}),
-    shop: ShopInfoSchema,
-    hours: WeekHoursSchema.prefault({}),
-    features: FeaturesSchema.prefault({}),
-    orders: OrderSettingsSchema.prefault({}),
-  })
-  .transform((settings, ctx) => {
-    const phone = normalizePhone(settings.shop.phone, settings.region.phoneCode);
-    if (phone === null) {
-      ctx.issues.push({
-        code: "custom",
-        path: ["shop", "phone"],
-        input: settings.shop.phone,
-        message: "Номер неполный — проверьте цифры",
-      });
-      return z.NEVER;
-    }
-    return { ...settings, shop: { ...settings.shop, phone } };
-  });
+export const SettingsSchema = z.strictObject({
+  region: RegionSchema.prefault({}),
+  shop: ShopInfoSchema,
+  hours: WeekHoursSchema.prefault({}),
+  features: FeaturesSchema.prefault({}),
+  orders: OrderSettingsSchema.prefault({}),
+});
 export type Settings = z.output<typeof SettingsSchema>;
 export type SettingsInput = z.input<typeof SettingsSchema>;
 
 /**
- * Мастер первой настройки: страна, название, телефон, часы работы и меню (демо или пустое).
+ * Мастер первой настройки: страна, название, Telegram менеджера, часы работы и меню (демо или пустое).
  * Всё остальное — значения по умолчанию, их можно поменять потом в админке.
  */
 export const SetupInputSchema = z.strictObject({

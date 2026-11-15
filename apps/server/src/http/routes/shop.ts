@@ -30,7 +30,7 @@ export const shopRoutes = new Hono<AppEnv>()
       bot,
       shop: {
         name: settings.shop.name,
-        phone: settings.shop.phone,
+        ...(settings.shop.manager && { manager: settings.shop.manager }),
         ...(settings.shop.logo && { logo: settings.shop.logo }),
       },
       region: settings.region,

@@ -5,15 +5,16 @@ import {
   ORDER_STATUS_LABELS,
   type OrderStatus,
   RATING_MAX,
+  telegramLink,
 } from "@store/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Check, Copy, Phone, Star } from "lucide-react";
+import { Send, Star } from "lucide-react";
 import { useState } from "react";
 import { BottomBar, Screen, Spinner } from "../components/ui.tsx";
 import { api, type Order } from "../lib/api.ts";
 import { useMoney, useReadyShop } from "../lib/shop.ts";
-import { copyText, haptic } from "../lib/telegram.ts";
+import { haptic, openTelegramChat } from "../lib/telegram.ts";
 
 const EXPECT: Record<OrderStatus, { title: string; text: (o: Order, sum: string) => string }> = {
   new: {
@@ -88,7 +89,11 @@ export function OrderScreen({ id }: { id: number }) {
             <ol className="m-0 flex list-none gap-1.5 p-0" aria-label="Ход заказа">
               {ORDER_FLOW.map((s, i) => (
                 <li key={s} className="flex flex-1 flex-col gap-1.5">
-                  <span className={`h-1.5 rounded-full ${i <= step ? "bg-accent" : "bg-muted"}`} />
+                  <span
+                    className={`h-1.5 rounded-full ${
+                      i > step ? "bg-muted" : o.status === "done" ? "bg-ok" : "bg-accent"
+                    }`}
+                  />
                   <span
                     className={`text-[11px] leading-[14px] ${i <= step ? "font-semibold text-ink" : "text-hint"}`}
                   >
@@ -140,12 +145,12 @@ export function OrderScreen({ id }: { id: number }) {
           {o.comment && <span className="text-hint">«{o.comment}»</span>}
         </div>
 
-        <ShopPhone phone={shop.shop.phone} />
         {o.chatOpen && (
           <span className="text-center text-[13px] text-hint">
-            Или напишите в чат с ботом — ответит менеджер
+            Вопрос по заказу — напишите в чат с ботом, ответит менеджер
           </span>
         )}
+        {shop.shop.manager && <ManagerContact username={shop.shop.manager} />}
 
         {o.cancelMode !== "none" && !(o.cancelMode === "request" && o.cancelRequested) && (
           <div className="flex flex-col gap-2">
@@ -206,29 +211,29 @@ export function OrderScreen({ id }: { id: number }) {
   );
 }
 
-/** Телефон магазина с кнопкой «Скопировать»: `tel:` в Mini App не работает. */
-function ShopPhone({ phone }: { phone: string }) {
-  const [copied, setCopied] = useState(false);
+/**
+ * Контакт магазина — Telegram менеджера (телефон магазина не показываем). В его профиле
+ * покупатель может и написать, и позвонить через Telegram.
+ */
+function ManagerContact({ username }: { username: string }) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-card py-2 pr-2 pl-4">
-      <Phone size={18} className="flex-none text-accent" />
+      <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-accent-soft text-accent-ink">
+        <Send size={17} />
+      </span>
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className="text-[13px] text-hint">Телефон магазина</span>
-        <span className="font-semibold select-all">{phone}</span>
+        <span className="text-[13px] text-hint">Менеджер в Telegram</span>
+        <span className="truncate font-semibold">@{username}</span>
       </div>
       <button
         type="button"
-        onClick={async () => {
-          if (await copyText(phone)) {
-            haptic.success();
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          }
+        onClick={() => {
+          haptic.tap();
+          openTelegramChat(telegramLink(username));
         }}
-        className="flex h-9 flex-none items-center gap-1.5 rounded-lg bg-accent-soft px-3 text-[13px] font-semibold text-accent-ink"
+        className="flex h-9 flex-none items-center rounded-lg bg-muted px-3 text-[13px] font-semibold text-ink"
       >
-        {copied ? <Check size={15} /> : <Copy size={15} />}
-        {copied ? "Скопирован" : "Скопировать"}
+        Написать
       </button>
     </div>
   );
@@ -247,7 +252,7 @@ function Stars({
     <Star
       size={size}
       strokeWidth={1.8}
-      className={n <= value ? "fill-accent text-accent" : "text-hint"}
+      className={n <= value ? "fill-accent text-accent" : "text-[#c7c7cc]"}
     />
   );
   const all = Array.from({ length: RATING_MAX }, (_, i) => i + 1);
@@ -261,7 +266,7 @@ function Stars({
     );
   }
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-2">
       {all.map((n) => (
         <button
           key={n}
@@ -269,7 +274,7 @@ function Stars({
           aria-pressed={n === value}
           aria-label={`${n} из ${RATING_MAX}`}
           onClick={() => onPick(n)}
-          className="flex h-11 w-11 items-center justify-center"
+          className="flex h-12 w-12 items-center justify-center"
         >
           {icon(n)}
         </button>
@@ -309,7 +314,7 @@ function ReviewCard({ order: o }: { order: Order }) {
       <div className="-mx-1.5">
         <Stars
           value={rating}
-          size={30}
+          size={36}
           onPick={(n) => {
             haptic.tap();
             setRating(n);

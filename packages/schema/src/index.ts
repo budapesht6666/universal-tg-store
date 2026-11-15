@@ -11,4 +11,5 @@ export * from "./parse.ts";
 export * from "./phone.ts";
 export * from "./settings.ts";
 export * from "./team.ts";
+export * from "./telegram.ts";
 export { z } from "./zod.ts";

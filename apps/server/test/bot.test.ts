@@ -62,7 +62,8 @@ describe("переписка покупателя с магазином", () => 
     const replies = sent.filter((s) => s.method === "sendMessage" && s.payload.chat_id === ANNA);
     expect(replies).toHaveLength(1);
     expect(replies[0]?.payload.text).toContain("Писать магазину можно по текущему заказу");
-    expect(replies[0]?.payload.text).toContain("+84");
+    expect(replies[0]?.payload.text).toContain("напишите менеджеру: @pechka_manager");
+    expect(replies[0]?.payload.text).not.toContain("+84");
 
     t.clock.now = new Date(NOON.getTime() + 11 * 60_000);
     await write(ANNA, "алло");

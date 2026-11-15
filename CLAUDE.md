@@ -29,6 +29,7 @@ pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест 
 - zod импортируем только из `src/zod.ts`: там включены русская локаль и свои понятные сообщения (`src/errors.ts`). Настройка глобальная.
 - Объекты каталога — `z.strictObject`: опечатка в ключе JSON = ошибка. Вложенные объекты настроек с дефолтами внутри — `.prefault({})`, а не `.default({})` (в zod 4 `default` не прогоняет значение через схему).
 - Меню (формат JSON) — `src/catalog.ts`; настройки магазина (в БД, не в файле меню) — `src/settings.ts`; часы работы и «открыт ли сейчас» — `src/hours.ts`.
+- Телефона магазина нет намеренно: контакт для покупателей — Telegram менеджера `shop.manager` (`src/telegram.ts`, необязательный). Убранные поля старых настроек из БД (`shop.phone`) отрезает `upgrade` в `apps/server/src/repo/settings.ts` — иначе `strictObject` их отвергнет.
 - Статусы заказа, переходы, отмена, форма оформления, роли — `src/order.ts`, `src/team.ts`; правила — `docs/product-decisions.md`.
 - Формы админки (категория, блюдо, настройки, порядок) и `slugify` — `src/admin.ts`; пауза приёма заказов — `src/hours.ts`.
 

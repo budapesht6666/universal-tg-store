@@ -81,7 +81,7 @@ export type TestCtx = ReturnType<typeof setup>;
 
 export const SETUP_BODY = {
   country: "VN",
-  shop: { name: "Печка", phone: "0905 123 456" },
+  shop: { name: "Печка", manager: "@pechka_manager" },
   menu: "demo",
 };
 

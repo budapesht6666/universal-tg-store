@@ -121,11 +121,15 @@ function SettingsForm({ initial }: { initial: Settings }) {
               />
             </div>
             <TextField
-              label="Телефон — покажем покупателям"
-              value={shop.phone}
-              onChange={(phone) => setShop({ ...shop, phone })}
-              type="tel"
-              error={errors["shop.phone"]}
+              label="Telegram менеджера — необязательно"
+              value={shop.manager ?? ""}
+              onChange={(manager) => setShop({ ...shop, manager })}
+              placeholder="@pechka_manager"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              hint="Покупатели смогут написать ему со страницы заказа."
+              error={errors["shop.manager"]}
             />
           </Card>
 
