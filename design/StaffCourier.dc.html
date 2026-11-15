@@ -57,9 +57,14 @@ button{font:inherit;color:inherit}
       <a href="#map" style="height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 14px; background: #1F73D6; color: #FFFFFF; font-size: 16px; font-weight: 700; text-decoration: none">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 22 2l-9 19-2-8-8-2Z"></path></svg>Открыть в Google Maps
       </a>
-      <button style="height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; background: #EFEFF3; color: #0B0B0C; font-weight: 600; border: 0; cursor: pointer">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8h12v12H8zM16 8V4H4v12h4"></path></svg>Номер
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <button style="height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; background: #EFEFF3; color: #0B0B0C; font-weight: 600; border: 0; cursor: pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8h12v12H8zM16 8V4H4v12h4"></path></svg>Номер
         </button>
+        <a href="#chat" style="height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; background: #EFEFF3; color: #0B0B0C; font-weight: 600; text-decoration: none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>Написать
+        </a>
+      </div>
 
       <details style="font-size: 14px">
         <summary style="color: #6B6B73; cursor: pointer">Состав · 3 порции</summary>
@@ -80,7 +85,7 @@ button{font:inherit;color:inherit}
       <button style="height: 40px; padding: 0 12px; border: 0; border-radius: 12px; background: #B5482A; color: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer">Забрал, еду</button>
     </article>
 
-    <p style="margin: 4px 0 0; font-size: 13px; line-height: 18px; color: #6B6B73; text-align: center">«Не получилось» в меню ⋯ — с причиной, заказ вернётся менеджеру. После доставки адрес и телефон скрываются.</p>
+    <p style="margin: 4px 0 0; display: flex; flex-direction: column; font-size: 13px; line-height: 18px; color: #6B6B73; text-align: center"><span>«Не получилось» — в меню ⋯, с причиной: заказ вернётся менеджеру.</span><span>После доставки адрес и телефон скрываются.</span><span>«Написать» — если у покупателя есть ник в Telegram.</span></p>
   </div>
 </div>
 </x-dc>
