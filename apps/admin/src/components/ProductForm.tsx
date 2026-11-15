@@ -15,10 +15,12 @@ import { useState } from "react";
 import { ApiError, api, type Catalog, type Product } from "../lib/api.ts";
 import { ImageUpload } from "./ImageUpload.tsx";
 import {
+  FIELD_LABEL,
   FieldError,
   issuesToErrors,
   PrimaryButton,
   SecondaryButton,
+  TEXTAREA,
   TextField,
   Toggle,
 } from "./ui.tsx";
@@ -123,7 +125,7 @@ export function ProductForm({
 
   return (
     <form
-      className="mx-auto flex w-full max-w-[560px] flex-col gap-4 rounded-2xl bg-card p-4 pb-28 lg:pb-4"
+      className="mx-auto flex w-full max-w-[560px] flex-col gap-4 rounded-2xl bg-card p-4 pb-28 lg:rounded-xl lg:pb-4 lg:shadow-[inset_0_0_0_1px_var(--line)]"
       onSubmit={(e) => {
         e.preventDefault();
         save.mutate();
@@ -156,14 +158,14 @@ export function ProductForm({
         error={errors.title}
       />
       <label className="flex flex-col gap-1.5">
-        <span className="text-[13px] text-hint">Состав</span>
+        <span className={FIELD_LABEL}>Состав</span>
         <textarea
           rows={3}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           maxLength={1000}
           placeholder="Со сметаной и чесночной пампушкой"
-          className="resize-y rounded-xl border border-line bg-card px-3.5 py-3 outline-none focus:border-accent"
+          className={TEXTAREA}
         />
         <FieldError message={errors.description} />
       </label>
@@ -190,11 +192,11 @@ export function ProductForm({
       </div>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-[13px] text-hint">Категория</span>
+        <span className={FIELD_LABEL}>Категория</span>
         <select
           value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
-          className="h-11 rounded-xl border border-line bg-card px-3 outline-none"
+          className="h-11 rounded-xl border border-line bg-card px-3 outline-none lg:h-[38px] lg:rounded-lg"
         >
           {catalog.categories.map((c) => (
             <option key={c.id} value={c.id}>
@@ -207,7 +209,7 @@ export function ProductForm({
 
       {features.badges && (
         <div className="flex flex-col gap-1.5">
-          <span className="text-[13px] text-hint">Метки · до трёх</span>
+          <span className={FIELD_LABEL}>Метки · до трёх</span>
           <div className="flex flex-wrap items-center gap-2">
             {badges.map((b) => (
               <span
@@ -345,11 +347,11 @@ function AttributeField({
     case "select":
       return (
         <label className="flex flex-col gap-1.5">
-          <span className="text-[13px] text-hint">{label}</span>
+          <span className={FIELD_LABEL}>{label}</span>
           <select
             value={typeof value === "string" ? value : ""}
             onChange={(e) => onChange(e.target.value || undefined)}
-            className="h-11 rounded-xl border border-line bg-card px-3 outline-none"
+            className="h-11 rounded-xl border border-line bg-card px-3 outline-none lg:h-[38px] lg:rounded-lg"
           >
             <option value="">—</option>
             {def.options.map((o) => (

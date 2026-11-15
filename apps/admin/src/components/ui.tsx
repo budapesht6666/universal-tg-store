@@ -232,6 +232,12 @@ export function Sheet({
   );
 }
 
+/** Подпись поля: на телефоне мелкая серая, на компьютере — тёмная, как в макетах админки. */
+export const FIELD_LABEL = "text-[13px] text-hint lg:text-sm lg:font-medium lg:text-ink";
+/** Многострочное поле в том же стиле, что TextField. */
+export const TEXTAREA =
+  "resize-y rounded-xl border border-line bg-card px-3.5 py-3 outline-none focus:border-accent lg:rounded-lg lg:px-3 lg:py-2";
+
 export function TextField({
   label,
   value,
@@ -248,11 +254,11 @@ export function TextField({
 } & Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
   return (
     <label className="flex flex-col gap-1.5" data-error={!!error}>
-      <span className="text-[13px] text-hint">{label}</span>
+      <span className={FIELD_LABEL}>{label}</span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`h-11 rounded-xl border bg-card px-3.5 outline-none placeholder:text-hint focus:border-accent ${
+        className={`h-11 rounded-xl border bg-card px-3.5 outline-none placeholder:text-hint focus:border-accent lg:h-[38px] lg:rounded-lg lg:px-3 ${
           error ? "border-danger" : "border-line"
         }`}
         {...rest}

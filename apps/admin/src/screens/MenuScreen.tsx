@@ -8,6 +8,7 @@ import {
   ArrowDown,
   ArrowUp,
   Check,
+  ExternalLink,
   EyeOff,
   Pencil,
   Plus,
@@ -19,7 +20,8 @@ import { type ReactNode, useState } from "react";
 import { ProductForm } from "../components/ProductForm.tsx";
 import { FieldError, Spinner, Toggle } from "../components/ui.tsx";
 import { api, type Catalog, type CategoryRow, type Product } from "../lib/api.ts";
-import { useMoney } from "../lib/session.ts";
+import { useMoney, useShopInfo } from "../lib/session.ts";
+import { openTelegram } from "../lib/telegram.ts";
 
 function move<T>(list: T[], index: number, delta: number): T[] {
   const next = [...list];
@@ -32,6 +34,7 @@ function move<T>(list: T[], index: number, delta: number): T[] {
 export function MenuScreen() {
   const queryClient = useQueryClient();
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.catalog });
+  const shop = useShopInfo();
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Product | "new" | null>(null);
   const refresh = () => {
@@ -46,23 +49,51 @@ export function MenuScreen() {
   const current = c.categories.find((x) => x.id === categoryId) ?? c.categories[0] ?? null;
   const products = current ? c.products.filter((p) => p.categoryId === current.id) : [];
   const soldOut = c.products.filter((p) => !p.available).length;
+  const bot = shop.data?.bot ?? null;
 
   return (
-    <div className="flex flex-col gap-3 p-4 lg:p-6">
-      <div className="flex flex-col">
-        <h1 className="m-0 text-2xl font-bold">Меню</h1>
-        <span className="text-[13px] text-hint">
-          {c.categories.length} категорий · {c.products.length} блюд
-          {soldOut ? ` · ${soldOut} закончились` : ""}
-        </span>
-      </div>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)_minmax(360px,420px)]">
+    <div className="flex flex-col gap-3 p-4 lg:gap-5 lg:px-7 lg:py-6">
+      <header className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-1 basis-60 flex-col">
+          <h1 className="m-0 text-2xl font-bold">Меню</h1>
+          <span className="text-[13px] text-hint lg:text-sm">
+            {c.categories.length} категорий · {c.products.length} блюд
+            {soldOut ? ` · ${soldOut} закончились` : ""}
+          </span>
+        </div>
+        {bot && (
+          <button
+            type="button"
+            onClick={() => openTelegram(`https://t.me/${bot}?startapp`)}
+            className="hidden h-[38px] items-center gap-1.5 rounded-lg bg-card px-3.5 font-medium shadow-[inset_0_0_0_1px_var(--line)] lg:flex"
+          >
+            <ExternalLink size={15} /> Открыть магазин
+          </button>
+        )}
+        {current && (
+          <button
+            type="button"
+            onClick={() => setEditing("new")}
+            className="hidden h-[38px] items-center gap-1.5 rounded-lg bg-accent px-3.5 font-semibold text-white lg:flex"
+          >
+            <Plus size={16} /> Блюдо
+          </button>
+        )}
+      </header>
+      <div
+        className={`grid grid-cols-1 gap-4 ${
+          editing
+            ? "lg:grid-cols-[240px_minmax(0,1fr)_minmax(340px,380px)]"
+            : "lg:grid-cols-[240px_minmax(0,1fr)]"
+        }`}
+      >
         <Categories catalog={c} current={current} onSelect={setCategoryId} onChanged={refresh} />
         <Products
           catalog={c}
           category={current}
           products={products}
           selected={editing === "new" ? null : (editing?.id ?? null)}
+          compact={editing !== null}
           onEdit={setEditing}
           onChanged={refresh}
         />
@@ -121,7 +152,7 @@ function Categories({
 
   return (
     <aside className="flex min-w-0 flex-col gap-2">
-      <div className="no-scrollbar flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible lg:rounded-2xl lg:bg-card lg:p-2">
+      <div className="no-scrollbar flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible lg:rounded-xl lg:bg-card lg:p-2 lg:shadow-[inset_0_0_0_1px_var(--line)]">
         <span className="hidden px-2 pt-1 text-[13px] font-semibold text-hint lg:block">
           Категории
         </span>
@@ -261,6 +292,7 @@ function Products({
   category,
   products,
   selected,
+  compact,
   onEdit,
   onChanged,
 }: {
@@ -268,6 +300,8 @@ function Products({
   category: CategoryRow | null;
   products: Product[];
   selected: string | null;
+  /** Рядом открыта форма — прячем стрелки порядка, чтобы названия не обрезались. */
+  compact: boolean;
   onEdit: (p: Product | "new") => void;
   onChanged: () => void;
 }) {
@@ -306,7 +340,11 @@ function Products({
 
   return (
     <section className="flex flex-col gap-2">
-      <div className="flex flex-col overflow-hidden rounded-2xl bg-card">
+      <div className="flex flex-col overflow-hidden rounded-2xl bg-card lg:rounded-xl lg:shadow-[inset_0_0_0_1px_var(--line)]">
+        <div className="hidden items-center gap-2 border-b border-line px-4 py-3 lg:flex">
+          <h2 className="m-0 flex-1 text-base font-bold">{category.title}</h2>
+          <span className="text-[13px] text-hint">Есть в наличии</span>
+        </div>
         {products.length === 0 && (
           <div className="p-6 text-center text-hint">В категории пока нет блюд</div>
         )}
@@ -332,7 +370,10 @@ function Products({
               <span className={`flex min-w-0 flex-col ${p.available ? "" : "opacity-55"}`}>
                 <span className="truncate font-semibold">{p.title}</span>
                 <span className="flex items-center gap-1.5 text-[13px] text-hint">
-                  {money(p.price)}
+                  <span className="lg:hidden">{money(p.price)}</span>
+                  {p.compareAtPrice !== undefined && (
+                    <span className="hidden lg:inline">было {money(p.compareAtPrice)}</span>
+                  )}
                   {!p.isActive && (
                     <span className="flex items-center gap-1 rounded bg-muted px-1.5 text-xs">
                       <EyeOff size={11} /> скрыто
@@ -354,7 +395,10 @@ function Products({
                 )}
               </span>
             </button>
-            <span className="hidden items-center md:flex">
+            <span className="hidden w-24 flex-none text-right font-semibold lg:block">
+              {money(p.price)}
+            </span>
+            <span className={`hidden items-center ${compact ? "" : "md:flex"}`}>
               <IconButton
                 label="Выше"
                 disabled={i === 0}
@@ -381,13 +425,13 @@ function Products({
       <button
         type="button"
         onClick={() => onEdit("new")}
-        className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-accent-soft font-semibold text-accent-ink"
+        className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-accent-soft font-semibold text-accent-ink lg:hidden"
       >
         <Plus size={16} /> Блюдо в «{category.title}»
       </button>
-      <span className="text-xs text-hint">
-        Выключили «Есть» — блюдо остаётся в меню серым с надписью «Закончилось». То же переключается
-        с телефона.
+      <span className="flex flex-col px-1 text-xs leading-[17px] text-hint">
+        <span>Выключили «Есть» — блюдо остаётся в меню серым с надписью «Закончилось».</span>
+        <span>То же переключается с телефона.</span>
       </span>
       <FieldError message={error ?? undefined} />
       {catalog.categories.length === 0 && null}
