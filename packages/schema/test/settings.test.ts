@@ -68,7 +68,7 @@ describe("первая настройка", () => {
     });
     expect(r.data.shop.phone).toBe("+84912345678");
     expect(r.data.hours.mon).toEqual({ from: "10:00", to: "22:00" });
-    expect(r.data.features).toEqual({ discounts: true, badges: true });
+    expect(r.data.features).toEqual({ discounts: true, badges: true, reviews: true });
     expect(r.data.orders.customerCanCancel).toBe(true);
   });
 

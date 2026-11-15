@@ -127,7 +127,8 @@ export function createBotNotifier(api: Api, deps: Deps): Notifier & { idle(): Pr
   }
 
   async function toCustomer(order: OrderRow, byCustomer = false) {
-    const msg = customerMessage(order, env, locale(), byCustomer);
+    const reviews = getShop(db)?.settings.features.reviews ?? false;
+    const msg = customerMessage(order, env, locale(), byCustomer, reviews);
     await send(order.customerId, msg.text, {
       silent: byCustomer || order.status === "new",
       markup: msg.reply_markup,

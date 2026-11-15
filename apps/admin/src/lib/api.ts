@@ -84,6 +84,7 @@ export const api = {
   order: (id: number) => request<StaffOrder>("GET", `/staff/orders/${id}`),
   action: (id: number, action: StaffOrderAction) =>
     request<StaffOrder>("POST", `/staff/orders/${id}/actions`, action),
+  reviewSeen: (id: number) => request<StaffOrder>("POST", `/staff/orders/${id}/review-seen`),
   couriers: () => request<{ couriers: { id: number; name: string }[] }>("GET", "/staff/couriers"),
   pause: (pause: PauseOption) =>
     request<{ pausedUntil: string | null }>("POST", "/staff/pause", { pause }),

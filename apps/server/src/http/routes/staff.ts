@@ -2,7 +2,13 @@
 import { can, PauseInputSchema, pauseUntil, StaffOrderActionSchema } from "@store/schema";
 import { Hono } from "hono";
 import { AppError, parseInput } from "../../errors.ts";
-import { getOrder, staffAction, staffBoard, staffView } from "../../orders/service.ts";
+import {
+  getOrder,
+  markReviewSeen,
+  staffAction,
+  staffBoard,
+  staffView,
+} from "../../orders/service.ts";
 import { getShop, setPause, statusOf } from "../../repo/settings.ts";
 import { staffWith } from "../../repo/team.ts";
 import { type AppEnv, requirePermission, requireUser } from "../auth.ts";
@@ -44,6 +50,13 @@ export const staffRoutes = new Hono<AppEnv>()
     }
     const action = parseInput(StaffOrderActionSchema, await jsonBody(c));
     const order = staffAction(c.var.deps, user, orderIdParam(c), action);
+    return c.json(staffView(c.var.deps.db, order, user));
+  })
+
+  /** Менеджер открыл карточку с отзывом — снять пометку «новый отзыв». */
+  .post("/staff/orders/:id/review-seen", (c) => {
+    const user = requireUser(c);
+    const order = markReviewSeen(c.var.deps, user, orderIdParam(c));
     return c.json(staffView(c.var.deps.db, order, user));
   })
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { settings } from "../src/db/schema.ts";
 import { dueReminders } from "../src/orders/service.ts";
 import { claimInvite, completeInvite, createInvite } from "../src/repo/team.ts";
 import {
@@ -273,5 +274,80 @@ describe("менеджер и курьер", () => {
     expect(dueReminders(t.deps)).toEqual([]);
     t.clock.now = new Date(NOON.getTime() + 6 * 60_000);
     expect(dueReminders(t.deps).map((r) => r.waitingMinutes)).toEqual([6]);
+  });
+});
+
+describe("отзыв после доставки", () => {
+  it("один раз, только доставленный свой заказ; менеджер видит, курьер — нет", async () => {
+    const t = setup();
+    await openShop(t);
+    await addCourier(t, IVAN);
+    await t.call("POST", "/api/orders", { as: ANNA, body: ORDER_BODY });
+    const review = (as: number, body: object) =>
+      t.call("POST", "/api/orders/1001/review", { as, body });
+    const act = (as: number, body: object) =>
+      t.call("POST", "/api/staff/orders/1001/actions", { as, body });
+
+    expect((await t.call("GET", "/api/orders/1001", { as: ANNA })).json.canReview).toBe(false);
+    expect((await review(ANNA, { rating: 5 })).status).toBe(409); // ещё не доставлен
+    await act(OWNER, { action: "accept" });
+    await act(OWNER, { action: "assign", courierId: IVAN });
+    await act(IVAN, { action: "pickup" });
+    await act(IVAN, { action: "deliver" });
+    expect((await t.call("GET", "/api/orders/1001", { as: ANNA })).json.canReview).toBe(true);
+
+    expect((await review(OWNER, { rating: 5 })).status).toBe(404); // чужой заказ
+    expect((await review(ANNA, { rating: 0 })).status).toBe(400);
+    expect((await review(ANNA, { rating: 6 })).status).toBe(400);
+
+    // Через двое суток доставленный заказ ушёл бы из «Готово», но отзыв его возвращает.
+    t.clock.now = new Date(NOON.getTime() + 48 * 3600_000);
+    const sent = await review(ANNA, { rating: 4, text: "  Вкусно, но остыло  " });
+    expect(sent.json).toMatchObject({
+      canReview: false,
+      review: { rating: 4, text: "Вкусно, но остыло" },
+    });
+    expect((await review(ANNA, { rating: 5 })).json.error).toBe("Отзыв уже оставлен — спасибо!");
+
+    const manager = (await t.call("GET", "/api/staff/orders", { as: OWNER })).json.done;
+    expect(manager.map((o: { id: number }) => o.id)).toEqual([1001]);
+    expect(manager[0].review).toMatchObject({ rating: 4, seen: false });
+    const courier = (await t.call("GET", "/api/staff/orders", { as: IVAN })).json.done;
+    expect(courier[0].review).toBeNull();
+    expect((await t.call("POST", "/api/staff/orders/1001/review-seen", { as: IVAN })).status).toBe(
+      403,
+    );
+
+    const seen = await t.call("POST", "/api/staff/orders/1001/review-seen", { as: OWNER });
+    expect(seen.json.review.seen).toBe(true);
+    // Прочитан и прошли сутки после отзыва — из «Готово» уходит.
+    t.clock.now = new Date(NOON.getTime() + 73 * 3600_000);
+    expect((await t.call("GET", "/api/staff/orders", { as: OWNER })).json.done).toEqual([]);
+  });
+
+  it("непрочитанный отзыв висит в «Готово», пока его не откроют", async () => {
+    const t = setup();
+    await openShop(t);
+    await t.call("POST", "/api/orders", { as: ANNA, body: ORDER_BODY });
+    for (const action of ["accept", "pickup", "deliver"]) {
+      await t.call("POST", "/api/staff/orders/1001/actions", { as: OWNER, body: { action } });
+    }
+    await t.call("POST", "/api/orders/1001/review", { as: ANNA, body: { rating: 2 } });
+    t.clock.now = new Date(NOON.getTime() + 5 * 24 * 3600_000);
+    const done = (await t.call("GET", "/api/staff/orders", { as: OWNER })).json.done;
+    expect(done[0].review).toMatchObject({ rating: 2, text: "", seen: false });
+  });
+
+  it("в настройках до появления флага отзывы включены по умолчанию", async () => {
+    const t = setup();
+    await openShop(t);
+    const row = t.deps.db.select().from(settings).get();
+    if (!row) throw new Error("нет настроек");
+    const { reviews: _, ...oldFeatures } = row.data.features;
+    t.deps.db
+      .update(settings)
+      .set({ data: { ...row.data, features: oldFeatures as typeof row.data.features } })
+      .run();
+    expect((await t.call("GET", "/api/shop")).json.features.reviews).toBe(true);
   });
 });

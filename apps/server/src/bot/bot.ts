@@ -2,14 +2,15 @@
  * Бот: /start (меню, первая настройка, приглашение в команду), /login (вход на компьютере),
  * кнопки в уведомлениях («Принять», «Забрал, еду», «Доставлен») и переписка покупателя
  * с магазином: сообщение покупателя уходит менеджерам, ответ менеджера — покупателю.
+ * Писать можно только по заказу в работе (и сутки после него) — иначе бот вежливо отказывает.
  */
 import { can, normalizePhone, type StaffOrderActionName } from "@store/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { Bot, type Context, InlineKeyboard, Keyboard } from "grammy";
 import { botMessages, orders } from "../db/schema.ts";
 import type { Deps } from "../deps.ts";
 import { AppError } from "../errors.ts";
-import { staffAction } from "../orders/service.ts";
+import { chatOrder, staffAction } from "../orders/service.ts";
 import { getShop } from "../repo/settings.ts";
 import {
   claimInvite,
@@ -25,6 +26,9 @@ import { esc, roleLabel, shopAppUrl, staffAppUrl, webAppButton } from "./texts.t
 
 const CUSTOMER_COMMANDS = [{ command: "start", description: "Меню и как заказать" }];
 const LOGIN_COMMAND = { command: "login", description: "Админка на компьютере" };
+
+/** Отказ «пишите по заказу» — не чаще раза в 10 минут одному человеку. */
+const NO_ORDER_REPLY_EVERY_MS = 10 * 60 * 1000;
 
 const CALLBACK_ACTIONS: Record<string, StaffOrderActionName> = {
   a: "accept",
@@ -59,6 +63,7 @@ export function createBot(deps: Deps): Bot {
   const { db, env } = deps;
   const bot = new Bot(env.BOT_TOKEN);
   const pm = bot.chatType("private");
+  const noOrderRepliedAt = new Map<number, number>();
 
   pm.use(async (ctx, next) => {
     upsertUser(
@@ -225,18 +230,29 @@ export function createBot(deps: Deps): Bot {
       return;
     }
 
-    if (!getShop(db)) return;
-    const lastOrder = db
-      .select()
-      .from(orders)
-      .where(eq(orders.customerId, ctx.from.id))
-      .orderBy(desc(orders.createdAt))
-      .limit(1)
-      .get();
+    const shop = getShop(db);
+    if (!shop) return;
+    const lastOrder = chatOrder(db, ctx.from.id, deps.now());
+    if (!lastOrder) {
+      // Без заказа менеджерам не пишем — иначе бот превращается в канал для спама.
+      const now = deps.now().getTime();
+      const last = noOrderRepliedAt.get(ctx.from.id);
+      if (last !== undefined && now - last < NO_ORDER_REPLY_EVERY_MS) return;
+      noOrderRepliedAt.set(ctx.from.id, now);
+      await ctx.reply(
+        [
+          "Писать магазину можно по текущему заказу — тогда сообщение сразу увидит менеджер.",
+          "Чтобы заказать, нажмите «Меню» внизу.",
+          `Другой вопрос — позвоните или напишите: ${esc(shop.settings.shop.phone)}`,
+        ].join("\n"),
+        { parse_mode: "HTML" },
+      );
+      return;
+    }
     const who = [
       `💬 <b>${esc(displayName({ firstName: ctx.from.first_name, lastName: ctx.from.last_name ?? null }))}</b>`,
       ctx.from.username ? `@${esc(ctx.from.username)}` : null,
-      lastOrder ? `заказ #${lastOrder.id}` : "без заказов",
+      `заказ #${lastOrder.id}`,
     ]
       .filter(Boolean)
       .join(" · ");
@@ -249,11 +265,11 @@ export function createBot(deps: Deps): Bot {
             parse_mode: "HTML",
           },
         );
-        rememberRelay(deps, m.id, head.message_id, ctx.from.id, lastOrder?.id ?? null);
+        rememberRelay(deps, m.id, head.message_id, ctx.from.id, lastOrder.id);
         const copy = await ctx.api.copyMessage(m.id, ctx.chat.id, ctx.message.message_id, {
           disable_notification: true,
         });
-        rememberRelay(deps, m.id, copy.message_id, ctx.from.id, lastOrder?.id ?? null);
+        rememberRelay(deps, m.id, copy.message_id, ctx.from.id, lastOrder.id);
       } catch (err) {
         console.error(`Бот: не переслалось сообщение менеджеру ${m.id}:`, String(err));
       }

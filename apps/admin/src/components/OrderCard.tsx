@@ -1,7 +1,8 @@
 /**
  * Карточка заказа на экране «Заказы». Раскрывается на месте: состав, сумма, контакты,
- * кнопки Позвонить · Написать · Карта и одна большая кнопка следующего шага.
- * Отмена и «Не получилось» — в меню «⋯».
+ * кнопки Номер (копирует — `tel:` в Mini App не работает) · Написать · Карта и одна большая кнопка следующего шага.
+ * Отмена и «Не получилось» — в меню «⋯». Отзыв покупателя видит менеджер: пока карточку
+ * не раскрыли, на ней «новый отзыв» (без звука), раскрыли — пометка снимается.
  */
 import {
   CANCEL_REASON_LABELS,
@@ -11,22 +12,25 @@ import {
   DELIVERY_FAILURE_REASONS,
   type DeliveryFailureReason,
   ORDER_STATUS_LABELS,
+  RATING_MAX,
   type StaffOrderAction,
 } from "@store/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
+  Check,
   ChevronDown,
   Clock,
+  Copy,
   MapPin,
   MessageCircle,
   MoreHorizontal,
-  Phone,
+  Star,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ApiError, api, type StaffOrder } from "../lib/api.ts";
 import { useMoney } from "../lib/session.ts";
-import { haptic, openExternal, openTelegram } from "../lib/telegram.ts";
+import { copyText, haptic, openExternal, openTelegram } from "../lib/telegram.ts";
 import { FieldError, PrimaryButton, SecondaryButton, Sheet } from "./ui.tsx";
 
 export type Mode = "manager" | "courier";
@@ -93,7 +97,17 @@ export function OrderCard({
       primary = { label: "Доставлен", action: { action: "deliver" } };
   }
 
-  const highlight = o.status === "new" || o.cancelRequested || o.deliveryIssue;
+  const newReview = o.review !== null && !o.review.seen;
+  const highlight = o.status === "new" || o.cancelRequested || o.deliveryIssue || newReview;
+
+  // Раскрыли карточку с новым отзывом — отзыв прочитан.
+  useEffect(() => {
+    if (!expanded || !newReview) return;
+    api
+      .reviewSeen(o.id)
+      .then(() => queryClient.invalidateQueries({ queryKey: ["board"] }))
+      .catch(() => {});
+  }, [expanded, newReview, o.id, queryClient]);
 
   if (!expanded) {
     return (
@@ -105,9 +119,10 @@ export function OrderCard({
         }`}
       >
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="font-bold">#{o.id}</span>
             <StatusChip order={o} waiting={waiting} />
+            {o.review && <RatingChip rating={o.review.rating} fresh={newReview} />}
           </div>
           <span className="truncate text-sm text-hint">
             {o.customer.name} · {portions(count)}
@@ -130,6 +145,7 @@ export function OrderCard({
         <button type="button" onClick={onToggle} className="flex items-center gap-2">
           <span className="text-[17px] leading-[22px] font-bold">#{o.id}</span>
           <StatusChip order={o} waiting={waiting} />
+          {o.review && <RatingChip rating={o.review.rating} fresh={false} />}
         </button>
         <span className="ml-auto text-[17px] font-bold">{money(o.total)}</span>
         {!finished && (
@@ -168,6 +184,29 @@ export function OrderCard({
         </div>
       )}
 
+      {o.review && (
+        <div className="flex flex-col gap-1 rounded-xl bg-accent-soft px-3 py-2.5 text-sm">
+          <span className="flex items-center gap-2">
+            <span className="font-semibold text-accent-ink">Отзыв</span>
+            <span className="flex" role="img" aria-label={`${o.review.rating} из ${RATING_MAX}`}>
+              {Array.from({ length: RATING_MAX }, (_, i) => (
+                <Star
+                  key={i}
+                  size={15}
+                  className={i < (o.review?.rating ?? 0) ? "fill-accent text-accent" : "text-hint"}
+                />
+              ))}
+            </span>
+            <span className="ml-auto text-xs text-hint">{reviewTime(o.review.at)}</span>
+          </span>
+          {o.review.text ? (
+            <span className="whitespace-pre-line">{o.review.text}</span>
+          ) : (
+            <span className="text-hint">Без текста — только оценка</span>
+          )}
+        </div>
+      )}
+
       <ul className="m-0 flex list-none flex-col gap-1 p-0">
         {o.items.map((i) => (
           <li key={i.productId} className="flex gap-2">
@@ -196,12 +235,7 @@ export function OrderCard({
 
       {!finished && o.customer.phone && (
         <div className={`grid gap-2 ${o.customer.username ? "grid-cols-3" : "grid-cols-2"}`}>
-          <a
-            href={`tel:${o.customer.phone}`}
-            className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-muted text-sm font-semibold text-ink"
-          >
-            <Phone size={16} /> Позвонить
-          </a>
+          <CopyPhone phone={o.customer.phone} />
           {o.customer.username && (
             <SecondaryButton onClick={() => openTelegram(`https://t.me/${o.customer.username}`)}>
               <MessageCircle size={16} /> Написать
@@ -325,15 +359,40 @@ function StatusChip({ order: o, waiting }: { order: StaffOrder; waiting: number 
       </span>
     );
   }
-  const tone =
-    o.status === "cancelled"
-      ? "bg-muted text-hint"
-      : o.status === "done"
-        ? "bg-[#e3f2e7] text-[#17753a]"
-        : "bg-muted text-ink";
+  // Цвета — по макетам (StaffOrders — телефон, AdminOrdersBoard — компьютер).
+  const tone = {
+    new: "bg-muted text-ink",
+    processing: "bg-[#fdf1dc] text-[#6b3f05] lg:bg-[#fef3e2] lg:text-[#92400e]",
+    shipping: "bg-[#e4eefa] text-[#1a5cab]",
+    done: "bg-[#e3f2e7] text-[#17753a]",
+    cancelled: "bg-muted text-hint",
+  }[o.status];
   return (
     <span className={`flex h-6 items-center rounded-lg px-2 text-[13px] font-semibold ${tone}`}>
       {ORDER_STATUS_LABELS[o.status]}
+    </span>
+  );
+}
+
+function reviewTime(iso: string) {
+  return new Date(iso).toLocaleString("ru-RU", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/** «★ 4» у статуса; новый (непрочитанный) отзыв — ярче и с подписью. */
+function RatingChip({ rating, fresh }: { rating: number; fresh: boolean }) {
+  return (
+    <span
+      className={`flex h-6 items-center gap-1 rounded-lg px-2 text-[13px] font-semibold ${
+        fresh ? "bg-accent text-white" : "bg-accent-soft text-accent-ink"
+      }`}
+    >
+      <Star size={12} className="fill-current" /> {rating}
+      {fresh && " · новый отзыв"}
     </span>
   );
 }
@@ -439,5 +498,24 @@ function AssignSheet({
       ))}
       <FieldError message={error ?? undefined} />
     </Sheet>
+  );
+}
+
+/** Номер покупателя в буфер: дальше — звонок из телефона, Zalo или WhatsApp. */
+function CopyPhone({ phone }: { phone: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <SecondaryButton
+      onClick={async () => {
+        if (await copyText(phone)) {
+          haptic.success();
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }
+      }}
+    >
+      {copied ? <Check size={16} /> : <Copy size={16} />}
+      {copied ? "Скопирован" : "Номер"}
+    </SecondaryButton>
   );
 }

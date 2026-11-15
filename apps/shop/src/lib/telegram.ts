@@ -183,3 +183,30 @@ function browserGps(): Promise<GpsResult> {
 export function closeApp(): void {
   attempt(() => miniApp.close());
 }
+
+/**
+ * Копирует текст (номер телефона). Ссылки `tel:` внутри Mini App Telegram не открывает —
+ * ни <a href>, ни openLink, — поэтому номер копируем, а позвонить можно из любого приложения.
+ */
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    // старый WebView — через скрытое поле
+  }
+  try {
+    const el = document.createElement("textarea");
+    el.value = text;
+    el.setAttribute("readonly", "");
+    el.style.position = "fixed";
+    el.style.opacity = "0";
+    document.body.append(el);
+    el.select();
+    const ok = document.execCommand("copy");
+    el.remove();
+    return ok;
+  } catch {
+    return false;
+  }
+}

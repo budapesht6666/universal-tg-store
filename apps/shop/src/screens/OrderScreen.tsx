@@ -1,13 +1,19 @@
-/** Экран заказа: крупно — что сейчас и чего ждать, полоса прогресса, состав, отмена. */
-import { isFinalStatus, ORDER_FLOW, ORDER_STATUS_LABELS, type OrderStatus } from "@store/schema";
+/** Экран заказа: крупно — что сейчас и чего ждать, полоса прогресса, оценка, состав, отмена. */
+import {
+  isFinalStatus,
+  ORDER_FLOW,
+  ORDER_STATUS_LABELS,
+  type OrderStatus,
+  RATING_MAX,
+} from "@store/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Phone } from "lucide-react";
+import { Check, Copy, Phone, Star } from "lucide-react";
 import { useState } from "react";
 import { BottomBar, Screen, Spinner } from "../components/ui.tsx";
 import { api, type Order } from "../lib/api.ts";
 import { useMoney, useReadyShop } from "../lib/shop.ts";
-import { haptic } from "../lib/telegram.ts";
+import { copyText, haptic } from "../lib/telegram.ts";
 
 const EXPECT: Record<OrderStatus, { title: string; text: (o: Order, sum: string) => string }> = {
   new: {
@@ -102,6 +108,8 @@ export function OrderScreen({ id }: { id: number }) {
           )}
         </div>
 
+        {(o.canReview || o.review) && <ReviewCard order={o} />}
+
         <div className="flex flex-col rounded-2xl bg-card">
           {o.items.map((i) => (
             <div
@@ -132,15 +140,12 @@ export function OrderScreen({ id }: { id: number }) {
           {o.comment && <span className="text-hint">«{o.comment}»</span>}
         </div>
 
-        <a
-          href={`tel:${shop.shop.phone}`}
-          className="flex h-11 items-center justify-center gap-2 rounded-xl bg-card font-semibold text-accent"
-        >
-          <Phone size={18} /> Позвонить в магазин
-        </a>
-        <span className="text-center text-[13px] text-hint">
-          Или напишите в чат с ботом — ответит менеджер
-        </span>
+        <ShopPhone phone={shop.shop.phone} />
+        {o.chatOpen && (
+          <span className="text-center text-[13px] text-hint">
+            Или напишите в чат с ботом — ответит менеджер
+          </span>
+        )}
 
         {o.cancelMode !== "none" && !(o.cancelMode === "request" && o.cancelRequested) && (
           <div className="flex flex-col gap-2">
@@ -198,5 +203,137 @@ export function OrderScreen({ id }: { id: number }) {
         </Link>
       </BottomBar>
     </Screen>
+  );
+}
+
+/** Телефон магазина с кнопкой «Скопировать»: `tel:` в Mini App не работает. */
+function ShopPhone({ phone }: { phone: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="flex items-center gap-3 rounded-xl bg-card py-2 pr-2 pl-4">
+      <Phone size={18} className="flex-none text-accent" />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <span className="text-[13px] text-hint">Телефон магазина</span>
+        <span className="font-semibold select-all">{phone}</span>
+      </div>
+      <button
+        type="button"
+        onClick={async () => {
+          if (await copyText(phone)) {
+            haptic.success();
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          }
+        }}
+        className="flex h-9 flex-none items-center gap-1.5 rounded-lg bg-accent-soft px-3 text-[13px] font-semibold text-accent-ink"
+      >
+        {copied ? <Check size={15} /> : <Copy size={15} />}
+        {copied ? "Скопирован" : "Скопировать"}
+      </button>
+    </div>
+  );
+}
+
+function Stars({
+  value,
+  onPick,
+  size,
+}: {
+  value: number;
+  onPick?: (n: number) => void;
+  size: number;
+}) {
+  const icon = (n: number) => (
+    <Star
+      size={size}
+      strokeWidth={1.8}
+      className={n <= value ? "fill-accent text-accent" : "text-hint"}
+    />
+  );
+  const all = Array.from({ length: RATING_MAX }, (_, i) => i + 1);
+  if (!onPick) {
+    return (
+      <span className="flex gap-1" role="img" aria-label={`${value} из ${RATING_MAX}`}>
+        {all.map((n) => (
+          <span key={n}>{icon(n)}</span>
+        ))}
+      </span>
+    );
+  }
+  return (
+    <div className="flex gap-1">
+      {all.map((n) => (
+        <button
+          key={n}
+          type="button"
+          aria-pressed={n === value}
+          aria-label={`${n} из ${RATING_MAX}`}
+          onClick={() => onPick(n)}
+          className="flex h-11 w-11 items-center justify-center"
+        >
+          {icon(n)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Оценка после доставки: звёзды обязательны, отзыв — нет. После отправки — «Спасибо». */
+function ReviewCard({ order: o }: { order: Order }) {
+  const queryClient = useQueryClient();
+  const [rating, setRating] = useState(0);
+  const [text, setText] = useState("");
+  const send = useMutation({
+    mutationFn: () => api.reviewOrder(o.id, { rating, text }),
+    onSuccess: (fresh) => {
+      haptic.success();
+      queryClient.setQueryData(["order", o.id], fresh);
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+    onError: () => haptic.error(),
+  });
+
+  if (o.review) {
+    return (
+      <div className="flex flex-col gap-2 rounded-2xl bg-card p-4">
+        <span className="font-semibold">Спасибо за отзыв!</span>
+        <Stars value={o.review.rating} size={22} />
+        {o.review.text && <p className="m-0 text-[15px] text-hint">«{o.review.text}»</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl bg-card p-4">
+      <span className="text-[17px] font-semibold">Как вам заказ?</span>
+      <div className="-mx-1.5">
+        <Stars
+          value={rating}
+          size={30}
+          onPick={(n) => {
+            haptic.tap();
+            setRating(n);
+          }}
+        />
+      </div>
+      <textarea
+        rows={2}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Напишите отзыв — необязательно"
+        maxLength={1000}
+        aria-label="Отзыв"
+        className="resize-none rounded-xl bg-page px-3.5 py-3 outline-none placeholder:text-hint"
+      />
+      <button
+        type="button"
+        onClick={() => send.mutate()}
+        disabled={rating === 0 || send.isPending}
+        className="h-11 rounded-xl bg-accent font-semibold text-white disabled:opacity-50"
+      >
+        {send.isPending ? "Отправляем…" : "Отправить"}
+      </button>
+      {send.error && <span className="text-[13px] text-danger">{send.error.message}</span>}
+    </div>
   );
 }

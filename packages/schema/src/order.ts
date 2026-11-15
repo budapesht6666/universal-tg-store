@@ -151,6 +151,20 @@ export function orderTotal(items: readonly Pick<OrderItemSnapshot, "price" | "qt
   return items.reduce((sum, item) => sum + item.price * item.qty, 0);
 }
 
+// ───────────── Отзыв ─────────────
+
+export const RATING_MAX = 5;
+
+/** Оценка после доставки: звёзды обязательны, текст — нет. Один раз на заказ. */
+export const OrderReviewInputSchema = z.strictObject({
+  rating: z
+    .int()
+    .min(1, { error: "Поставьте оценку — от 1 до 5 звёзд" })
+    .max(RATING_MAX, { error: "Оценка — от 1 до 5 звёзд" }),
+  text: z.string().trim().max(1000, { error: "Отзыв — до 1000 символов" }).default(""),
+});
+export type OrderReviewInput = z.output<typeof OrderReviewInputSchema>;
+
 // ───────────── Действия магазина с заказом ─────────────
 
 const optionalComment = z.string().trim().max(500).optional();
@@ -199,5 +213,6 @@ export const ORDER_EVENT_TYPES = [
   "courier_assigned",
   "cancel_requested",
   "delivery_failed",
+  "reviewed",
 ] as const;
 export type OrderEventType = (typeof ORDER_EVENT_TYPES)[number];

@@ -70,6 +70,8 @@ export const api = {
   order: (id: number) => request<Order>("GET", `/orders/${id}`),
   createOrder: (body: OrderBody) => request<Order>("POST", "/orders", body),
   cancelOrder: (id: number) => request<Order>("POST", `/orders/${id}/cancel`),
+  reviewOrder: (id: number, review: { rating: number; text: string }) =>
+    request<Order>("POST", `/orders/${id}/review`, review),
   resolveMapsUrl: (url: string) =>
     request<{ point: { lat: number; lng: number } }>(
       "GET",

@@ -74,7 +74,7 @@ export const ShopInfoSchema = z.strictObject({
         "2. Укажите адрес и телефон. Оплата курьеру при получении.",
         "3. Статус заказа придёт сюда, в этот чат.",
         "",
-        "Есть вопрос? Просто напишите сюда — ответит менеджер.",
+        "Вопрос по заказу? Напишите сюда — ответит менеджер.",
       ].join("\n"),
     )
     .meta({ description: "Ответ бота на /start, под ним кнопка «Меню»" }),
@@ -107,14 +107,25 @@ export const FeaturesSchema = z
   .strictObject({
     discounts: z.boolean().default(true),
     badges: z.boolean().default(true),
+    reviews: z
+      .boolean()
+      .default(true)
+      .meta({ description: "Оценка (1–5 звёзд) и отзыв покупателя после доставки" }),
   })
-  .meta({ description: "Фичи меню: выключенная пропадает из магазина, данные блюд остаются" });
+  .meta({ description: "Фичи магазина: выключенная пропадает из магазина, данные остаются" });
 export type Features = z.output<typeof FeaturesSchema>;
 export type FeatureKey = keyof Features;
 
 export const FEATURE_LABELS: Record<FeatureKey, string> = {
   discounts: "Старая цена и скидка",
   badges: "Метки на блюдах",
+  reviews: "Оценка и отзыв после доставки",
+};
+
+export const FEATURE_HINTS: Record<FeatureKey, string> = {
+  discounts: "Зачёркнутая цена и «−15%» на карточке",
+  badges: "«Хит», «Острое 🌶», «Вег»",
+  reviews: "Покупатель ставит звёзды и пишет отзыв, когда заказ доставлен",
 };
 
 export const OrderSettingsSchema = z.strictObject({

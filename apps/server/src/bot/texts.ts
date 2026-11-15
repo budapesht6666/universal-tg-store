@@ -110,11 +110,18 @@ export function courierMessage(order: OrderRow, env: Env, locale: string) {
 }
 
 /** Сообщение покупателю о его заказе. null — писать не нужно. */
-export function customerMessage(order: OrderRow, env: Env, locale: string, byCustomer: boolean) {
+export function customerMessage(
+  order: OrderRow,
+  env: Env,
+  locale: string,
+  byCustomer: boolean,
+  reviews = false,
+) {
+  const askReview = reviews && order.status === "done";
   const kb = webAppButton(
     new InlineKeyboard(),
     env,
-    "Открыть заказ",
+    askReview ? "⭐ Оценить заказ" : "Открыть заказ",
     shopAppUrl(env, `orders/${order.id}`),
   );
   const sum = money(order, locale);
@@ -122,7 +129,9 @@ export function customerMessage(order: OrderRow, env: Env, locale: string, byCus
     new: `Заказ <b>#${order.id}</b> оформлен · ${sum}\nОплата курьеру при получении. Напишем, когда начнём готовить.`,
     processing: `👨‍🍳 Готовим ваш заказ <b>#${order.id}</b>`,
     shipping: `🛵 Курьер везёт заказ <b>#${order.id}</b>. Приготовьте ${sum}`,
-    done: `✅ Заказ <b>#${order.id}</b> доставлен. Приятного аппетита!`,
+    done: `✅ Заказ <b>#${order.id}</b> доставлен. Приятного аппетита!${
+      askReview ? "\nКак всё прошло? Поставьте оценку — это пара секунд." : ""
+    }`,
     cancelled: byCustomer
       ? `Заказ <b>#${order.id}</b> отменён`
       : `❌ Заказ <b>#${order.id}</b> отменён: ${esc(cancelText(order) ?? "")}`,

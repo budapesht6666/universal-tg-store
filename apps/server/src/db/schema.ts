@@ -141,6 +141,12 @@ export const orders = sqliteTable(
     cancelComment: text("cancel_comment"),
     cancelRequestedAt: ms("cancel_requested_at"),
     deliveryIssue: text("delivery_issue", { mode: "json" }).$type<DeliveryIssue>(),
+    /** Отзыв покупателя после доставки: 1–5 звёзд и необязательный текст. */
+    rating: integer("rating"),
+    review: text("review"),
+    reviewedAt: ms("reviewed_at"),
+    /** Когда менеджер открыл заказ с отзывом — до этого на карточке «новый отзыв». */
+    reviewSeenAt: ms("review_seen_at"),
     /** Когда последний раз напоминали менеджерам о непринятом заказе. */
     remindedAt: ms("reminded_at"),
     createdAt: ms("created_at").notNull(),

@@ -1,4 +1,4 @@
-import { type Settings, type ShopStatus, shopStatus } from "@store/schema";
+import { type Settings, SettingsSchema, type ShopStatus, shopStatus } from "@store/schema";
 import { eq } from "drizzle-orm";
 import type { Db } from "../db/client.ts";
 import { settings } from "../db/schema.ts";
@@ -8,7 +8,10 @@ export type ShopState = { settings: Settings; pausedUntil: Date | null };
 /** Настройки магазина; null — первая настройка ещё не пройдена. */
 export function getShop(db: Db): ShopState | null {
   const row = db.select().from(settings).where(eq(settings.id, 1)).get();
-  return row ? { settings: row.data, pausedUntil: row.pausedUntil } : null;
+  if (!row) return null;
+  // Настройки, сохранённые до появления нового флага, получают его значение по умолчанию.
+  const parsed = SettingsSchema.safeParse(row.data);
+  return { settings: parsed.success ? parsed.data : row.data, pausedUntil: row.pausedUntil };
 }
 
 export function saveSettings(db: Db, data: Settings, now: Date): void {

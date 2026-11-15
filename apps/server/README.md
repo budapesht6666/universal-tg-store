@@ -45,17 +45,19 @@ pnpm --filter @store/server db:generate  # после правки src/db/schema
 | `POST /api/orders`            | оформить (`createOrderInputSchema`). Вне часов работы и на паузе — 409 |
 | `GET /api/orders`, `/:id`     | мои заказы                                                             |
 | `POST /api/orders/:id/cancel` | отменить сам («Оформлен») или попросить отменить                       |
+| `POST /api/orders/:id/review` | оценка после доставки (`OrderReviewInputSchema`), один раз             |
 
 **Первая настройка** (владелец, один раз): `GET /api/setup`, `POST /api/setup` (`SetupInputSchema`).
 
 **Менеджер и курьер**
 
-| Запрос                               | Что                                                                     |
-| ------------------------------------ | ----------------------------------------------------------------------- |
-| `GET /api/staff/orders?mode=`        | Новые · В работе · Готово (за сутки); `mode=courier` — «Мои доставки»   |
-| `POST /api/staff/orders/:id/actions` | `StaffOrderActionSchema`: accept, assign, pickup, deliver, fail, cancel |
-| `GET /api/staff/couriers`            | кого можно назначить                                                    |
-| `POST /api/staff/pause`              | `{ pause: "30m" \| "1h" \| "today" \| "off" }`                          |
+| Запрос                                   | Что                                                                     |
+| ---------------------------------------- | ----------------------------------------------------------------------- |
+| `GET /api/staff/orders?mode=`            | Новые · В работе · Готово (за сутки); `mode=courier` — «Мои доставки»   |
+| `POST /api/staff/orders/:id/actions`     | `StaffOrderActionSchema`: accept, assign, pickup, deliver, fail, cancel |
+| `POST /api/staff/orders/:id/review-seen` | менеджер открыл заказ с отзывом — снять «новый отзыв»                   |
+| `GET /api/staff/couriers`                | кого можно назначить                                                    |
+| `POST /api/staff/pause`                  | `{ pause: "30m" \| "1h" \| "today" \| "off" }`                          |
 
 **Админка**: `GET /api/admin/catalog`; категории — `POST /api/admin/categories`, `PATCH|DELETE /api/admin/categories/:id`, `PUT /api/admin/categories/order`, `PUT /api/admin/categories/:id/products/order`; блюда — `POST /api/admin/products`, `PUT|PATCH|DELETE /api/admin/products/:id`; фото — `POST /api/admin/uploads` (multipart, поле `file`, → WebP); настройки — `GET|PUT /api/admin/settings` (регион не меняется); команда — `GET /api/admin/team`, `POST /api/admin/team/invites`, `PATCH /api/admin/team/:userId`.
 

@@ -1,5 +1,11 @@
 /** «Настройки»: магазин, часы работы, отмена покупателем, фичи меню. Регион — только для чтения. */
-import { FEATURE_LABELS, type FeatureKey, REGIONS, type WeekHours } from "@store/schema";
+import {
+  FEATURE_HINTS,
+  FEATURE_LABELS,
+  type FeatureKey,
+  REGIONS,
+  type WeekHours,
+} from "@store/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { HoursEditor } from "../components/HoursEditor.tsx";
@@ -184,11 +190,7 @@ function SettingsForm({ initial }: { initial: Settings }) {
                 <Row
                   key={key}
                   title={FEATURE_LABELS[key]}
-                  hint={
-                    key === "discounts"
-                      ? "Зачёркнутая цена и «−15%» на карточке"
-                      : "«Хит», «Острое 🌶», «Вег»"
-                  }
+                  hint={FEATURE_HINTS[key]}
                   checked={features[key]}
                   onChange={(v) => setFeatures({ ...features, [key]: v })}
                 />

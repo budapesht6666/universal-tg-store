@@ -13,15 +13,17 @@ import {
   createOrderInputSchema,
   customerCancelMode,
   DELIVERY_FAILURE_LABELS,
+  isFinalStatus,
   mapsUrlFromCoords,
   ORDER_STATUS_LABELS,
   type OrderItemSnapshot,
+  OrderReviewInputSchema,
   type OrderStatus,
   orderTotal,
   type Role,
   type StaffOrderAction,
 } from "@store/schema";
-import { and, asc, desc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 import type { Db } from "../db/client.ts";
 import { orderEvents, orders, users } from "../db/schema.ts";
 import type { Deps } from "../deps.ts";
@@ -32,6 +34,30 @@ import { rolesOf, staffWith, userName } from "../repo/team.ts";
 
 export type OrderRow = typeof orders.$inferSelect;
 export type Actor = { id: number; roles: Role[] };
+
+/**
+ * Писать магазину через бота можно, пока заказ в работе, и сутки после доставки или отмены
+ * («привезли не то»). Без заказа сообщения менеджерам не уходят — защита от спама.
+ */
+export const CHAT_AFTER_CLOSE_MS = 24 * 60 * 60 * 1000;
+
+export function chatOpen(order: Pick<OrderRow, "status" | "updatedAt">, now: Date): boolean {
+  return (
+    !isFinalStatus(order.status) || now.getTime() - order.updatedAt.getTime() < CHAT_AFTER_CLOSE_MS
+  );
+}
+
+/** Последний заказ покупателя, если по нему ещё можно писать магазину. */
+export function chatOrder(db: Db, customerId: number, now: Date): OrderRow | null {
+  const last = db
+    .select()
+    .from(orders)
+    .where(eq(orders.customerId, customerId))
+    .orderBy(desc(orders.createdAt))
+    .limit(1)
+    .get();
+  return last && chatOpen(last, now) ? last : null;
+}
 
 /** Напоминание менеджерам о непринятом заказе — каждые 3 минуты. */
 export const REMINDER_INTERVAL_MS = 3 * 60 * 1000;
@@ -163,7 +189,48 @@ export function customerCancel(deps: Deps, customerId: number, orderId: number):
   return updated;
 }
 
+/** Оценка после доставки: один раз, только свой доставленный заказ, если отзывы включены. */
+export function customerReview(
+  deps: Deps,
+  customerId: number,
+  orderId: number,
+  body: unknown,
+): OrderRow {
+  const { db } = deps;
+  const now = deps.now();
+  const order = getOrder(db, orderId);
+  if (order.customerId !== customerId) throw new AppError(404, "Заказ не найден");
+  if (!getShop(db)?.settings.features.reviews) throw new AppError(409, "Отзывы выключены");
+  if (order.status !== "done") throw new AppError(409, "Оценить можно доставленный заказ");
+  const input = parseInput(OrderReviewInputSchema, body);
+  const updated = db
+    .update(orders)
+    .set({ rating: input.rating, review: input.text || null, reviewedAt: now })
+    .where(and(eq(orders.id, order.id), isNull(orders.rating)))
+    .returning()
+    .get();
+  if (!updated) throw new AppError(409, "Отзыв уже оставлен — спасибо!");
+  addEvent(db, order.id, { type: "reviewed", actorId: customerId, note: `${input.rating}★` }, now);
+  return updated;
+}
+
 // ───────────── Магазин ─────────────
+
+/** Менеджер открыл заказ с отзывом — пометка «новый отзыв» снимается для всех. */
+export function markReviewSeen(deps: Deps, actor: Actor, orderId: number): OrderRow {
+  requirePermission(actor, "orders.manage");
+  const { db } = deps;
+  const order = getOrder(db, orderId);
+  if (order.rating === null || order.reviewSeenAt !== null) return order;
+  return (
+    db
+      .update(orders)
+      .set({ reviewSeenAt: deps.now() })
+      .where(and(eq(orders.id, order.id), isNull(orders.reviewSeenAt)))
+      .returning()
+      .get() ?? getOrder(db, order.id)
+  );
+}
 
 /** Смена статуса с проверкой перехода и защитой от гонки. */
 function transition(
@@ -372,9 +439,19 @@ function history(db: Db, orderId: number) {
     .all();
 }
 
+function reviewOf(order: OrderRow) {
+  if (order.rating === null) return null;
+  return {
+    rating: order.rating,
+    text: order.review ?? "",
+    at: (order.reviewedAt ?? order.updatedAt).toISOString(),
+  };
+}
+
 /** Заказ глазами покупателя. */
-export function customerView(db: Db, order: OrderRow) {
+export function customerView(db: Db, order: OrderRow, now: Date) {
   const shop = getShop(db);
+  const reviewsOn = shop?.settings.features.reviews ?? false;
   return {
     id: order.id,
     status: order.status,
@@ -390,6 +467,10 @@ export function customerView(db: Db, order: OrderRow) {
     cancelMode: shop ? customerCancelMode(order.status, shop.settings) : "none",
     cancelRequested: order.cancelRequestedAt !== null,
     cancelReason: cancelText(order),
+    review: reviewOf(order),
+    canReview: reviewsOn && order.status === "done" && order.rating === null,
+    /** Можно ли сейчас написать магазину в чат с ботом. */
+    chatOpen: chatOpen(order, now),
     history: history(db, order.id)
       .filter((e) => e.type === "status" || e.type === "created")
       .map((e) => ({ status: e.status, at: e.createdAt.toISOString() })),
@@ -397,7 +478,7 @@ export function customerView(db: Db, order: OrderRow) {
 }
 export type CustomerOrderView = ReturnType<typeof customerView>;
 
-export function listCustomerOrders(db: Db, customerId: number) {
+export function listCustomerOrders(db: Db, customerId: number, now: Date) {
   return db
     .select()
     .from(orders)
@@ -405,7 +486,7 @@ export function listCustomerOrders(db: Db, customerId: number) {
     .orderBy(desc(orders.createdAt))
     .limit(30)
     .all()
-    .map((o) => customerView(db, o));
+    .map((o) => customerView(db, o, now));
 }
 
 /** Данные последнего заказа — чтобы второй заказ оформлялся одним нажатием. */
@@ -440,6 +521,7 @@ export function staffView(db: Db, order: OrderRow, viewer: Actor) {
     !can(viewer.roles, "orders.manage") &&
     (order.status === "done" || order.status === "cancelled");
   const issue = order.deliveryIssue;
+  const review = reviewOf(order);
   return {
     id: order.id,
     status: order.status,
@@ -486,6 +568,11 @@ export function staffView(db: Db, order: OrderRow, viewer: Actor) {
           at: new Date(issue.at).toISOString(),
         }
       : null,
+    /** Отзыв видит только менеджер. seen=false — на карточке «новый отзыв». */
+    review:
+      review && can(viewer.roles, "orders.manage")
+        ? { ...review, seen: order.reviewSeenAt !== null }
+        : null,
   };
 }
 export type StaffOrderView = ReturnType<typeof staffView>;
@@ -494,7 +581,8 @@ const ACTIVE: OrderStatus[] = ["processing", "shipping"];
 const DONE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Экран «Заказы»: Новые · В работе · Готово (за сутки).
+ * Экран «Заказы»: Новые · В работе · Готово (за сутки; заказ с отзывом поднимается наверх
+ * «Готово» на сутки после отзыва, а непрочитанный отзыв висит, пока менеджер его не откроет).
  * Режим курьера — только назначенные ему заказы.
  */
 export function staffBoard(deps: Deps, viewer: Actor, mode: "manager" | "courier") {
@@ -524,8 +612,20 @@ export function staffBoard(deps: Deps, viewer: Actor, mode: "manager" | "courier
   const done = db
     .select()
     .from(orders)
-    .where(and(inArray(orders.status, ["done", "cancelled"]), gte(orders.updatedAt, since), mine))
-    .orderBy(desc(orders.updatedAt))
+    .where(
+      and(
+        inArray(orders.status, ["done", "cancelled"]),
+        or(
+          gte(orders.updatedAt, since),
+          gte(orders.reviewedAt, since),
+          mode === "manager"
+            ? and(isNotNull(orders.rating), isNull(orders.reviewSeenAt))
+            : undefined,
+        ),
+        mine,
+      ),
+    )
+    .orderBy(desc(sql`max(${orders.updatedAt}, coalesce(${orders.reviewedAt}, 0))`))
     .limit(50)
     .all();
   return { new: fresh.map(view), active: active.map(view), done: done.map(view) };
