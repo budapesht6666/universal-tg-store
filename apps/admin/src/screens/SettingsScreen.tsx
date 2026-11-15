@@ -3,6 +3,7 @@ import { FEATURE_LABELS, type FeatureKey, REGIONS, type WeekHours } from "@store
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { HoursEditor } from "../components/HoursEditor.tsx";
+import { ImageUpload } from "../components/ImageUpload.tsx";
 import {
   FieldError,
   issuesToErrors,
@@ -71,6 +72,19 @@ function SettingsForm({ initial }: { initial: Settings }) {
           onChange={(name) => setShop({ ...shop, name })}
           error={errors["shop.name"]}
         />
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[13px] text-hint">Логотип — в шапке магазина</span>
+          <ImageUpload
+            value={shop.logo}
+            onChange={(logo) => {
+              const { logo: _old, ...rest } = shop;
+              setShop(logo ? { ...rest, logo } : rest);
+            }}
+            hint="Квадрат, от 256 px. Обычно тот же, что аватар бота."
+            error={errors["shop.logo.url"]}
+            noun="логотип"
+          />
+        </div>
         <TextField
           label="Телефон — покажем покупателям"
           value={shop.phone}
@@ -112,9 +126,15 @@ function SettingsForm({ initial }: { initial: Settings }) {
         <span className="text-[13px] text-hint">
           Название, описание и «О себе» бот обновит сам после сохранения.
         </span>
+      </section>
+
+      <section className="flex flex-col gap-1">
+        <h2 className="m-0 mb-2 text-[17px] font-bold">Регион</h2>
+        <span className="font-semibold">
+          {regionLabel} · {region.currency} · {region.timeZone} · +{region.phoneCode}
+        </span>
         <span className="text-[13px] text-hint">
-          {regionLabel} · валюта {region.currency} · {region.timeZone} · +{region.phoneCode}. Страну
-          и валюту после настройки не поменять: от них зависят все цены.
+          Страну и валюту после настройки не поменять: от них зависят все цены.
         </span>
       </section>
 

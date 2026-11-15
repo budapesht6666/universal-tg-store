@@ -99,9 +99,12 @@ export function SetupScreen() {
                 </button>
               ))}
             </div>
-            <span className="text-[13px] text-hint">
-              Валюта {region.currency} · часовой пояс {region.timeZone} · код телефона +
-              {region.phoneCode}. Страну потом не поменять: от неё зависят все цены в меню.
+            <span className="flex flex-col text-[13px] text-hint">
+              <span>
+                Валюта {region.currency} · часовой пояс {region.timeZone} · код телефона +
+                {region.phoneCode}
+              </span>
+              <span>Страну потом не поменять: от неё зависят все цены в меню.</span>
             </span>
           </div>
           <TextField
@@ -126,9 +129,10 @@ export function SetupScreen() {
       {step === 2 && (
         <>
           <h1 className="m-0 text-2xl font-bold">Когда принимаете заказы?</h1>
-          <span className="text-[13px] text-hint">
-            Вне этих часов меню видно, но оформить заказ нельзя. Работаете за полночь — например,
-            18:00–02:00 — тоже можно. Если на кухне завал — в заказах есть пауза.
+          <span className="flex flex-col gap-1 text-[13px] text-hint">
+            <span>Вне этих часов меню видно, но оформить заказ нельзя.</span>
+            <span>Работаете за полночь, например 18:00–02:00, — тоже можно.</span>
+            <span>Если на кухне завал — в заказах есть пауза.</span>
           </span>
           <HoursEditor value={hours} onChange={setHours} />
           <FieldError message={Object.entries(errors).find(([k]) => k.startsWith("hours"))?.[1]} />

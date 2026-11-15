@@ -10,9 +10,10 @@ import {
   toMinor,
 } from "@store/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ImagePlus, Trash2, X } from "lucide-react";
-import { useRef, useState } from "react";
+import { X } from "lucide-react";
+import { useState } from "react";
 import { ApiError, api, type Catalog, type Product } from "../lib/api.ts";
+import { ImageUpload } from "./ImageUpload.tsx";
 import {
   FieldError,
   issuesToErrors,
@@ -65,12 +66,6 @@ export function ProductForm({
   const [attrs, setAttrs] = useState<Record<string, unknown>>(product?.attributes ?? {});
   const [errors, setErrors] = useState<Errors>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const file = useRef<HTMLInputElement>(null);
-
-  const upload = useMutation({
-    mutationFn: (f: File) => api.upload(f),
-    onSuccess: ({ url }) => setImage({ url }),
-  });
 
   const save = useMutation({
     mutationFn: async () => {
@@ -146,44 +141,12 @@ export function ProductForm({
         </button>
       </header>
 
-      <div className="flex items-center gap-3">
-        <span className="flex h-24 w-24 flex-none items-center justify-center overflow-hidden rounded-2xl bg-accent-soft text-accent-ink">
-          {image ? (
-            <img src={image.url} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <ImagePlus size={28} />
-          )}
-        </span>
-        <div className="flex flex-col gap-1.5">
-          <div className="flex gap-2">
-            <SecondaryButton
-              tone="accent"
-              disabled={upload.isPending}
-              onClick={() => file.current?.click()}
-            >
-              {upload.isPending ? "Загружаем…" : image ? "Заменить фото" : "Загрузить фото"}
-            </SecondaryButton>
-            {image && (
-              <SecondaryButton onClick={() => setImage(undefined)}>
-                <Trash2 size={15} />
-              </SecondaryButton>
-            )}
-          </div>
-          <span className="text-xs text-hint">Квадрат, от 800 px. Сожмём сами.</span>
-          <FieldError message={upload.error?.message ?? errors["image.url"]} />
-        </div>
-        <input
-          ref={file}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) upload.mutate(f);
-            e.target.value = "";
-          }}
-        />
-      </div>
+      <ImageUpload
+        value={image}
+        onChange={setImage}
+        hint="Квадрат, от 800 px. Сожмём сами."
+        error={errors["image.url"]}
+      />
 
       <TextField
         label="Название"

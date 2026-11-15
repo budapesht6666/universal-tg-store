@@ -3,6 +3,7 @@
  * потом меняются в админке. Регион (валюта, часовой пояс, код страны) после настройки
  * не меняется: смена валюты молча переоценила бы все цены (65000 ₫ ≠ 65000 копеек).
  */
+import { ImageRefSchema } from "./fields.ts";
 import { WeekHoursSchema } from "./hours.ts";
 import { normalizePhone } from "./phone.ts";
 import { z } from "./zod.ts";
@@ -57,6 +58,9 @@ export const ShopInfoSchema = z.strictObject({
     .string()
     .trim()
     .min(1, { error: "Нужен телефон — по нему покупатель свяжется с магазином" }),
+  logo: ImageRefSchema.optional().meta({
+    description: "Логотип в шапке магазина — квадрат, обычно тот же, что аватар бота",
+  }),
   greeting: z
     .string()
     .trim()

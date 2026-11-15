@@ -25,7 +25,11 @@ export const shopRoutes = new Hono<AppEnv>()
     const { settings } = shop;
     return c.json({
       ready: true as const,
-      shop: { name: settings.shop.name, phone: settings.shop.phone },
+      shop: {
+        name: settings.shop.name,
+        phone: settings.shop.phone,
+        ...(settings.shop.logo && { logo: settings.shop.logo }),
+      },
       region: settings.region,
       features: settings.features,
       hours: settings.hours,

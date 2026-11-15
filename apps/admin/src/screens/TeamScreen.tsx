@@ -132,9 +132,9 @@ function MemberRow({ member: m }: { member: Member }) {
         )}
       </div>
       {isOwner && (
-        <span className="text-[13px] text-hint">
-          Владелец может всё, что менеджер: принимает заказы, ведёт меню. Роль курьера — если
-          развозите сами.
+        <span className="flex flex-col text-[13px] text-hint">
+          <span>Владелец может всё, что менеджер: принимает заказы, ведёт меню.</span>
+          <span>Роль курьера — если развозите сами.</span>
         </span>
       )}
       <div className="flex flex-wrap gap-2">

@@ -78,13 +78,20 @@ export function MenuScreen() {
   return (
     <Screen>
       <header className="flex items-center gap-3 bg-card px-4 py-3">
+        {shop.shop.logo && (
+          <img
+            src={shop.shop.logo.url}
+            alt=""
+            className="h-11 w-11 flex-none rounded-xl object-cover"
+          />
+        )}
         <div className="flex min-w-0 flex-1 flex-col">
           <h1 className="m-0 truncate text-[17px] leading-[22px] font-bold">{shop.shop.name}</h1>
           <span className="text-[13px] leading-[18px] text-hint">
             <span className={`font-semibold ${status.open ? "text-ok" : "text-ink"}`}>
               {status.text}
             </span>
-            {" · доставка бесплатно"}
+            {status.open && " · доставка бесплатно"}
           </span>
         </div>
         {orders.data && orders.data.orders.length > 0 && (
