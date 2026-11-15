@@ -56,7 +56,7 @@ export function MenuScreen() {
           {soldOut ? ` · ${soldOut} закончились` : ""}
         </span>
       </div>
-      <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)_minmax(360px,420px)]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)_minmax(360px,420px)]">
         <Categories catalog={c} current={current} onSelect={setCategoryId} onChanged={refresh} />
         <Products
           catalog={c}
@@ -120,7 +120,7 @@ function Categories({
   const ids = catalog.categories.map((x) => x.id);
 
   return (
-    <aside className="flex flex-col gap-2">
+    <aside className="flex min-w-0 flex-col gap-2">
       <div className="no-scrollbar flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible lg:rounded-2xl lg:bg-card lg:p-2">
         <span className="hidden px-2 pt-1 text-[13px] font-semibold text-hint lg:block">
           Категории

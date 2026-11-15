@@ -131,8 +131,14 @@ function MemberRow({ member: m }: { member: Member }) {
           />
         )}
       </div>
+      {isOwner && (
+        <span className="text-[13px] text-hint">
+          Владелец может всё, что менеджер: принимает заказы, ведёт меню. Роль курьера — если
+          развозите сами.
+        </span>
+      )}
       <div className="flex flex-wrap gap-2">
-        {(["manager", "courier"] as const).map((role) => (
+        {(isOwner ? (["courier"] as const) : (["manager", "courier"] as const)).map((role) => (
           <button
             key={role}
             type="button"
