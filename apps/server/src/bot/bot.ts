@@ -117,7 +117,7 @@ export function createBot(deps: Deps): Bot {
       return;
     }
 
-    const kb = webAppButton(new InlineKeyboard(), env, "Открыть меню", shopAppUrl(env));
+    const kb = webAppButton(new InlineKeyboard(), env, "Меню", shopAppUrl(env));
     if (roles.length > 0) {
       webAppButton(kb.row(), env, "Заказы", staffAppUrl(env));
       await setStaffMenuButton(ctx, deps);
