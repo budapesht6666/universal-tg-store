@@ -21,47 +21,82 @@ export function TeamScreen() {
   if (team.isPending) return <Spinner />;
   if (team.isError) return <div className="p-8 text-center text-hint">{team.error.message}</div>;
 
-  return (
-    <div className="mx-auto flex w-full max-w-[640px] flex-col gap-4 p-4 lg:p-6">
-      <h1 className="m-0 text-2xl font-bold">Команда</h1>
-      <div className="flex flex-col overflow-hidden rounded-2xl bg-card">
-        {team.data.members.map((m) => (
-          <MemberRow key={m.id} member={m} />
-        ))}
-      </div>
+  const members = team.data.members;
+  const couriers = members.filter((m) => m.active && m.roles.includes("courier")).length;
+  const managers = members.filter((m) => m.active && m.roles.includes("manager")).length;
 
-      <div className="flex flex-col gap-2 rounded-2xl bg-card p-4">
-        <span className="flex items-center gap-2 font-bold">
-          <UserPlus size={18} /> Пригласить
+  return (
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 p-4 lg:gap-5 lg:px-7 lg:py-6">
+      <header className="flex flex-col">
+        <h1 className="m-0 text-2xl font-bold">Команда</h1>
+        <span className="text-[13px] text-hint lg:text-sm">
+          {people(members.length)} · курьеров: {couriers} · менеджеров: {managers}
         </span>
-        <span className="text-[13px] text-hint">
-          Ссылка одноразовая, на 24 часа. Человек открывает её в Telegram и делится номером — и он в
-          команде.
-        </span>
-        <div className="flex gap-2">
-          <SecondaryButton
-            tone="accent"
-            disabled={create.isPending}
-            onClick={() => create.mutate("courier")}
-          >
-            Курьера
-          </SecondaryButton>
-          <SecondaryButton
-            tone="accent"
-            disabled={create.isPending}
-            onClick={() => create.mutate("manager")}
-          >
-            Менеджера
-          </SecondaryButton>
-        </div>
-        {invite?.link && <InviteLink link={invite.link} role={invite.role} />}
-        {invite && !invite.link && (
-          <span className="text-[13px] text-warn-ink">Бот не запущен — ссылку создать нельзя.</span>
-        )}
-        <FieldError message={create.error?.message} />
+      </header>
+
+      <div className="flex flex-wrap items-start gap-4">
+        <section
+          aria-label="Кто работает"
+          className="flex min-w-0 flex-[3_1_480px] flex-col overflow-hidden rounded-2xl bg-card lg:rounded-xl lg:shadow-[inset_0_0_0_1px_var(--line)]"
+        >
+          {members.map((m) => (
+            <MemberRow key={m.id} member={m} />
+          ))}
+          <p className="m-0 flex flex-col px-4 py-3 text-xs leading-[17px] text-hint">
+            <span>Владелец может всё, что менеджер: принимает заказы, ведёт меню.</span>
+            <span>
+              Выключенный доступ — человек остаётся в списке, но заказов и админки не видит.
+            </span>
+          </p>
+        </section>
+
+        <section
+          aria-label="Пригласить"
+          className="flex min-w-0 flex-[1_1_320px] flex-col gap-3 rounded-2xl bg-card p-4 lg:max-w-[420px] lg:rounded-xl lg:shadow-[inset_0_0_0_1px_var(--line)]"
+        >
+          <h2 className="m-0 flex items-center gap-2 text-base font-bold">
+            <UserPlus size={18} /> Пригласить
+          </h2>
+          <p className="m-0 flex flex-col text-[13px] leading-[18px] text-hint">
+            <span>Ссылка одноразовая, на 24 часа.</span>
+            <span>Человек открывает её в Telegram, делится номером — и он в команде.</span>
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <SecondaryButton
+              tone="accent"
+              disabled={create.isPending}
+              onClick={() => create.mutate("courier")}
+            >
+              Курьера
+            </SecondaryButton>
+            <SecondaryButton
+              tone="accent"
+              disabled={create.isPending}
+              onClick={() => create.mutate("manager")}
+            >
+              Менеджера
+            </SecondaryButton>
+          </div>
+          {invite?.link && <InviteLink link={invite.link} role={invite.role} />}
+          {invite && !invite.link && (
+            <span className="text-[13px] text-warn-ink">
+              Бот не запущен — ссылку создать нельзя.
+            </span>
+          )}
+          <FieldError message={create.error?.message} />
+          <span className="text-xs text-hint">Когда человек вступит, бот напишет вам.</span>
+        </section>
       </div>
     </div>
   );
+}
+
+function people(n: number) {
+  const m10 = n % 10;
+  const m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return `${n} человек`;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return `${n} человека`;
+  return `${n} человек`;
 }
 
 function InviteLink({ link, role }: { link: string; role: InviteRole }) {
@@ -110,19 +145,49 @@ function MemberRow({ member: m }: { member: Member }) {
 
   return (
     <div
-      className={`flex flex-col gap-2 border-b border-line px-4 py-3 last:border-b-0 ${m.active ? "" : "opacity-60"}`}
+      className={`flex flex-wrap items-center gap-3 border-b border-line px-4 py-3 ${m.active ? "" : "opacity-55"}`}
     >
-      <div className="flex items-center gap-3">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <span className="font-semibold">
-            {m.name}
-            {m.username && <span className="font-normal text-hint"> · @{m.username}</span>}
+      <span
+        className={`flex h-9 w-9 flex-none items-center justify-center rounded-full font-bold ${
+          isOwner ? "bg-accent-soft text-accent-ink" : "bg-muted"
+        }`}
+      >
+        {m.name.charAt(0)}
+      </span>
+      <div className="flex min-w-0 flex-[1_1_180px] flex-col leading-[18px]">
+        <span className="font-semibold">
+          {m.name}
+          {m.username && <span className="font-normal text-hint"> @{m.username}</span>}
+        </span>
+        <span className="text-[13px] text-hint">
+          {m.active
+            ? m.roles.map((r) => ROLE_LABELS[r]).join(", ") || "Без роли"
+            : "Доступ выключен"}
+          {m.phone ? ` · ${m.phone}` : ""}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-1.5 lg:w-[200px]">
+        {isOwner && (
+          <span className="flex h-7 items-center rounded-[7px] bg-accent-soft px-2.5 text-[13px] font-semibold text-accent-ink">
+            {ROLE_LABELS.owner}
           </span>
-          <span className="text-[13px] text-hint">
-            {m.roles.map((r) => ROLE_LABELS[r]).join(", ") || "Без роли"}
-            {m.phone ? ` · ${m.phone}` : ""}
-          </span>
-        </div>
+        )}
+        {(isOwner ? (["courier"] as const) : (["manager", "courier"] as const)).map((role) => (
+          <button
+            key={role}
+            type="button"
+            aria-pressed={extra.includes(role)}
+            disabled={update.isPending}
+            onClick={() => toggleRole(role)}
+            className={`h-7 rounded-[7px] px-2.5 text-[13px] font-semibold ${
+              extra.includes(role) ? "bg-accent-soft text-accent-ink" : "bg-page text-hint"
+            }`}
+          >
+            {ROLE_LABELS[role]}
+          </button>
+        ))}
+      </div>
+      <div className="flex w-11 justify-end">
         {!isOwner && (
           <Toggle
             checked={m.active}
@@ -131,28 +196,11 @@ function MemberRow({ member: m }: { member: Member }) {
           />
         )}
       </div>
-      {isOwner && (
-        <span className="flex flex-col text-[13px] text-hint">
-          <span>Владелец может всё, что менеджер: принимает заказы, ведёт меню.</span>
-          <span>Роль курьера — если развозите сами.</span>
-        </span>
+      {update.error && (
+        <div className="basis-full">
+          <FieldError message={update.error.message} />
+        </div>
       )}
-      <div className="flex flex-wrap gap-2">
-        {(isOwner ? (["courier"] as const) : (["manager", "courier"] as const)).map((role) => (
-          <button
-            key={role}
-            type="button"
-            disabled={update.isPending}
-            onClick={() => toggleRole(role)}
-            className={`h-8 rounded-lg px-3 text-sm font-semibold ${
-              extra.includes(role) ? "bg-accent-soft text-accent-ink" : "bg-page text-hint"
-            }`}
-          >
-            {ROLE_LABELS[role]}
-          </button>
-        ))}
-      </div>
-      <FieldError message={update.error?.message} />
     </div>
   );
 }

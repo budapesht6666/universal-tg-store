@@ -1,3 +1,4 @@
+import { ROLE_LABELS } from "@store/schema";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createRootRoute,
@@ -11,6 +12,7 @@ import {
 } from "@tanstack/react-router";
 import { ClipboardList, LogOut, Settings, Users, UtensilsCrossed } from "lucide-react";
 import { type ReactNode, useEffect } from "react";
+import { ShopMark } from "./components/ShopMark.tsx";
 import { Spinner } from "./components/ui.tsx";
 import { ApiError, api } from "./lib/api.ts";
 import { useMe, useShopInfo, useStaff } from "./lib/session.ts";
@@ -68,34 +70,64 @@ function Shell() {
   const queryClient = useQueryClient();
   const items = NAV.filter((n) => n.show(staff));
   const name = shop.data?.ready ? shop.data.shop.name : "Магазин";
+  const logo = shop.data?.ready ? shop.data.shop.logo : undefined;
+  // Счётчик новых заказов у «Заказов» — тот же запрос, что на экране заказов.
+  const board = useQuery({
+    queryKey: ["board", "manager"],
+    queryFn: () => api.board("manager"),
+    enabled: staff.can("orders.manage"),
+    refetchInterval: 15_000,
+  });
+  const fresh = board.data?.new.length ?? 0;
+  const roleText = staff.roles.map((r) => ROLE_LABELS[r]).join(", ");
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[220px_minmax(0,1fr)]">
-      <aside className="sticky top-0 hidden h-screen flex-col gap-1 border-r border-line bg-card p-3 lg:flex">
-        <span className="px-3 pt-1 pb-3 text-lg font-bold">{name}</span>
+    <div className="min-h-screen lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
+      <aside className="sticky top-0 hidden h-screen flex-col gap-1 border-r border-line bg-card px-3 py-4 lg:flex">
+        <div className="flex items-center gap-2.5 px-2 pt-1 pb-4">
+          <ShopMark name={name} logo={logo} />
+          <div className="flex min-w-0 flex-col leading-[18px]">
+            <span className="truncate font-bold">{name}</span>
+            <span className="text-xs text-hint">Админка</span>
+          </div>
+        </div>
         {items.map((n) => (
           <Link
             key={n.to}
             to={n.to}
             activeOptions={{ exact: n.to === "/" }}
-            className="flex h-10 items-center gap-2.5 rounded-xl px-3 font-medium text-ink"
-            activeProps={{ className: "bg-accent-soft text-accent-ink font-semibold" }}
+            className="flex h-9 items-center gap-2.5 rounded-lg px-2.5 font-medium text-hint"
+            activeProps={{ className: "bg-accent-soft font-semibold text-ink!" }}
           >
-            <n.icon size={18} /> {n.label}
+            <n.icon size={18} />
+            <span className="flex-1">{n.label}</span>
+            {n.to === "/" && fresh > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-semibold text-white">
+                {fresh}
+              </span>
+            )}
           </Link>
         ))}
-        <div className="mt-auto flex flex-col gap-1 px-3 text-[13px] text-hint">
-          <span>{staff.user.firstName}</span>
+        <div className="mt-auto flex items-center gap-2.5 p-2">
+          <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-muted text-[13px] font-semibold">
+            {staff.user.firstName.charAt(0)}
+          </span>
+          <div className="flex min-w-0 flex-1 flex-col leading-[17px]">
+            <span className="truncate font-medium">{staff.user.firstName}</span>
+            <span className="truncate text-xs text-hint">{roleText}</span>
+          </div>
           {!isInTelegram() && (
             <button
               type="button"
+              aria-label="Выйти"
+              title="Выйти"
               onClick={async () => {
                 await api.logout().catch(() => {});
                 await queryClient.invalidateQueries({ queryKey: ["me"] });
               }}
-              className="flex items-center gap-1.5 py-1 text-left font-semibold"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-hint hover:bg-muted"
             >
-              <LogOut size={14} /> Выйти
+              <LogOut size={16} />
             </button>
           )}
         </div>
@@ -112,6 +144,11 @@ function Shell() {
                 activeProps={{ className: "border-accent! text-accent font-semibold" }}
               >
                 <n.icon size={16} /> {n.label}
+                {n.to === "/" && fresh > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-semibold text-white">
+                    {fresh}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>

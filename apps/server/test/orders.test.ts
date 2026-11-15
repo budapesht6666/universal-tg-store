@@ -23,7 +23,10 @@ async function addCourier(t: TestCtx, id: number) {
 describe("первая настройка", () => {
   it("до настройки магазин не готов, настраивает только владелец и один раз", async () => {
     const t = setup();
-    expect((await t.call("GET", "/api/shop")).json).toEqual({ ready: false });
+    expect((await t.call("GET", "/api/shop")).json).toEqual({
+      ready: false,
+      bot: "pechka_test_bot",
+    });
     expect((await t.call("POST", "/api/setup", { as: ANNA, body: SETUP_BODY })).status).toBe(403);
     expect((await t.call("POST", "/api/setup", { as: OWNER, body: SETUP_BODY })).status).toBe(201);
     expect((await t.call("POST", "/api/setup", { as: OWNER, body: SETUP_BODY })).status).toBe(409);

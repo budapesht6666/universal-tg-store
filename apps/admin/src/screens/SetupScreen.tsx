@@ -212,8 +212,9 @@ function SetupDone({ shopName, onOpen }: { shopName: string; onOpen: () => void 
 
       <div className="flex flex-col gap-2 rounded-2xl bg-card p-4">
         <span className="font-bold">Пригласите курьера</span>
-        <span className="text-[13px] text-hint">
-          Ссылка на 24 часа. Пока курьер один, заказы назначаются ему сами.
+        <span className="flex flex-col text-[13px] text-hint">
+          <span>Ссылка на 24 часа.</span>
+          <span>Пока курьер один, заказы назначаются ему сами.</span>
         </span>
         {link ? (
           <div className="flex gap-2">

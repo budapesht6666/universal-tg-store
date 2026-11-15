@@ -21,10 +21,12 @@ export const shopRoutes = new Hono<AppEnv>()
   .get("/shop", (c) => {
     const { db, now } = c.var.deps;
     const shop = getShop(db);
-    if (!shop) return c.json({ ready: false as const });
+    const bot = c.var.deps.botUsername;
+    if (!shop) return c.json({ ready: false as const, bot });
     const { settings } = shop;
     return c.json({
       ready: true as const,
+      bot,
       shop: {
         name: settings.shop.name,
         phone: settings.shop.phone,

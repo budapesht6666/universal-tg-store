@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { type Mode, OrderCard } from "../components/OrderCard.tsx";
 import { FieldError, SecondaryButton, Sheet, Spinner } from "../components/ui.tsx";
 import { api, type Board } from "../lib/api.ts";
+import { useIsDesktop } from "../lib/media.ts";
 import { useStaff } from "../lib/session.ts";
 import { beep } from "../lib/telegram.ts";
 
@@ -41,6 +42,7 @@ export function OrdersScreen() {
   const [pauseSheet, setPauseSheet] = useState(false);
   const [, tick] = useState(0);
   const queryClient = useQueryClient();
+  const desktop = useIsDesktop();
 
   const board = useQuery({
     queryKey: ["board", mode],
@@ -106,6 +108,151 @@ export function OrdersScreen() {
           { key: "active", label: `Мои доставки${b.active.length ? ` · ${b.active.length}` : ""}` },
           { key: "done", label: "Доставлено" },
         ];
+
+  const paused = !!b.status && !b.status.open && b.status.reason === "paused";
+  const pauseSheetEl = pauseSheet && (
+    <Sheet title="Пауза приёма заказов" onClose={() => setPauseSheet(false)}>
+      <span className="flex flex-col text-[13px] text-hint">
+        <span>Меню остаётся открытым, оформить заказ нельзя.</span>
+        <span>Пауза снимется сама.</span>
+      </span>
+      {(["30m", "1h", "today"] as const).map((p) => (
+        <SecondaryButton key={p} disabled={pause.isPending} onClick={() => pause.mutate(p)}>
+          {PAUSE_LABELS[p]}
+        </SecondaryButton>
+      ))}
+      {paused && (
+        <SecondaryButton
+          tone="accent"
+          disabled={pause.isPending}
+          onClick={() => pause.mutate("off")}
+        >
+          {PAUSE_LABELS.off}
+        </SecondaryButton>
+      )}
+      <FieldError message={pause.error?.message} />
+    </Sheet>
+  );
+
+  if (desktop) {
+    const columns: { key: Tab; title: string; hint?: string }[] =
+      mode === "manager"
+        ? [
+            { key: "new", title: "Новые" },
+            { key: "active", title: "В работе" },
+            { key: "done", title: "Готово", hint: "за сутки" },
+          ]
+        : [
+            { key: "active", title: "Мои доставки" },
+            { key: "done", title: "Доставлено", hint: "за сутки" },
+          ];
+    return (
+      <div className="flex flex-col gap-4 px-7 py-6">
+        <header className="flex flex-wrap items-center gap-3">
+          <h1 className="m-0 flex-1 basis-40 text-2xl font-bold">Заказы</h1>
+          {isManager && isCourier && (
+            <div
+              role="tablist"
+              aria-label="Режим"
+              className="flex gap-0.5 rounded-[10px] bg-muted p-[3px]"
+            >
+              {(["manager", "courier"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === m}
+                  onClick={() => switchMode(m)}
+                  className={`h-8 rounded-lg px-3.5 ${
+                    mode === m ? "bg-card font-semibold shadow-sm" : "font-medium text-hint"
+                  }`}
+                >
+                  {m === "manager"
+                    ? "Все заказы"
+                    : `Мои доставки${mine.data?.active.length ? ` · ${mine.data.active.length}` : ""}`}
+                </button>
+              ))}
+            </div>
+          )}
+          {mode === "manager" && (
+            <div className="flex h-[38px] items-center gap-2.5 rounded-[10px] bg-card pr-1.5 pl-3.5 shadow-[inset_0_0_0_1px_var(--line)]">
+              <span
+                className={`h-2.5 w-2.5 flex-none rounded-full ${status.open ? "bg-ok" : "bg-hint"}`}
+              />
+              <span className="font-semibold">{status.text}</span>
+              <button
+                type="button"
+                onClick={() => setPauseSheet(true)}
+                className="flex h-7 items-center gap-1.5 rounded-[7px] bg-muted px-2.5 text-sm font-semibold"
+              >
+                {paused ? <Play size={14} /> : <Pause size={14} />}
+                {paused ? "Снять паузу" : "Пауза"}
+              </button>
+            </div>
+          )}
+        </header>
+
+        <div className="flex flex-wrap items-start gap-4">
+          {columns.map((col) => {
+            const orders = b[col.key];
+            return (
+              <section
+                key={col.key}
+                aria-label={col.title}
+                className="flex min-w-0 flex-1 basis-[300px] flex-col gap-2.5"
+              >
+                <h2 className="m-0 flex items-center gap-2 px-1 text-[15px] leading-[22px] font-bold">
+                  {col.title}
+                  {col.hint ? (
+                    <span className="text-[13px] font-medium text-hint">{col.hint}</span>
+                  ) : (
+                    orders.length > 0 && (
+                      <span
+                        className={`flex h-[22px] min-w-[22px] items-center justify-center rounded-full px-[7px] text-xs font-bold ${
+                          col.key === "new" ? "bg-accent text-white" : "bg-muted text-ink"
+                        }`}
+                      >
+                        {orders.length}
+                      </span>
+                    )
+                  )}
+                </h2>
+                {orders.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-line px-4 py-8 text-center text-[13px] text-hint">
+                    {col.key === "new"
+                      ? "Новых заказов нет"
+                      : col.key === "active"
+                        ? mode === "courier"
+                          ? "Доставок пока нет — назначенные заказы появятся здесь"
+                          : "В работе ничего нет"
+                        : "За сутки ничего не закрыто"}
+                  </div>
+                )}
+                {orders.map((o) => (
+                  <OrderCard
+                    key={o.id}
+                    order={o}
+                    mode={mode}
+                    expanded={col.key !== "done" || open === o.id}
+                    {...(col.key === "done" && {
+                      onToggle: () => setOpen(open === o.id ? null : o.id),
+                    })}
+                  />
+                ))}
+                {col.key === "new" && (
+                  <p className="m-0 flex flex-col px-1 text-xs leading-[17px] text-hint">
+                    <span>Новые заказы появляются сами — со звуком, пока страница открыта.</span>
+                    <span>Пока заказ не приняли, он обведён.</span>
+                  </p>
+                )}
+              </section>
+            );
+          })}
+        </div>
+        {pauseSheetEl}
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-[720px] flex-col">
@@ -220,28 +367,7 @@ export function OrdersScreen() {
         )}
       </div>
 
-      {pauseSheet && (
-        <Sheet title="Пауза приёма заказов" onClose={() => setPauseSheet(false)}>
-          <span className="text-[13px] text-hint">
-            Меню остаётся открытым, оформить заказ нельзя. Пауза снимется сама.
-          </span>
-          {(["30m", "1h", "today"] as const).map((p) => (
-            <SecondaryButton key={p} disabled={pause.isPending} onClick={() => pause.mutate(p)}>
-              {PAUSE_LABELS[p]}
-            </SecondaryButton>
-          ))}
-          {b.status && !b.status.open && b.status.reason === "paused" && (
-            <SecondaryButton
-              tone="accent"
-              disabled={pause.isPending}
-              onClick={() => pause.mutate("off")}
-            >
-              {PAUSE_LABELS.off}
-            </SecondaryButton>
-          )}
-          <FieldError message={pause.error?.message} />
-        </Sheet>
-      )}
+      {pauseSheetEl}
     </div>
   );
 }
