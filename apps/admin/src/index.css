@@ -67,6 +67,12 @@ button {
   cursor: pointer;
 }
 
+/* Цвет курсора задаём сами: иначе iOS берёт его из оформления Telegram (бывает белым на белом). */
+input,
+textarea {
+  caret-color: var(--color-accent);
+}
+
 /* Нижняя панель с кнопкой не уезжает под «полоску» iPhone. */
 .safe-bottom {
   padding-bottom: max(20px, var(--tg-viewport-safe-area-inset-bottom, 0px));
