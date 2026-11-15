@@ -22,6 +22,8 @@
   --color-danger: var(--tg-theme-destructive-text-color, #d93025);
   --font-sans:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
+  /* Название магазина на обложке меню (бренд) */
+  --font-brand: "Unbounded", var(--font-sans);
 }
 
 /* Бренд проекта («Печка»): акцент «кирпич». В шаблоне меняется здесь. */
@@ -52,6 +54,51 @@
   --bad-bg: rgb(255 105 80 / 0.15);
   --bad-ink: #ffa48f;
   color-scheme: dark;
+}
+
+/*
+ * Бренд в меню: обложка, заглушка блюда без фото, шрифт названия. Знак — `src/brand.tsx`.
+ * Узор — маленькие печки (корпус с вырезом устья, evenodd), цвет задаётся в fill.
+ */
+:root {
+  --cover: #b5482a;
+  --cover-dim: #2a1a14;
+  --cover-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Cg fill='%23fff' fill-opacity='.09' fill-rule='evenodd'%3E%3Cg transform='translate(6 6) scale(.32) rotate(-8 32 32)'%3E%3Crect x='38' y='6' width='9' height='16' rx='2'/%3E%3Cpath d='M17 18h30a7 7 0 0 1 7 7v24a7 7 0 0 1-7 7H17a7 7 0 0 1-7-7V25a7 7 0 0 1 7-7ZM21 50h22V40a11 11 0 0 0-22 0Z'/%3E%3C/g%3E%3Cg transform='translate(28 26) scale(.2) rotate(10 32 32)'%3E%3Cpath d='M17 18h30a7 7 0 0 1 7 7v24a7 7 0 0 1-7 7H17a7 7 0 0 1-7-7V25a7 7 0 0 1 7-7ZM21 50h22V40a11 11 0 0 0-22 0Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --placeholder-bg: #fbf4ec;
+  --placeholder-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Cg fill='%23b5482a' fill-opacity='.07' fill-rule='evenodd'%3E%3Cg transform='translate(6 6) scale(.32) rotate(-8 32 32)'%3E%3Crect x='38' y='6' width='9' height='16' rx='2'/%3E%3Cpath d='M17 18h30a7 7 0 0 1 7 7v24a7 7 0 0 1-7 7H17a7 7 0 0 1-7-7V25a7 7 0 0 1 7-7ZM21 50h22V40a11 11 0 0 0-22 0Z'/%3E%3C/g%3E%3Cg transform='translate(28 26) scale(.2) rotate(10 32 32)'%3E%3Cpath d='M17 18h30a7 7 0 0 1 7 7v24a7 7 0 0 1-7 7H17a7 7 0 0 1-7-7V25a7 7 0 0 1 7-7ZM21 50h22V40a11 11 0 0 0-22 0Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+:root[data-theme="dark"] {
+  --placeholder-bg: rgb(251 244 236 / 0.08);
+}
+
+/* Обложка меню: стоит на месте, лист меню наезжает на неё; затемняется по прокрутке. */
+.menu-cover {
+  background-color: var(--cover);
+  background-image: var(--cover-pattern);
+  background-size: 44px 44px;
+}
+.menu-cover-dim {
+  background: var(--cover-dim);
+  opacity: 0;
+}
+@supports (animation-timeline: scroll()) {
+  .menu-cover-dim {
+    animation: cover-dim linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 160px;
+  }
+}
+@keyframes cover-dim {
+  to {
+    opacity: 0.45;
+  }
+}
+
+.dish-placeholder {
+  background-color: var(--placeholder-bg);
+  background-image: var(--placeholder-pattern);
+  background-size: 26px 26px;
 }
 
 html,
@@ -85,9 +132,15 @@ textarea {
   padding-bottom: max(20px, var(--tg-viewport-safe-area-inset-bottom, 0px));
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
+/*
+ * Полоса прокрутки страницы скрыта, как в мобильном приложении: в Telegram Desktop (Windows)
+ * она занимает ~16px справа, и белые карточки не доходят до края.
+ */
+html,
 .no-scrollbar {
   scrollbar-width: none;
+}
+html::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

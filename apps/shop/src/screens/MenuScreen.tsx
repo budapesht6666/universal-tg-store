@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, MapPin, ReceiptText, UtensilsCrossed } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { BrandMark } from "../brand.tsx";
 import { AddButton, BottomBar, Screen, Stepper } from "../components/ui.tsx";
 import { api, type Product } from "../lib/api.ts";
 import { useCart } from "../lib/cart.ts";
@@ -79,96 +80,104 @@ export function MenuScreen() {
 
   return (
     <Screen>
-      <header className="flex items-center gap-3 bg-card px-4 py-3">
-        {shop.shop.logo && (
-          <img
-            src={shop.shop.logo.url}
-            alt=""
-            className="h-11 w-11 flex-none rounded-xl object-cover"
-          />
+      {/* Обложка стоит на месте (sticky), лист меню ниже наезжает на неё. */}
+      <header className="menu-cover sticky top-0 z-0 flex h-[168px] flex-none flex-col justify-end gap-1 overflow-hidden px-4 pb-[34px] text-white">
+        <BrandMark tone="light" className="absolute -top-3.5 -right-[26px] w-[170px] -rotate-6" />
+        <h1 className="relative m-0 max-w-[70%] font-brand text-[26px] leading-[1.15] font-bold [overflow-wrap:anywhere]">
+          {shop.shop.name}
+        </h1>
+        {area && (
+          <span className="relative flex items-center gap-1 text-[13px] leading-[18px] text-white/85">
+            <MapPin size={13} strokeWidth={2.2} className="flex-none" />
+            <span className="truncate">{area}</span>
+          </span>
         )}
-        <div className="flex min-w-0 flex-1 flex-col">
-          <h1 className="m-0 truncate text-[17px] leading-[22px] font-bold">{shop.shop.name}</h1>
-          <span className="text-[13px] leading-[18px] text-hint">
+        <div className="menu-cover-dim pointer-events-none absolute inset-0" />
+      </header>
+
+      <div className="relative z-[1] -mt-5 flex flex-1 flex-col rounded-t-[20px] bg-page">
+        <div className="flex min-h-14 items-center gap-3 rounded-t-[20px] bg-card px-4 pt-3 pb-2">
+          <span className="flex-1 text-[13px] leading-[18px] text-hint">
             <span className={`font-semibold ${status.open ? "text-ok" : "text-ink"}`}>
               {status.text}
             </span>
             {status.open && " · доставка бесплатно"}
           </span>
-          {area && (
-            <span className="flex items-center gap-1 text-[13px] leading-[18px] text-hint">
-              <MapPin size={13} strokeWidth={2.2} className="flex-none" />
-              <span className="truncate">{area}</span>
-            </span>
+          {orders.data && orders.data.orders.length > 0 && (
+            <Link
+              to="/orders"
+              aria-label="Мои заказы"
+              className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-page text-accent"
+            >
+              <ReceiptText size={20} />
+            </Link>
           )}
         </div>
-        {orders.data && orders.data.orders.length > 0 && (
+
+        {active && (
           <Link
-            to="/orders"
-            aria-label="Мои заказы"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-page text-accent"
+            to="/orders/$id"
+            params={{ id: String(active.id) }}
+            className="flex items-center gap-3 bg-accent-soft px-4 py-2.5 text-accent-ink"
           >
-            <ReceiptText size={20} />
+            <span className="flex-1 text-sm font-semibold">
+              Заказ #{active.id} · {ORDER_STATUS_LABELS[active.status]}
+            </span>
+            <ChevronRight size={18} />
           </Link>
         )}
-      </header>
 
-      {active && (
-        <Link
-          to="/orders/$id"
-          params={{ id: String(active.id) }}
-          className="flex items-center gap-3 bg-accent-soft px-4 py-2.5 text-accent-ink"
-        >
-          <span className="flex-1 text-sm font-semibold">
-            Заказ #{active.id} · {ORDER_STATUS_LABELS[active.status]}
-          </span>
-          <ChevronRight size={18} />
-        </Link>
-      )}
-
-      {sections.length > 1 && (
-        <nav
-          ref={tabsRef}
-          aria-label="Разделы меню"
-          className="no-scrollbar sticky top-0 z-10 flex gap-5 overflow-x-auto border-b border-line bg-card px-4"
-        >
-          {sections.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              data-tab={s.id}
-              aria-current={current === s.id}
-              onClick={() => goTo(s.id)}
-              className={`flex h-11 flex-none items-center border-b-[3px] whitespace-nowrap ${
-                current === s.id
-                  ? "border-accent font-bold text-accent"
-                  : "border-transparent font-medium text-hint"
-              }`}
-            >
-              {s.title}
-            </button>
-          ))}
-        </nav>
-      )}
-
-      <main className="flex flex-col gap-1 pb-28">
-        {sections.length === 0 && (
-          <div className="flex flex-col items-center gap-2 px-8 py-24 text-center text-hint">
-            <UtensilsCrossed size={36} />
-            Меню скоро появится
-          </div>
+        {sections.length > 1 && (
+          <nav
+            ref={tabsRef}
+            aria-label="Разделы меню"
+            className="no-scrollbar sticky top-0 z-10 flex gap-5 overflow-x-auto border-b border-line bg-card px-4"
+          >
+            {sections.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                data-tab={s.id}
+                aria-current={current === s.id}
+                onClick={() => goTo(s.id)}
+                className={`flex h-11 flex-none items-center border-b-[3px] whitespace-nowrap ${
+                  current === s.id
+                    ? "border-accent font-bold text-accent"
+                    : "border-transparent font-medium text-hint"
+                }`}
+              >
+                {s.title}
+              </button>
+            ))}
+          </nav>
         )}
-        {sections.map((s) => (
-          <section key={s.id} id={`sec-${s.id}`} className="flex flex-col">
-            <h2 className="m-0 px-4 pt-4 pb-2 text-xl leading-[26px] font-bold">{s.title}</h2>
-            <div className="flex flex-col bg-card">
-              {s.items.map((p) => (
-                <DishRow key={p.id} product={p} />
-              ))}
+
+        <main className="flex flex-col gap-1 pb-28">
+          {sections.length === 0 && (
+            <div className="flex flex-col items-center gap-2 px-8 py-24 text-center text-hint">
+              <UtensilsCrossed size={36} />
+              Меню скоро появится
             </div>
-          </section>
-        ))}
-      </main>
+          )}
+          {sections.map((s) => (
+            <section key={s.id} id={`sec-${s.id}`} className="flex flex-col">
+              <h2 className="m-0 px-4 pt-4 pb-2 text-xl leading-[26px] font-bold">{s.title}</h2>
+              <div className="flex flex-col bg-card">
+                {s.items.map((p) => (
+                  <DishRow key={p.id} product={p} />
+                ))}
+              </div>
+            </section>
+          ))}
+          {sections.length > 0 && (
+            <footer className="flex flex-col items-center gap-1.5 px-4 pt-7 text-center text-xs text-hint">
+              <BrandMark className="w-[54px] opacity-30 grayscale" />
+              <span className="font-brand text-[13px] font-bold text-ink/55">{shop.shop.name}</span>
+              {area && <span>{area}</span>}
+            </footer>
+          )}
+        </main>
+      </div>
 
       {count > 0 && (
         <BottomBar>
@@ -207,7 +216,7 @@ function useCardAttributes(product: Product): string[] {
 export function DishImage({ product, size }: { product: Product; size: number }) {
   return (
     <div
-      className="relative flex flex-none items-center justify-center overflow-hidden rounded-[14px] bg-accent-soft text-accent-ink"
+      className={`relative flex flex-none items-center justify-center overflow-hidden rounded-[14px] ${product.image ? "bg-muted" : "dish-placeholder"}`}
       style={{ width: size, height: size }}
     >
       {product.image ? (
@@ -218,7 +227,10 @@ export function DishImage({ product, size }: { product: Product; size: number })
           className="h-full w-full object-cover"
         />
       ) : (
-        <UtensilsCrossed size={size * 0.36} strokeWidth={1.6} />
+        <BrandMark
+          className="drop-shadow-[0_2px_3px_rgb(143_53_32/0.18)]"
+          style={{ width: size * 0.48 }}
+        />
       )}
     </div>
   );
