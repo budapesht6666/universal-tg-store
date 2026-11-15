@@ -11,10 +11,12 @@ import { type ReactNode, useState } from "react";
 import { HoursEditor } from "../components/HoursEditor.tsx";
 import { ImageUpload } from "../components/ImageUpload.tsx";
 import {
+  FIELD_LABEL,
   FieldError,
   issuesToErrors,
   PrimaryButton,
   Spinner,
+  TEXTAREA,
   TextField,
   Toggle,
 } from "../components/ui.tsx";
@@ -106,7 +108,7 @@ function SettingsForm({ initial }: { initial: Settings }) {
               error={errors["shop.name"]}
             />
             <div className="flex flex-col gap-1.5">
-              <span className="text-[13px] text-hint">Логотип — в шапке магазина</span>
+              <span className={FIELD_LABEL}>Логотип — в шапке магазина</span>
               <ImageUpload
                 value={shop.logo}
                 onChange={(logo) => {
@@ -132,26 +134,24 @@ function SettingsForm({ initial }: { initial: Settings }) {
             hint="Название, описание и «О себе» бот обновит сам после сохранения."
           >
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] text-hint">Приветствие на /start</span>
+              <span className={FIELD_LABEL}>Приветствие на /start</span>
               <textarea
                 rows={8}
                 value={shop.greeting}
                 onChange={(e) => setShop({ ...shop, greeting: e.target.value })}
                 maxLength={1000}
-                className="resize-y rounded-xl border border-line bg-card px-3.5 py-3 outline-none focus:border-accent"
+                className={TEXTAREA}
               />
               <FieldError message={errors["shop.greeting"]} />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] text-hint">
-                Описание — в пустом чате до первого /start
-              </span>
+              <span className={FIELD_LABEL}>Описание — в пустом чате до первого /start</span>
               <textarea
                 rows={7}
                 value={shop.botDescription}
                 onChange={(e) => setShop({ ...shop, botDescription: e.target.value })}
                 maxLength={512}
-                className="resize-y rounded-xl border border-line bg-card px-3.5 py-3 outline-none focus:border-accent"
+                className={TEXTAREA}
               />
               <FieldError message={errors["shop.botDescription"]} />
             </label>
