@@ -38,6 +38,7 @@ export const shopRoutes = new Hono<AppEnv>()
       hours: settings.hours,
       status: statusOf(shop, now()),
       customerCanCancel: settings.orders.customerCanCancel,
+      delivery: settings.delivery,
       catalog: publicCatalog(db, settings.features),
     });
   })

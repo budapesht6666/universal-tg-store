@@ -17,6 +17,8 @@
   --color-ok: var(--ok);
   --color-warn-bg: var(--warn-bg);
   --color-warn-ink: var(--warn-ink);
+  --color-bad-bg: var(--bad-bg);
+  --color-bad-ink: var(--bad-ink);
   --color-danger: var(--tg-theme-destructive-text-color, #d93025);
   --font-sans:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
@@ -32,6 +34,9 @@
   --ok: #17753a;
   --warn-bg: #fdf1dc;
   --warn-ink: #6b3f05;
+  /* Точка вне зоны доставки */
+  --bad-bg: #fcebe7;
+  --bad-ink: #7a2410;
   color-scheme: light;
 }
 
@@ -44,6 +49,8 @@
   --ok: #4ccb72;
   --warn-bg: rgb(242 165 65 / 0.16);
   --warn-ink: #f6c27a;
+  --bad-bg: rgb(255 105 80 / 0.15);
+  --bad-ink: #ffa48f;
   color-scheme: dark;
 }
 

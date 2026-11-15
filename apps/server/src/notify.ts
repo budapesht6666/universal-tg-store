@@ -15,7 +15,9 @@ export type OrderNotice =
   | { type: "status"; orderId: number; actorId: number | null }
   | { type: "cancel_requested"; orderId: number }
   | { type: "delivery_failed"; orderId: number; actorId: number }
-  | { type: "reminder"; orderId: number; waitingMinutes: number };
+  | { type: "reminder"; orderId: number; waitingMinutes: number }
+  /** Заказ долго не принимают — сказать покупателю, что о нём помнят. */
+  | { type: "waiting"; orderId: number };
 
 export interface Notifier {
   notify(notice: OrderNotice): void;

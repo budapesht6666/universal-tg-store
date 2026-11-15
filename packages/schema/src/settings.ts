@@ -3,6 +3,7 @@
  * потом меняются в админке. Регион (валюта, часовой пояс, код страны) после настройки
  * не меняется: смена валюты молча переоценила бы все цены (65000 ₫ ≠ 65000 копеек).
  */
+import { DeliveryZoneSchema } from "./delivery.ts";
 import { ImageRefSchema } from "./fields.ts";
 import { WeekHoursSchema } from "./hours.ts";
 import { telegramUsernameSchema } from "./telegram.ts";
@@ -141,6 +142,7 @@ export const SettingsSchema = z.strictObject({
   hours: WeekHoursSchema.prefault({}),
   features: FeaturesSchema.prefault({}),
   orders: OrderSettingsSchema.prefault({}),
+  delivery: DeliveryZoneSchema.prefault({}),
 });
 export type Settings = z.output<typeof SettingsSchema>;
 export type SettingsInput = z.input<typeof SettingsSchema>;

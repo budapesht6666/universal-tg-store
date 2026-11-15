@@ -6,7 +6,9 @@
  * Карта — MapLibre + OpenFreeMap (векторные плитки OpenStreetMap, без ключа и лимитов).
  * tile.openstreetmap.org из Вьетнама открывается не всегда, CARTO требует ключ.
  * Библиотека грузится только здесь, чтобы меню открывалось быстро.
+ * С зоной доставки на карте пунктиром — границы её кругов.
  */
+import type { DeliveryCircle } from "@store/schema";
 import { Move } from "lucide-react";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
@@ -22,12 +24,14 @@ const PIN_ZOOM = 17;
 type Props = {
   value: DraftLocation | null;
   onChange: (location: DraftLocation) => void;
+  /** Круги зоны доставки; пусто — зона выключена. */
+  zone?: DeliveryCircle[];
 };
 
 type GeoData = Parameters<GeoJSONSource["setData"]>[0];
 
-/** Круг погрешности GPS — многоугольник из 64 точек. */
-function circle(lat: number, lng: number, meters: number): GeoData {
+/** Круг на карте (погрешность GPS, круг зоны) — многоугольник из 64 точек. */
+function circleCoords(lat: number, lng: number, meters: number): [number, number][] {
   const coords: [number, number][] = [];
   const dLat = meters / 111_320;
   const dLng = meters / (111_320 * Math.cos((lat * Math.PI) / 180));
@@ -35,12 +39,31 @@ function circle(lat: number, lng: number, meters: number): GeoData {
     const a = (i / 64) * 2 * Math.PI;
     coords.push([lng + dLng * Math.cos(a), lat + dLat * Math.sin(a)]);
   }
+  return coords;
+}
+
+function circle(lat: number, lng: number, meters: number): GeoData {
+  const coords = circleCoords(lat, lng, meters);
   return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [coords] } };
+}
+
+function zoneData(circles: DeliveryCircle[]): GeoData {
+  return {
+    type: "FeatureCollection",
+    features: circles.map((c) => ({
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "LineString",
+        coordinates: circleCoords(c.lat, c.lng, c.radiusKm * 1000),
+      },
+    })),
+  };
 }
 
 const EMPTY: GeoData = { type: "FeatureCollection", features: [] };
 
-export function MapPicker({ value, onChange }: Props) {
+export function MapPicker({ value, onChange, zone = [] }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const map = useRef<MlMap | null>(null);
   const [ready, setReady] = useState(false);
@@ -89,6 +112,13 @@ export function MapPicker({ value, onChange }: Props) {
           onChangeRef.current({ lat: round(c.lat), lng: round(c.lng), source: "pin" });
         });
         instance.on("load", () => {
+          instance.addSource("zone", { type: "geojson", data: EMPTY });
+          instance.addLayer({
+            id: "zone-line",
+            type: "line",
+            source: "zone",
+            paint: { "line-color": "#b5482a", "line-width": 2.5, "line-dasharray": [3, 2] },
+          });
           instance.addSource("accuracy", { type: "geojson", data: EMPTY });
           instance.addLayer({
             id: "accuracy-fill",
@@ -115,6 +145,14 @@ export function MapPicker({ value, onChange }: Props) {
       map.current = null;
     };
   }, []);
+
+  // Границы зоны доставки.
+  const zoneKey = JSON.stringify(zone);
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready) return;
+    (m.getSource("zone") as GeoJSONSource | undefined)?.setData(zoneData(JSON.parse(zoneKey)));
+  }, [zoneKey, ready]);
 
   // Точка пришла снаружи (GPS или ссылка) — переносим карту и рисуем круг погрешности.
   useEffect(() => {

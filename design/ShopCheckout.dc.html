@@ -30,7 +30,7 @@ input::placeholder,textarea::placeholder{color:#8E8E96}
     <section style="display: flex; flex-direction: column; gap: 10px">
       <div style="display: flex; flex-direction: column; gap: 2px">
         <h2 style="margin: 0; font-size: 17px; line-height: 22px; font-weight: 700">Куда привезти</h2>
-        <span style="font-size: 13px; line-height: 18px; color: #6B6B73">Курьер приедет туда, где стоит пин. Поставьте его на свой вход.</span>
+        <span style="display: flex; flex-direction: column; font-size: 13px; line-height: 18px; color: #6B6B73"><span>Курьер приедет туда, где стоит пин. Поставьте его на свой вход.</span><span>Доставляем: Дананг и Хойан.</span></span>
       </div>
       <div style="display: flex; flex-direction: column; border-radius: 16px; background: #FFFFFF; overflow: hidden">
         <div style="position: relative; height: 168px; background: #E7ECE2">
@@ -40,6 +40,8 @@ input::placeholder,textarea::placeholder{color:#8E8E96}
             <path d="M-10 12l120 70 120-70 140 56" stroke="#FFFFFF" stroke-width="4" fill="none"></path>
             <rect x="160" y="10" width="80" height="28" rx="4" fill="#D9E4D0"></rect>
             <rect x="70" y="94" width="70" height="16" rx="3" fill="#D9E4D0"></rect>
+            <path d="M-10 -10H255C280 50 320 95 370 112V178H-10Z" fill="{{outFill}}"></path>
+            <path d="M255 -10C280 50 320 95 370 112" stroke="{{zoneLine}}" stroke-width="2.5" stroke-dasharray="7 5" fill="none"></path>
             <circle cx="179" cy="76" r="{{accR}}" fill="{{accFill}}" stroke="{{accStroke}}" stroke-width="1.5"></circle>
           </svg>
           <svg width="34" height="44" viewBox="0 0 24 32" aria-hidden="true" style="position: absolute; left: 162px; top: 34px">
@@ -52,7 +54,7 @@ input::placeholder,textarea::placeholder{color:#8E8E96}
         </div>
         <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: {{rowBg}}">
           <span style="width: 28px; height: 28px; flex: none; border-radius: 14px; background: {{iconBg}}; color: {{iconFg}}; display: flex; align-items: center; justify-content: center">
-            <sc-if value="{{poor}}" hint-placeholder-val="{{ false }}">
+            <sc-if value="{{warn}}" hint-placeholder-val="{{ false }}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 7v6M12 17h.01"></path></svg>
             </sc-if>
             <sc-if value="{{good}}" hint-placeholder-val="{{ true }}">
@@ -64,6 +66,12 @@ input::placeholder,textarea::placeholder{color:#8E8E96}
             <span style="font-size: 13px; line-height: 17px; color: {{subFg}}">{{sub}}</span>
           </div>
         </div>
+        <sc-if value="{{outside}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-top: 1px solid #F3D9D2; background: #FCEBE7">
+            <span style="flex: 1; min-width: 0; font-size: 13px; line-height: 17px; color: #7A2410">Вы у самой границы? Спросите менеджера — может, довезём.</span>
+            <button type="button" style="height: 36px; flex: none; padding: 0 14px; border: 0; border-radius: 10px; background: #FFFFFF; color: #8F3520; font-size: 14px; font-weight: 600; cursor: pointer">Написать</button>
+          </div>
+        </sc-if>
       </div>
 
       <button type="button" style="height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 12px; background: #FBE9E2; color: #8F3520; font-weight: 600; cursor: pointer">
@@ -110,24 +118,39 @@ input::placeholder,textarea::placeholder{color:#8E8E96}
   </form>
 
   <div style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 20px; background: #F2F2F7; border-top: 1px solid #E4E4EA">
-    <span style="text-align: center; font-size: 13px; color: #6B6B73">3 порции · доставка бесплатно · оплата курьеру</span>
-    <button style="height: 52px; border: 0; border-radius: 14px; background: #B5482A; color: #FFFFFF; font-size: 16px; font-weight: 600; cursor: pointer">Оформить заказ · 330 000 ₫</button>
+    <span style="text-align: center; font-size: 13px; color: {{footFg}}; font-weight: {{footWeight}}">{{foot}}</span>
+    <button disabled="{{blocked}}" style="height: 52px; border: 0; border-radius: 14px; background: {{btnBg}}; color: {{btnFg}}; font-size: 16px; font-weight: 600; cursor: pointer">Оформить заказ · 330 000 ₫</button>
   </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"geo":{"editor":"enum","options":["good","poor"],"default":"good"},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props="{&quot;geo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;good&quot;,&quot;poor&quot;,&quot;outside&quot;],&quot;default&quot;:&quot;outside&quot;},&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844}}">
 class Component extends DCLogic {
   renderVals() {
-    const poor = (this.props.geo ?? 'good') === 'poor';
-    return poor ? {
-      poor: true, good: false, accR: 60, accFill: 'rgba(176,96,8,0.10)', accStroke: 'rgba(176,96,8,0.45)',
+    const geo = this.props.geo ?? 'good';
+    const base = {
+      outside: false, blocked: false, outFill: 'none', zoneLine: 'none',
+      foot: '3 порции · доставка бесплатно · оплата курьеру', footFg: '#6B6B73', footWeight: '400',
+      btnBg: '#B5482A', btnFg: '#FFFFFF'
+    };
+    if (geo === 'outside') return Object.assign(base, {
+      warn: true, good: false, outside: true, blocked: true,
+      accR: 14, accFill: 'rgba(154,43,18,0.10)', accStroke: 'rgba(154,43,18,0.40)',
+      outFill: 'none', zoneLine: '#B5482A',
+      rowBg: '#FCEBE7', iconBg: '#F6CFC5', iconFg: '#9A2B12',
+      status: 'Сюда не доставляем', sub: 'Доставляем только: Дананг и Хойан. Подвиньте точку в зону', subFg: '#7A2410',
+      foot: 'Точка вне зоны доставки', footFg: '#9A2B12', footWeight: '600',
+      btnBg: '#E4E4EA', btnFg: '#8E8E96'
+    });
+    if (geo === 'poor') return Object.assign(base, {
+      warn: true, good: false, accR: 60, accFill: 'rgba(176,96,8,0.10)', accStroke: 'rgba(176,96,8,0.45)',
       rowBg: '#FDF1DC', iconBg: '#F7DDB0', iconFg: '#8A4B06',
       status: 'Неточно: ±400 м', sub: 'Подвиньте карту, чтобы пин встал на ваш дом', subFg: '#6B3F05'
-    } : {
-      poor: false, good: true, accR: 14, accFill: 'rgba(181,72,42,0.10)', accStroke: 'rgba(181,72,42,0.40)',
+    });
+    return Object.assign(base, {
+      warn: false, good: true, accR: 14, accFill: 'rgba(181,72,42,0.10)', accStroke: 'rgba(181,72,42,0.40)',
       rowBg: '#FFFFFF', iconBg: '#E3F2E7', iconFg: '#17753A',
       status: 'Точка поставлена · ±15 м', sub: 'Хойан, Кам Тхань · 15.8801, 108.3380', subFg: '#6B6B73'
-    };
+    });
   }
 }
 </script>

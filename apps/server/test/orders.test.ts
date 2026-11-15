@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { settings } from "../src/db/schema.ts";
-import { dueReminders } from "../src/orders/service.ts";
+import { dueReminders, dueWaitingNotices } from "../src/orders/service.ts";
 import { claimInvite, completeInvite, createInvite } from "../src/repo/team.ts";
 import {
   ANNA,
@@ -397,5 +397,85 @@ describe("отзыв после доставки", () => {
       .set({ data: { ...row.data, features: oldFeatures as typeof row.data.features } })
       .run();
     expect((await t.call("GET", "/api/shop")).json.features.reviews).toBe(true);
+  });
+});
+
+describe("зона доставки, первый заказ, долгое ожидание", () => {
+  const ZONE = {
+    enabled: true,
+    label: "Дананг и Хойан",
+    circles: [
+      { name: "Дананг", lat: 16.0544, lng: 108.2022, radiusKm: 12 },
+      { name: "Хойан", lat: 15.8801, lng: 108.338, radiusKm: 9 },
+    ],
+  };
+
+  it("точку вне зоны сервер не принимает; магазин отдаёт зону", async () => {
+    const t = setup();
+    await openShop(t);
+    const settings = (await t.call("GET", "/api/admin/settings", { as: OWNER })).json;
+    expect(settings.delivery).toEqual({ enabled: false, label: "", circles: [] });
+    const saved = await t.call("PUT", "/api/admin/settings", {
+      as: OWNER,
+      body: { ...settings, region: undefined, delivery: ZONE },
+    });
+    expect(saved.status).toBe(200);
+    expect((await t.call("GET", "/api/shop")).json.delivery).toEqual(ZONE);
+
+    const hue = { lat: 16.4637, lng: 107.5909, source: "pin" };
+    const outside = await t.call("POST", "/api/orders", {
+      as: ANNA,
+      body: { ...ORDER_BODY, customer: { ...ORDER_BODY.customer, location: hue } },
+    });
+    expect(outside.status).toBe(400);
+    expect(outside.json.issues[0]).toMatchObject({ path: "customer.location" });
+    expect(outside.json.issues[0].message).toContain("только Дананг и Хойан");
+    expect((await t.call("POST", "/api/orders", { as: ANNA, body: ORDER_BODY })).status).toBe(201);
+  });
+
+  it("включить зону без кругов нельзя", async () => {
+    const t = setup();
+    await openShop(t);
+    const settings = (await t.call("GET", "/api/admin/settings", { as: OWNER })).json;
+    const r = await t.call("PUT", "/api/admin/settings", {
+      as: OWNER,
+      body: { ...settings, region: undefined, delivery: { enabled: true, circles: [] } },
+    });
+    expect(r.status).toBe(400);
+  });
+
+  it("«Первый заказ» — пока покупателю ничего не доставили", async () => {
+    const t = setup();
+    await openShop(t);
+    await t.call("POST", "/api/orders", { as: ANNA, body: ORDER_BODY });
+    const board = async () => (await t.call("GET", "/api/staff/orders", { as: OWNER })).json;
+    expect((await board()).new[0].firstOrder).toBe(true);
+    const act = (body: object) =>
+      t.call("POST", "/api/staff/orders/1001/actions", { as: OWNER, body });
+    await act({ action: "accept" });
+    await act({ action: "pickup" });
+    await act({ action: "deliver" });
+    await t.call("POST", "/api/orders", { as: ANNA, body: ORDER_BODY });
+    expect((await board()).new[0].firstOrder).toBe(false);
+  });
+
+  it("не приняли за 15 минут — покупателю пишем один раз", async () => {
+    const t = setup();
+    await openShop(t);
+    await t.call("POST", "/api/orders", { as: ANNA, body: ORDER_BODY });
+    await t.call("POST", "/api/orders", {
+      as: ANNA + 1,
+      body: ORDER_BODY,
+    });
+    await t.call("POST", "/api/staff/orders/1002/actions", {
+      as: OWNER,
+      body: { action: "accept" },
+    });
+    t.clock.now = new Date(NOON.getTime() + 14 * 60_000);
+    expect(dueWaitingNotices(t.deps)).toEqual([]);
+    t.clock.now = new Date(NOON.getTime() + 15 * 60_000);
+    expect(dueWaitingNotices(t.deps).map((o) => o.id)).toEqual([1001]);
+    t.clock.now = new Date(NOON.getTime() + 30 * 60_000);
+    expect(dueWaitingNotices(t.deps)).toEqual([]);
   });
 });

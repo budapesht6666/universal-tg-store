@@ -16,6 +16,7 @@
     "@tma.js/sdk-react": "catalog:",
     "hono": "catalog:",
     "lucide-react": "catalog:",
+    "maplibre-gl": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

@@ -100,6 +100,8 @@ export function OrderCard({
   }
 
   const newReview = o.review !== null && !o.review.seen;
+  // Раньше этому покупателю ничего не доставляли — менеджеру стоит присмотреться (оплата курьеру).
+  const firstOrder = mode === "manager" && o.firstOrder && !finished;
   const highlight = o.status === "new" || o.cancelRequested || o.deliveryIssue || newReview;
 
   // Раскрыли карточку с новым отзывом — отзыв прочитан.
@@ -128,6 +130,7 @@ export function OrderCard({
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="font-bold">#{o.id}</span>
             <StatusChip order={o} waiting={waiting} />
+            {firstOrder && <FirstOrderChip />}
             {o.review && <RatingChip rating={o.review.rating} fresh={newReview} />}
           </div>
           <span className="truncate text-sm text-hint">
@@ -151,6 +154,7 @@ export function OrderCard({
         <button type="button" onClick={onToggle} className="flex items-center gap-2">
           <span className="text-[17px] leading-[22px] font-bold">#{o.id}</span>
           <StatusChip order={o} waiting={waiting} />
+          {firstOrder && <FirstOrderChip />}
           {o.review && <RatingChip rating={o.review.rating} fresh={false} />}
         </button>
         <span className="ml-auto text-[17px] font-bold">{money(o.total)}</span>
@@ -471,7 +475,7 @@ export function DoneRow({
 function StatusChip({ order: o, waiting }: { order: StaffOrder; waiting: number | null }) {
   if (waiting !== null) {
     return (
-      <span className="flex h-6 items-center gap-1 rounded-lg bg-accent-soft px-2 text-[13px] font-bold text-accent-ink">
+      <span className="flex h-6 items-center gap-1 rounded-lg bg-accent-soft px-2 text-[13px] font-bold whitespace-nowrap text-accent-ink">
         <Clock size={13} /> ждёт {waiting} мин
       </span>
     );
@@ -498,6 +502,15 @@ function reviewTime(iso: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+/** Покупателю ещё ничего не доставляли. Цвет — по макетам StaffOrders и AdminOrdersBoard. */
+function FirstOrderChip() {
+  return (
+    <span className="flex h-6 items-center rounded-lg bg-[#efe8fb] px-2 text-[13px] font-semibold whitespace-nowrap text-[#5b3aa8] lg:h-5 lg:rounded-md lg:px-1.5 lg:text-xs">
+      Первый заказ
+    </span>
+  );
 }
 
 /** «★ 4» у статуса; новый (непрочитанный) отзыв — мягкий чип с подписью. */

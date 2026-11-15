@@ -3,6 +3,7 @@
  * нажал вкладку — лента прокрутилась к разделу; листаешь — вкладка подсвечивается сама.
  */
 import {
+  deliveryAreaLine,
   discountPercent,
   isFinalStatus,
   MAX_QTY_PER_ITEM,
@@ -10,7 +11,7 @@ import {
 } from "@store/schema";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, ReceiptText, UtensilsCrossed } from "lucide-react";
+import { ChevronRight, MapPin, ReceiptText, UtensilsCrossed } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AddButton, BottomBar, Screen, Stepper } from "../components/ui.tsx";
 import { api, type Product } from "../lib/api.ts";
@@ -21,6 +22,7 @@ export function MenuScreen() {
   const shop = useReadyShop();
   const { categories, products } = shop.catalog;
   const status = statusText(shop.status, shop.hours);
+  const area = deliveryAreaLine(shop.delivery);
   const { count, total } = useCartLines();
   const money = useMoney();
   const orders = useQuery({ queryKey: ["orders"], queryFn: api.orders });
@@ -93,6 +95,12 @@ export function MenuScreen() {
             </span>
             {status.open && " · доставка бесплатно"}
           </span>
+          {area && (
+            <span className="flex items-center gap-1 text-[13px] leading-[18px] text-hint">
+              <MapPin size={13} strokeWidth={2.2} className="flex-none" />
+              <span className="truncate">{area}</span>
+            </span>
+          )}
         </div>
         {orders.data && orders.data.orders.length > 0 && (
           <Link

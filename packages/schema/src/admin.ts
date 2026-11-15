@@ -3,6 +3,7 @@
  * Те же схемы проверяют запросы на сервере.
  */
 import { CategorySchema, checkCompareAtPrice, IdSchema, ProductBaseSchema } from "./catalog.ts";
+import { DeliveryZoneSchema } from "./delivery.ts";
 import { type AttributeDefinition, buildZodSchema } from "./fields.ts";
 import { WeekHoursSchema } from "./hours.ts";
 import { FeaturesSchema, OrderSettingsSchema, ShopInfoSchema } from "./settings.ts";
@@ -68,5 +69,6 @@ export const SettingsUpdateSchema = z.strictObject({
   hours: WeekHoursSchema.prefault({}),
   features: FeaturesSchema.prefault({}),
   orders: OrderSettingsSchema.prefault({}),
+  delivery: DeliveryZoneSchema.prefault({}),
 });
 export type SettingsUpdate = z.input<typeof SettingsUpdateSchema>;

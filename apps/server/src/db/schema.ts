@@ -149,6 +149,8 @@ export const orders = sqliteTable(
     reviewSeenAt: ms("review_seen_at"),
     /** Когда последний раз напоминали менеджерам о непринятом заказе. */
     remindedAt: ms("reminded_at"),
+    /** Когда написали покупателю «заказ ещё не приняли» (один раз, через 15 минут). */
+    waitingNoticeAt: ms("waiting_notice_at"),
     createdAt: ms("created_at").notNull(),
     updatedAt: ms("updated_at").notNull(),
   },

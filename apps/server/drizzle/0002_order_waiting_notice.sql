@@ -1,0 +1,1 @@
+ALTER TABLE `orders` ADD `waiting_notice_at` integer;

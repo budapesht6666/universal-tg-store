@@ -5,9 +5,12 @@
  */
 import {
   createOrderInputSchema,
+  type DeliveryZone,
   GPS_ACCURACY_WARN_M,
+  inDeliveryZone,
   normalizePhone,
   parseLocationText,
+  telegramLink,
 } from "@store/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -18,7 +21,13 @@ import { BottomBar, FieldError, PrimaryButton, Screen, Section } from "../compon
 import { ApiError, api } from "../lib/api.ts";
 import { type DraftLocation, useCart } from "../lib/cart.ts";
 import { useCartLines, useMoney, useReadyShop } from "../lib/shop.ts";
-import { canLocate, haptic, openLocationSettings, requestGps } from "../lib/telegram.ts";
+import {
+  canLocate,
+  haptic,
+  openLocationSettings,
+  openTelegramChat,
+  requestGps,
+} from "../lib/telegram.ts";
 import { ClosedNotice } from "./CartScreen.tsx";
 
 type Errors = Record<string, string>;
@@ -106,6 +115,9 @@ export function CheckoutScreen() {
     },
   });
 
+  const zone = shop.delivery;
+  const outside = !!draft.location && !inDeliveryZone(zone, draft.location);
+
   if (count === 0 && !submit.isPending) {
     return (
       <Screen>
@@ -126,9 +138,14 @@ export function CheckoutScreen() {
         <ClosedNotice />
         <Section
           title="Куда привезти"
-          hint="Курьер приедет туда, где стоит пин. Поставьте его на свой вход."
+          hint={[
+            "Курьер приедет туда, где стоит пин. Поставьте его на свой вход.",
+            zone.enabled && zone.label ? `Доставляем: ${zone.label}.` : null,
+          ]}
         >
           <LocationField
+            zone={zone}
+            manager={shop.shop.manager}
             value={draft.location}
             onChange={(location) => {
               setDraft({ location });
@@ -208,10 +225,20 @@ export function CheckoutScreen() {
           </div>
         )}
         <BottomBar>
-          <span className="text-center text-[13px] text-hint">
-            {count} {portions(count)} · доставка бесплатно · оплата курьеру
-          </span>
-          <PrimaryButton type="submit" loading={submit.isPending} disabled={!shop.status.open}>
+          {outside ? (
+            <span className="text-center text-[13px] font-semibold text-bad-ink">
+              Точка вне зоны доставки
+            </span>
+          ) : (
+            <span className="text-center text-[13px] text-hint">
+              {count} {portions(count)} · доставка бесплатно · оплата курьеру
+            </span>
+          )}
+          <PrimaryButton
+            type="submit"
+            loading={submit.isPending}
+            disabled={!shop.status.open || outside}
+          >
             Оформить заказ · {money(total)}
           </PrimaryButton>
         </BottomBar>
@@ -228,12 +255,19 @@ function portions(n: number) {
   return "порций";
 }
 
-/** Карта + «Я сейчас здесь» (только на телефоне) + ИЛИ + ссылка Google Maps / координаты. */
+/**
+ * Карта + «Я сейчас здесь» (только на телефоне) + ИЛИ + ссылка Google Maps / координаты.
+ * С зоной доставки: граница на карте, точка вне зоны — «Сюда не доставляем».
+ */
 function LocationField({
+  zone,
+  manager,
   value,
   onChange,
   error,
 }: {
+  zone: DeliveryZone;
+  manager: string | undefined;
   value: DraftLocation | null;
   onChange: (l: DraftLocation) => void;
   error: string | undefined;
@@ -253,6 +287,8 @@ function LocationField({
   }, [link]);
 
   const poor = value?.source === "gps" && (value.accuracy ?? 0) > GPS_ACCURACY_WARN_M;
+  const outside = !!value && !inDeliveryZone(zone, value);
+  const warn = !value || poor;
 
   const locate = async () => {
     setGpsState("loading");
@@ -287,16 +323,22 @@ function LocationField({
   return (
     <>
       <div className="flex flex-col overflow-hidden rounded-2xl bg-card" data-error={!!error}>
-        <MapPicker value={value} onChange={onChange} />
+        <MapPicker value={value} onChange={onChange} zone={zone.enabled ? zone.circles : []} />
         <div
-          className={`flex items-center gap-3 px-3.5 py-3 ${poor ? "bg-warn-bg text-warn-ink" : ""}`}
+          className={`flex items-center gap-3 px-3.5 py-3 ${
+            outside ? "bg-bad-bg text-bad-ink" : poor ? "bg-warn-bg text-warn-ink" : ""
+          }`}
         >
           <span
             className={`flex h-7 w-7 flex-none items-center justify-center rounded-full ${
-              !value || poor ? "bg-warn-bg text-warn-ink" : "bg-[#e3f2e7] text-[#17753a]"
+              outside
+                ? "bg-bad-ink/15 text-bad-ink"
+                : warn
+                  ? "bg-warn-bg text-warn-ink"
+                  : "bg-[#e3f2e7] text-[#17753a]"
             }`}
           >
-            {!value || poor ? (
+            {outside || warn ? (
               <AlertCircle size={16} strokeWidth={2.6} />
             ) : (
               <Check size={16} strokeWidth={2.6} />
@@ -304,25 +346,48 @@ function LocationField({
           </span>
           <div className="flex min-w-0 flex-1 flex-col">
             <span className="font-semibold">
-              {!value
-                ? "Точка не поставлена"
-                : poor
-                  ? `Неточно: ±${Math.round(value.accuracy ?? 0)} м`
-                  : `Точка поставлена${value.accuracy ? ` · ±${Math.round(value.accuracy)} м` : ""}`}
+              {outside
+                ? "Сюда не доставляем"
+                : !value
+                  ? "Точка не поставлена"
+                  : poor
+                    ? `Неточно: ±${Math.round(value.accuracy ?? 0)} м`
+                    : `Точка поставлена${value.accuracy ? ` · ±${Math.round(value.accuracy)} м` : ""}`}
             </span>
-            <span className="text-[13px] leading-[17px] text-hint">
-              {!value
-                ? gpsShown
-                  ? "Подвиньте карту, нажмите «Я сейчас здесь» или вставьте ссылку"
-                  : "Подвиньте карту или вставьте ссылку"
-                : poor
-                  ? "Подвиньте карту, чтобы пин встал на ваш дом"
-                  : `${value.lat.toFixed(5)}, ${value.lng.toFixed(5)}`}
+            <span className={`text-[13px] leading-[17px] ${outside ? "" : "text-hint"}`}>
+              {outside
+                ? zone.label
+                  ? `Доставляем только: ${zone.label}. Подвиньте точку в зону`
+                  : "Точка вне зоны доставки. Подвиньте её"
+                : !value
+                  ? gpsShown
+                    ? "Подвиньте карту, нажмите «Я сейчас здесь» или вставьте ссылку"
+                    : "Подвиньте карту или вставьте ссылку"
+                  : poor
+                    ? "Подвиньте карту, чтобы пин встал на ваш дом"
+                    : `${value.lat.toFixed(5)}, ${value.lng.toFixed(5)}`}
             </span>
           </div>
         </div>
+        {outside && manager && (
+          <div className="flex items-center gap-3 border-t border-bad-ink/15 bg-bad-bg px-3.5 py-2.5">
+            <span className="min-w-0 flex-1 text-[13px] leading-[17px] text-bad-ink">
+              Вы у самой границы? Спросите менеджера — может, довезём.
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                haptic.tap();
+                openTelegramChat(telegramLink(manager));
+              }}
+              className="flex h-9 flex-none items-center rounded-[10px] bg-card px-3.5 text-sm font-semibold text-accent-ink"
+            >
+              Написать
+            </button>
+          </div>
+        )}
       </div>
-      <FieldError message={error} />
+      {!outside && <FieldError message={error} />}
 
       {gpsShown && (
         <>

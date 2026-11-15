@@ -1,4 +1,7 @@
-/** «Настройки»: магазин, часы работы, отмена покупателем, фичи меню. Регион — только для чтения. */
+/**
+ * «Настройки»: магазин, часы работы, отмена покупателем, фичи меню, зона доставки.
+ * Регион — только для чтения.
+ */
 import {
   FEATURE_HINTS,
   FEATURE_LABELS,
@@ -20,6 +23,7 @@ import {
   TextField,
   Toggle,
 } from "../components/ui.tsx";
+import { ZoneEditor } from "../components/ZoneEditor.tsx";
 import { ApiError, api, type Settings } from "../lib/api.ts";
 import { atUsername, fromAtInput } from "../lib/telegram.ts";
 
@@ -37,21 +41,29 @@ function SettingsForm({ initial }: { initial: Settings }) {
   const [hours, setHours] = useState<WeekHours>(initial.hours);
   const [features, setFeatures] = useState(initial.features);
   const [orders, setOrders] = useState(initial.orders);
+  const [delivery, setDelivery] = useState(initial.delivery);
   const [errors, setErrors] = useState<Record<string, string>>({});
   // «Сохранено», пока форма совпадает с тем, что вернул сервер; любая правка — снова «Сохранить».
   const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
-  const saved = savedSnapshot === JSON.stringify({ shop, hours, features, orders });
+  const saved = savedSnapshot === JSON.stringify({ shop, hours, features, orders, delivery });
 
   const save = useMutation({
-    mutationFn: () => api.saveSettings({ shop, hours, features, orders }),
+    mutationFn: () => api.saveSettings({ shop, hours, features, orders, delivery }),
     onMutate: () => setErrors({}),
     onSuccess: (s) => {
       setShop(s.shop);
       setHours(s.hours);
       setFeatures(s.features);
       setOrders(s.orders);
+      setDelivery(s.delivery);
       setSavedSnapshot(
-        JSON.stringify({ shop: s.shop, hours: s.hours, features: s.features, orders: s.orders }),
+        JSON.stringify({
+          shop: s.shop,
+          hours: s.hours,
+          features: s.features,
+          orders: s.orders,
+          delivery: s.delivery,
+        }),
       );
       queryClient.setQueryData(["settings"], s);
       void queryClient.invalidateQueries({ queryKey: ["shop"] });
@@ -67,7 +79,7 @@ function SettingsForm({ initial }: { initial: Settings }) {
 
   const region = initial.region;
   const regionLabel = REGIONS[region.country]?.label ?? region.country;
-  const current = JSON.stringify({ shop, hours, features, orders });
+  const current = JSON.stringify({ shop, hours, features, orders, delivery });
   const base =
     savedSnapshot ??
     JSON.stringify({
@@ -75,6 +87,7 @@ function SettingsForm({ initial }: { initial: Settings }) {
       hours: initial.hours,
       features: initial.features,
       orders: initial.orders,
+      delivery: initial.delivery,
     });
   const dirty = current !== base;
   const saveLabel = saved ? "Сохранено" : "Сохранить";
@@ -213,6 +226,13 @@ function SettingsForm({ initial }: { initial: Settings }) {
           </Card>
         </div>
       </div>
+
+      <Card
+        title="Зона доставки"
+        hint="Если точка покупателя вне зоны, заказ не оформить — он увидит это сразу на карте."
+      >
+        <ZoneEditor value={delivery} onChange={setDelivery} errors={errors} />
+      </Card>
 
       <FieldError message={errors.form} />
       <div className="safe-bottom fixed inset-x-0 bottom-0 z-10 bg-page px-4 pt-3 lg:hidden">

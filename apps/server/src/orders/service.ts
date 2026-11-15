@@ -24,7 +24,7 @@ import {
   type Role,
   type StaffOrderAction,
 } from "@store/schema";
-import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, or, sql } from "drizzle-orm";
 import type { Db } from "../db/client.ts";
 import { orderEvents, orders, users } from "../db/schema.ts";
 import type { Deps } from "../deps.ts";
@@ -79,6 +79,29 @@ export function chatOrder(db: Db, customerId: number, now: Date): OrderRow | nul
 
 /** Напоминание менеджерам о непринятом заказе — каждые 3 минуты. */
 export const REMINDER_INTERVAL_MS = 3 * 60 * 1000;
+
+/** Через столько после оформления непринятого заказа бот один раз пишет покупателю. */
+export const WAITING_NOTICE_MS = 15 * 60 * 1000;
+
+/**
+ * Первый заказ покупателя: раньше ему ничего не доставляли. Менеджеру на карточке —
+ * метка «Первый заказ»: на такой стоит посмотреть внимательнее (оплата курьеру).
+ */
+export function isFirstOrder(db: Db, order: Pick<OrderRow, "id" | "customerId">): boolean {
+  const earlier = db
+    .select({ id: orders.id })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.customerId, order.customerId),
+        eq(orders.status, "done"),
+        lt(orders.id, order.id),
+      ),
+    )
+    .limit(1)
+    .get();
+  return !earlier;
+}
 
 export function getOrder(db: Db, id: number): OrderRow {
   const order = db.select().from(orders).where(eq(orders.id, id)).get();
@@ -438,6 +461,30 @@ export function dueReminders(deps: Deps): { order: OrderRow; waitingMinutes: num
   });
 }
 
+/**
+ * Заказы, которые не приняли за 15 минут, — покупателю один раз пишем, что о заказе помнят.
+ * Иначе он молча ждёт, а напоминания видит только команда.
+ */
+export function dueWaitingNotices(deps: Deps): OrderRow[] {
+  const { db } = deps;
+  const now = deps.now();
+  const due = db
+    .select()
+    .from(orders)
+    .where(
+      and(
+        eq(orders.status, "new"),
+        isNull(orders.waitingNoticeAt),
+        lte(orders.createdAt, new Date(now.getTime() - WAITING_NOTICE_MS)),
+      ),
+    )
+    .all();
+  for (const order of due) {
+    db.update(orders).set({ waitingNoticeAt: now }).where(eq(orders.id, order.id)).run();
+  }
+  return due;
+}
+
 // ───────────── Списки и карточки ─────────────
 
 export function cancelText(order: OrderRow): string | null {
@@ -586,6 +633,8 @@ export function staffView(db: Db, order: OrderRow, viewer: Actor) {
           at: new Date(issue.at).toISOString(),
         }
       : null,
+    /** Раньше этому покупателю ничего не доставляли — метка «Первый заказ». */
+    firstOrder: isFirstOrder(db, order),
     /** Отзыв видит только менеджер. seen=false — на карточке «новый отзыв». */
     review:
       review && can(viewer.roles, "orders.manage")

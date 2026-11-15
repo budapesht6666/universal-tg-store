@@ -12,10 +12,17 @@ import type { Api, RawApi } from "grammy";
 import { botMessages } from "../db/schema.ts";
 import type { Deps } from "../deps.ts";
 import type { Notifier, OrderNotice } from "../notify.ts";
-import { getOrder, type OrderRow } from "../orders/service.ts";
+import { getOrder, isFirstOrder, type OrderRow } from "../orders/service.ts";
 import { getShop } from "../repo/settings.ts";
 import { staffWith, userName } from "../repo/team.ts";
-import { courierMessage, customerMessage, esc, type Names, staffOrderMessage } from "./texts.ts";
+import {
+  courierMessage,
+  customerMessage,
+  esc,
+  type Names,
+  staffOrderMessage,
+  waitingMessage,
+} from "./texts.ts";
 
 type Kind = (typeof botMessages.$inferSelect)["kind"];
 type Markup = Parameters<Api<RawApi>["sendMessage"]>[2] extends infer O
@@ -97,7 +104,7 @@ export function createBotNotifier(api: Api, deps: Deps): Notifier & { idle(): Pr
   }
 
   async function refreshStaff(order: OrderRow) {
-    const msg = staffOrderMessage(order, env, locale(), names);
+    const msg = staffOrderMessage(order, env, locale(), names, isFirstOrder(db, order));
     for (const m of messagesOf(order.id, "order"))
       await edit(m.chatId, m.messageId, msg.text, msg.reply_markup);
   }
@@ -139,7 +146,7 @@ export function createBotNotifier(api: Api, deps: Deps): Notifier & { idle(): Pr
     const order = getOrder(db, n.orderId);
     switch (n.type) {
       case "created": {
-        const msg = staffOrderMessage(order, env, locale(), names);
+        const msg = staffOrderMessage(order, env, locale(), names, isFirstOrder(db, order));
         for (const m of staffWith(db, env, "orders.manage")) {
           const id = await send(m.id, msg.text, { markup: msg.reply_markup });
           if (id) remember("order", order.id, m.id, id);
@@ -189,6 +196,13 @@ export function createBotNotifier(api: Api, deps: Deps): Notifier & { idle(): Pr
           order,
           `⚠️ Заказ <b>#${order.id}</b> не доставлен · ${by}${reason ? `\n${reason}` : ""}\nПозвоните покупателю или отмените заказ.`,
         );
+        break;
+      }
+      case "waiting": {
+        if (order.status !== "new") break;
+        const canCancel = getShop(db)?.settings.orders.customerCanCancel ?? false;
+        const msg = waitingMessage(order, env, canCancel);
+        await send(order.customerId, msg.text, { markup: msg.reply_markup });
         break;
       }
       case "reminder": {

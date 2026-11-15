@@ -283,6 +283,9 @@ importers:
       lucide-react:
         specifier: 'catalog:'
         version: 1.72.0(@types/react@19.3.0)(react@19.3.1)
+      maplibre-gl:
+        specifier: 'catalog:'
+        version: 6.18.0
       react:
         specifier: 'catalog:'
         version: 19.3.1

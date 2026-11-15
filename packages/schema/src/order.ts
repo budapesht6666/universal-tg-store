@@ -3,6 +3,7 @@
  * Названия статусов — единственный словарь для магазина, админки и бота (docs/product-decisions.md).
  */
 import { IdSchema, MAX_QTY_PER_ITEM } from "./catalog.ts";
+import { inDeliveryZone, outsideZoneMessage } from "./delivery.ts";
 import { DeliveryLocationSchema } from "./geo.ts";
 import type { Minor } from "./money.ts";
 import { phoneSchema } from "./phone.ts";
@@ -112,7 +113,16 @@ export const OrderItemInputSchema = z.strictObject({
  * комментарий. Ссылки клиент разбирает заранее (parseLocationText, короткие — через сервер).
  * Телефон нормализуется по коду страны магазина, поэтому схема строится от настроек.
  */
-export function createOrderInputSchema(settings: Pick<Settings, "region">) {
+/** Схема оформления. С зоной доставки (`delivery`) точка вне кругов — ошибка у поля location. */
+export function createOrderInputSchema(
+  settings: Pick<Settings, "region"> & Partial<Pick<Settings, "delivery">>,
+) {
+  const zone = settings.delivery;
+  const location = zone
+    ? DeliveryLocationSchema.refine((p) => inDeliveryZone(zone, p), {
+        error: outsideZoneMessage(zone),
+      })
+    : DeliveryLocationSchema;
   return z.strictObject({
     items: z
       .array(OrderItemInputSchema)
@@ -124,7 +134,7 @@ export function createOrderInputSchema(settings: Pick<Settings, "region">) {
     customer: z.strictObject({
       name: z.string().trim().min(1, { error: "Как к вам обращаться?" }).max(80),
       phone: phoneSchema(settings.region.phoneCode),
-      location: DeliveryLocationSchema,
+      location,
       address: z
         .string()
         .trim()

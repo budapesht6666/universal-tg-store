@@ -86,4 +86,33 @@ describe("уведомления в боте", () => {
     expect(calls[1]?.text).toContain("👨‍🍳 Готовим · принял User1000 · курьер User1000");
     expect(calls[4]?.text).toMatch(/^🛵 <b>Доставка #1001<\/b> · получить 420\s000\s₫/);
   });
+
+  it("долгое ожидание: покупателю «ещё не приняли», после принятия — ничего", async () => {
+    const t = setup();
+    await openShop(t);
+    const { api, calls } = fakeApi();
+    const notifier = createBotNotifier(api, t.deps);
+    t.deps.notifier = notifier;
+    await t.call("POST", "/api/orders", { as: ANNA, body: ORDER_BODY });
+    await notifier.idle();
+    expect(calls[0]?.text).toContain("👤 Анна · +84912345678 · первый заказ");
+
+    calls.length = 0;
+    notifier.notify({ type: "waiting", orderId: 1001 });
+    await notifier.idle();
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({ method: "send", chatId: ANNA });
+    expect(calls[0]?.text).toContain("⏳ Заказ <b>#1001</b> ещё не приняли");
+    expect(calls[0]?.text).toContain("можно отменить");
+
+    await t.call("POST", "/api/staff/orders/1001/actions", {
+      as: OWNER,
+      body: { action: "accept" },
+    });
+    await notifier.idle();
+    calls.length = 0;
+    notifier.notify({ type: "waiting", orderId: 1001 });
+    await notifier.idle();
+    expect(calls).toEqual([]);
+  });
 });

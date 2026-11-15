@@ -30,8 +30,10 @@ function itemsBlock(order: OrderRow) {
   return order.items.map((i) => `• ${esc(i.title)} × ${i.qty}`).join("\n");
 }
 
-function contactBlock(order: OrderRow) {
-  const lines = [`👤 ${esc(order.customerName)} · ${esc(order.phone)}`];
+function contactBlock(order: OrderRow, firstOrder = false) {
+  const lines = [
+    `👤 ${esc(order.customerName)} · ${esc(order.phone)}${firstOrder ? " · первый заказ" : ""}`,
+  ];
   if (order.address) lines.push(`📍 ${esc(order.address)}`);
   if (order.comment) lines.push(`💬 ${esc(order.comment)}`);
   return lines.join("\n");
@@ -71,12 +73,18 @@ function statusLine(order: OrderRow, names: Names): string {
 }
 
 /** «🆕 Заказ» у менеджера — одно сообщение, обновляется на месте при каждом изменении. */
-export function staffOrderMessage(order: OrderRow, env: Env, locale: string, names: Names) {
+export function staffOrderMessage(
+  order: OrderRow,
+  env: Env,
+  locale: string,
+  names: Names,
+  firstOrder = false,
+) {
   const head = order.status === "new" ? "🆕" : "📦";
   const text = [
     `${head} <b>Заказ #${order.id}</b> · ${money(order, locale)}`,
     itemsBlock(order),
-    contactBlock(order),
+    contactBlock(order, firstOrder),
     "",
     statusLine(order, names),
   ].join("\n");
@@ -137,6 +145,22 @@ export function customerMessage(
       : `❌ Заказ <b>#${order.id}</b> отменён: ${esc(cancelText(order) ?? "")}`,
   };
   return { text: texts[order.status], reply_markup: kb };
+}
+
+/** Заказ не приняли за 15 минут — покупателю, один раз. */
+export function waitingMessage(order: OrderRow, env: Env, canCancel: boolean) {
+  const lines = [
+    `⏳ Заказ <b>#${order.id}</b> ещё не приняли — менеджер скоро ответит.`,
+    "Вопрос — напишите сюда, в этот чат.",
+  ];
+  if (canCancel) lines.push("Передумали — заказ можно отменить на его странице.");
+  const kb = webAppButton(
+    new InlineKeyboard(),
+    env,
+    "Открыть заказ",
+    shopAppUrl(env, `orders/${order.id}`),
+  );
+  return { text: lines.join("\n"), reply_markup: kb };
 }
 
 export function roleLabel(role: InviteRole): string {

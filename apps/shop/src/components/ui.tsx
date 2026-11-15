@@ -107,14 +107,20 @@ export function Section({
   children,
 }: {
   title: string;
-  hint?: string;
+  /** Подсказка под заголовком; несколько — каждая с новой строки. */
+  hint?: string | (string | null)[];
   children: ReactNode;
 }) {
+  const hints = (Array.isArray(hint) ? hint : [hint]).filter(Boolean);
   return (
     <section className="flex flex-col gap-2.5">
       <div className="flex flex-col gap-0.5">
         <h2 className="m-0 text-[17px] leading-[22px] font-bold">{title}</h2>
-        {hint && <span className="text-[13px] leading-[18px] text-hint">{hint}</span>}
+        {hints.map((h) => (
+          <span key={h} className="text-[13px] leading-[18px] text-hint">
+            {h}
+          </span>
+        ))}
       </div>
       {children}
     </section>

@@ -28,7 +28,7 @@ pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест 
 - Пакет без сборки: `exports` указывает на `src/index.ts`, импорты внутри — с расширением `.ts` (`allowImportingTsExtensions` + `erasableSyntaxOnly`). Поэтому скрипты запускаются прямо `node file.ts` (Node 24, type stripping): без enum, namespace и parameter properties.
 - zod импортируем только из `src/zod.ts`: там включены русская локаль и свои понятные сообщения (`src/errors.ts`). Настройка глобальная.
 - Объекты каталога — `z.strictObject`: опечатка в ключе JSON = ошибка. Вложенные объекты настроек с дефолтами внутри — `.prefault({})`, а не `.default({})` (в zod 4 `default` не прогоняет значение через схему).
-- Меню (формат JSON) — `src/catalog.ts`; настройки магазина (в БД, не в файле меню) — `src/settings.ts`; часы работы и «открыт ли сейчас» — `src/hours.ts`.
+- Меню (формат JSON) — `src/catalog.ts`; настройки магазина (в БД, не в файле меню) — `src/settings.ts`; часы работы и «открыт ли сейчас» — `src/hours.ts`; зона доставки (круги, `inDeliveryZone`) — `src/delivery.ts`.
 - Телефона магазина нет намеренно: контакт для покупателей — Telegram менеджера `shop.manager` (`src/telegram.ts`, необязательный). Убранные поля старых настроек из БД (`shop.phone`) отрезает `upgrade` в `apps/server/src/repo/settings.ts` — иначе `strictObject` их отвергнет.
 - Статусы заказа, переходы, отмена, форма оформления, роли — `src/order.ts`, `src/team.ts`; правила — `docs/product-decisions.md`.
 - Формы админки (категория, блюдо, настройки, порядок) и `slugify` — `src/admin.ts`; пауза приёма заказов — `src/hours.ts`.
@@ -79,6 +79,7 @@ pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест 
 - `requestContact` не тихий: Telegram отправляет контакт пользователя сообщением в чат с ботом сразу, ещё до заказа. Поэтому кнопки «Взять из Telegram» в оформлении нет. Геопозицию Telegram Desktop (Windows, macOS) не отдаёт — «Я сейчас здесь» там скрыта по `tgWebAppPlatform`.
 - Ссылки `tel:` внутри Mini App не открываются (ни `<a href>`, ни `openLink` — WebView Telegram не передаёт схему системе). Номер показываем текстом с кнопкой «Скопировать» (`copyText` в `lib/telegram.ts` обоих приложений).
 - Mini App: `readTextFromClipboard` работает только у ботов из меню вложений, поэтому ссылку на точку принимаем обычным полем ввода. Геопозиция — LocationManager (Bot API 8.0), отдаёт `horizontal_accuracy`. Короткие ссылки `maps.app.goo.gl` координат не содержат: сервер сам раскрывает перенаправление.
+- `<input type="number">` с `step="0.5"` молча блокирует отправку формы, если значение не кратно шагу (радиус 10,7 км, выставленный перетаскиванием на карте), — для свободных чисел `step="any"`.
 - Bot API: `setMyProfilePhoto` каждый раз добавляет новое фото в профиль (переиспользовать нельзя) — аватар ставим один раз, а имя и описания синхронизируем из настроек, сверяя с `getMy*` (у `setMyName` жёсткий лимит частоты). «Allow Groups» и Main Mini App — только в BotFather.
 
 ## Прод
