@@ -75,6 +75,9 @@ textarea::placeholder{color:#8E8E96}
       <div style="display: flex; gap: 8px; padding: 12px 14px; font-weight: 700"><span style="flex: 1">Итого</span><span>330 000 ₫</span></div>
     </section>
 
+    <sc-if value="{{showChat}}" hint-placeholder-val="{{ true }}">
+      <p style="margin: 0; font-size: 13px; line-height: 18px; color: #6B6B73; text-align: center">Вопрос по заказу — напишите в чат с ботом, ответит менеджер</p>
+    </sc-if>
     <sc-if value="{{hasManager}}" hint-placeholder-val="{{ true }}">
     <section style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: #FFFFFF">
       <span style="width: 36px; height: 36px; flex: none; border-radius: 18px; background: #FBE9E2; color: #8F3520; display: flex; align-items: center; justify-content: center">
@@ -90,7 +93,7 @@ textarea::placeholder{color:#8E8E96}
   </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"view":{"editor":"enum","options":["Оценка","Отзыв отправлен"],"default":"Оценка"},"noManager":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"view":{"editor":"enum","options":["Оценка","Отзыв отправлен"],"default":"Оценка"},"delivered":{"editor":"enum","options":["Недавно","Больше 2 часов назад"],"default":"Недавно"},"noManager":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
   renderVals() {
     const sent = (this.props.view ?? 'Оценка') === 'Отзыв отправлен';
@@ -100,7 +103,7 @@ class Component extends DCLogic {
       fill: i <= 4 ? '#B5482A' : 'none',
       stroke: i <= 4 ? '#B5482A' : '#C7C7CC'
     }));
-    return { isForm: !sent, isSent: sent, stars: stars, hasManager: !this.props.noManager };
+    return { showChat: (this.props.delivered ?? 'Недавно') === 'Недавно', isForm: !sent, isSent: sent, stars: stars, hasManager: !this.props.noManager };
   }
 }
 </script>
