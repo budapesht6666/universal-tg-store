@@ -27,8 +27,28 @@ const ALLOWED_UPDATES = ["message", "callback_query"] as const;
 let webhook: AppOptions["webhook"];
 let stopBot = async () => {};
 
-if (env.BOT_MODE !== "off") {
-  const bot = createBot(deps);
+/**
+ * Локальный polling с тем же токеном снял бы вебхук боевого сервера — и бот на проде
+ * молча перестал бы получать сообщения. Поэтому, если вебхук уже стоит, локально бот не
+ * запускаем (для разработки — отдельный тестовый бот или BOT_MODE=off).
+ */
+async function webhookTakenElsewhere(bot: ReturnType<typeof createBot>): Promise<string | null> {
+  if (env.BOT_MODE !== "polling") return null;
+  const info = await bot.api.getWebhookInfo();
+  return info.url || null;
+}
+
+const probe = env.BOT_MODE === "off" ? null : createBot(deps);
+const takenBy = probe ? await webhookTakenElsewhere(probe) : null;
+if (takenBy) {
+  console.warn(
+    `Бот уже работает на сервере (вебхук ${takenBy}) — локально запускаемся без бота.
+` + "Для разработки заведите отдельного тестового бота или задайте BOT_MODE=off.",
+  );
+}
+
+if (probe && !takenBy) {
+  const bot = probe;
   await bot.init();
   deps.botUsername = bot.botInfo.username;
   deps.notifier = createBotNotifier(bot.api, deps);
