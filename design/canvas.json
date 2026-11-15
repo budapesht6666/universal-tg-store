@@ -236,6 +236,14 @@
       "w": 1440,
       "x": 6080,
       "y": 3900
+    },
+    "ShopOrder.dc.html": {
+      "h": 844,
+      "page": "mvp",
+      "title": "Магазин — заказ доставлен, оценка и отзыв",
+      "w": 390,
+      "x": 1410,
+      "y": 1200
     }
   },
   "createdOnFiles": {
@@ -278,9 +286,9 @@
     },
     "m_shop": {
       "kind": "title1",
-      "maxW": 1330,
+      "maxW": 1800,
       "page": "mvp",
-      "text": "Магазин: меню, закрыто, оформление",
+      "text": "Магазин: меню, закрыто, оформление, заказ",
       "w": 240,
       "x": 0,
       "y": 900
@@ -358,7 +366,8 @@
     "AdminOrdersBoard.dc.html",
     "AdminTeamMvp.dc.html",
     "AdminSettingsMvp.dc.html",
-    "AdminLogin.dc.html"
+    "AdminLogin.dc.html",
+    "ShopOrder.dc.html"
   ],
   "pages": [
     {

@@ -161,7 +161,7 @@ a{color:#8F3520}a:hover{color:#6E2817}
 
         <section aria-label="Заказы и меню" style="display: flex; flex-direction: column; padding: 8px 16px; border-radius: 12px; background: #FFFFFF; box-shadow: inset 0 0 0 1px #E4E4E7">
           <h2 style="margin: 0; padding: 8px 0 4px; font-size: 16px; line-height: 22px; font-weight: 700">Заказы и меню</h2>
-          <sc-for list="{{toggles}}" as="t" hint-placeholder-count="3">
+          <sc-for list="{{toggles}}" as="t" hint-placeholder-count="4">
             <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #F0F0F2">
               <span style="flex: 1; display: flex; flex-direction: column; line-height: 18px">
                 <span style="font-weight: 500">{{t.title}}</span>
@@ -200,7 +200,8 @@ class Component extends DCLogic {
       toggles: [
         { title: 'Покупатель может отменить заказ сам', hint: 'Пока заказ «Оформлен». Потом — только просьба менеджеру' },
         { title: 'Старая цена и скидка', hint: 'Зачёркнутая цена и «−15%» на карточке' },
-        { title: 'Метки на блюдах', hint: '«Хит», «Острое», «Вег»' }
+        { title: 'Метки на блюдах', hint: '«Хит», «Острое», «Вег»' },
+        { title: 'Оценка и отзыв после доставки', hint: 'Покупатель ставит звёзды и пишет отзыв, когда заказ доставлен' }
       ]
     };
   }
