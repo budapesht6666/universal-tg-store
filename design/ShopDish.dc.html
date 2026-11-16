@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Страница блюда</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+*::-webkit-scrollbar{display:none}
+button{font:inherit;color:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; display: flex; flex-direction: column; background: #F2F2F7; color: #0B0B0C; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 15px; line-height: 20px">
+
+  <div style="height: 48px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: #FFFFFF; border-bottom: 1px solid #E4E4EA">
+    <a href="ShopMenu.dc.html" style="width: 72px; display: flex; align-items: center; gap: 2px; color: #B5482A; font-size: 16px; text-decoration: none">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Назад
+    </a>
+    <span style="font-size: 16px; font-weight: 600">Печка</span>
+    <span aria-hidden="true" style="width: 72px; display: flex; justify-content: flex-end; color: #B5482A">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg>
+    </span>
+  </div>
+
+  <svg width="0" height="0" aria-hidden="true" style="position: absolute">
+    <defs>
+      <pattern id="dish-dough" width="44" height="44" patternUnits="userSpaceOnUse"><g opacity="0.07"><g transform="translate(6 6) scale(.32) rotate(-8 32 32)"><rect x="38" y="6" width="9" height="16" rx="2" fill="#B5482A"></rect><rect x="10" y="18" width="44" height="38" rx="7" fill="#B5482A"></rect><path d="M21 50V40a11 11 0 0 1 22 0v10z" fill="#FBF4EC"></path></g><g transform="translate(28 26) scale(.2) rotate(10 32 32)"><rect x="10" y="18" width="44" height="38" rx="7" fill="#B5482A"></rect><path d="M21 50V40a11 11 0 0 1 22 0v10z" fill="#FBF4EC"></path></g></g></pattern>
+      <radialGradient id="soup" cx="50%" cy="45%" r="55%"><stop offset="0" stop-color="#B8352B"></stop><stop offset="1" stop-color="#7E1F1B"></stop></radialGradient>
+    </defs>
+  </svg>
+
+  <sc-if value="{{gone}}" hint-placeholder-val="{{ false }}">
+    <main style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 0 40px 80px; text-align: center">
+      <div style="width: 96px; height: 96px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; border-radius: 24px; background: #FBF4EC">
+        <svg width="96" height="96" aria-hidden="true" style="position: absolute; inset: 0"><rect width="96" height="96" fill="url(#dish-dough)"></rect></svg>
+        <svg width="48" height="48" viewBox="0 0 64 64" aria-hidden="true" style="position: relative; opacity: 0.5; filter: grayscale(1)"><rect x="38" y="6" width="9" height="16" rx="2" fill="#B5482A"></rect><rect x="10" y="18" width="44" height="38" rx="7" fill="#B5482A"></rect><path d="M21 50V40a11 11 0 0 1 22 0v10z" fill="#FFFFFF"></path></svg>
+      </div>
+      <h1 style="margin: 0; font-size: 20px; line-height: 26px; font-weight: 700">Этого блюда больше нет в меню</h1>
+      <p style="margin: 0; color: #6B6B73">Загляните в меню — там много другого вкусного</p>
+      <a href="ShopMenu.dc.html" style="height: 48px; margin-top: 8px; padding: 0 28px; display: flex; align-items: center; border-radius: 14px; background: #B5482A; color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none">В меню</a>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{shown}}" hint-placeholder-val="{{ true }}">
+    <div style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; padding-bottom: 92px">
+
+      <div style="height: 340px; flex: none; position: relative; overflow: hidden; background: #FBF4EC">
+        <sc-if value="{{noPhoto}}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding-bottom: 20px">
+            <svg width="390" height="340" aria-hidden="true" style="position: absolute; inset: 0"><rect width="390" height="340" fill="url(#dish-dough)"></rect></svg>
+            <svg width="150" height="150" viewBox="0 0 64 64" aria-hidden="true" style="position: relative; filter: drop-shadow(0 4px 6px rgba(143,53,32,0.18))"><rect x="38" y="6" width="9" height="16" rx="2" fill="#B5482A"></rect><rect x="10" y="18" width="44" height="38" rx="7" fill="#B5482A"></rect><path d="M21 50V40a11 11 0 0 1 22 0v10z" fill="#FFFFFF"></path><path d="M32 48c-3.6 0-6-2.5-6-5.6 0-3.6 3.4-5.4 3.6-9.4 2.9 1.8 8.4 5.6 8.4 9.6 0 3-2.4 5.4-6 5.4z" fill="#F2A541"></path></svg>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{hasPhoto}}" hint-placeholder-val="{{ true }}">
+          <div style="position: absolute; top: 0; left: 0; height: 340px; width: {{stripW}}; display: flex; transform: translateX({{offset}}); transition: transform 0.3s ease">
+            <svg width="390" height="340" viewBox="0 0 390 340" role="img" aria-label="Фото 1: борщ в тарелке, вид сверху" style="flex: none">
+              <rect width="390" height="340" fill="#6B4A33"></rect>
+              <path d="M0 60h390M0 140h390M0 230h390M0 300h390" stroke="#5C3F2B" stroke-width="3"></path>
+              <circle cx="195" cy="160" r="128" fill="#F3EEE6"></circle>
+              <circle cx="195" cy="160" r="104" fill="#E4DCD0"></circle>
+              <circle cx="195" cy="160" r="94" fill="url(#soup)"></circle>
+              <path d="M150 130c14-10 30-6 34 4M220 200c10 4 22 0 26-8M160 205c6 6 16 8 24 4" stroke="#E0603F" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.7"></path>
+              <path d="M196 140c22-6 40 6 36 22-4 18-34 22-48 12-14-10-8-30 12-34z" fill="#FFFDF8"></path>
+              <circle cx="176" cy="196" r="4" fill="#4E8A3A"></circle><circle cx="226" cy="122" r="4" fill="#4E8A3A"></circle><circle cx="240" cy="176" r="3.5" fill="#4E8A3A"></circle><circle cx="160" cy="150" r="3.5" fill="#4E8A3A"></circle><circle cx="206" cy="182" r="3" fill="#4E8A3A"></circle>
+              <circle cx="330" cy="70" r="30" fill="#C98A4B"></circle><circle cx="322" cy="64" r="5" fill="#F1E3C8"></circle><circle cx="338" cy="76" r="4" fill="#F1E3C8"></circle>
+              <circle cx="348" cy="262" r="26" fill="#C98A4B"></circle><circle cx="342" cy="256" r="4" fill="#F1E3C8"></circle>
+            </svg>
+            <svg width="390" height="340" viewBox="0 0 390 340" role="img" aria-label="Фото 2: борщ сбоку, рядом пампушки" style="flex: none">
+              <rect width="390" height="340" fill="#E9DCCB"></rect>
+              <rect y="210" width="390" height="130" fill="#8A5A3C"></rect>
+              <ellipse cx="170" cy="250" rx="130" ry="26" fill="#6E4630"></ellipse>
+              <path d="M60 150h220l-18 86c-3 12-12 20-24 20H102c-12 0-21-8-24-20z" fill="#F7F3EC"></path>
+              <ellipse cx="170" cy="150" rx="110" ry="24" fill="url(#soup)"></ellipse>
+              <ellipse cx="180" cy="146" rx="30" ry="9" fill="#FFFDF8"></ellipse>
+              <circle cx="150" cy="150" r="3" fill="#4E8A3A"></circle><circle cx="210" cy="152" r="3" fill="#4E8A3A"></circle>
+              <circle cx="320" cy="214" r="34" fill="#C98A4B"></circle><circle cx="300" cy="244" r="28" fill="#B87A3E"></circle><circle cx="314" cy="206" r="5" fill="#F1E3C8"></circle>
+            </svg>
+            <svg width="390" height="340" viewBox="0 0 390 340" role="img" aria-label="Фото 3: борщ крупно, ложка со сметаной" style="flex: none">
+              <rect width="390" height="340" fill="url(#soup)"></rect>
+              <path d="M40 90c40-20 90-10 110 14M230 250c30 12 70 6 90-14M60 260c20 14 50 18 74 8M250 70c26-6 54 2 70 18" stroke="#E0603F" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.6"></path>
+              <ellipse cx="200" cy="170" rx="70" ry="44" fill="#E7E5E1"></ellipse>
+              <ellipse cx="200" cy="168" rx="58" ry="34" fill="#FFFDF8"></ellipse>
+              <path d="M262 150l120-60" stroke="#E7E5E1" stroke-width="16" stroke-linecap="round"></path>
+              <circle cx="120" cy="150" r="6" fill="#4E8A3A"></circle><circle cx="290" cy="210" r="6" fill="#4E8A3A"></circle><circle cx="160" cy="230" r="5" fill="#4E8A3A"></circle><circle cx="240" cy="110" r="5" fill="#4E8A3A"></circle>
+            </svg>
+          </div>
+          <sc-if value="{{multi}}" hint-placeholder-val="{{ true }}">
+            <button aria-label="Предыдущее фото" onClick="{{prev}}" style="position: absolute; left: 0; top: 0; width: 120px; height: 300px; border: 0; background: transparent; cursor: pointer"></button>
+            <button aria-label="Следующее фото" onClick="{{next}}" style="position: absolute; right: 0; top: 0; width: 120px; height: 300px; border: 0; background: transparent; cursor: pointer"></button>
+            <div style="position: absolute; left: 50%; bottom: 32px; transform: translateX(-50%); height: 20px; padding: 0 8px; display: flex; align-items: center; gap: 6px; border-radius: 10px; background: rgba(11,11,12,0.35)">
+              <sc-for list="{{dots}}" as="dt" hint-placeholder-count="3">
+                <button aria-label="Фото {{dt.n}}" aria-current="{{dt.current}}" onClick="{{dt.pick}}" style="width: {{dt.w}}; height: 6px; padding: 0; border: 0; border-radius: 3px; background: {{dt.bg}}; cursor: pointer; transition: width 0.2s"></button>
+              </sc-for>
+            </div>
+          </sc-if>
+        </sc-if>
+      </div>
+
+      <section style="position: relative; margin-top: -20px; display: flex; flex-direction: column; gap: 10px; padding: 18px 16px 16px; border-radius: 20px 20px 0 0; background: #FFFFFF">
+        <div style="display: flex; flex-wrap: wrap; gap: 6px">
+          <span style="height: 24px; padding: 0 8px; display: flex; align-items: center; border-radius: 7px; background: #FBE9E2; color: #8F3520; font-size: 12px; font-weight: 700">Хит</span>
+          <span style="height: 24px; padding: 0 8px; display: flex; align-items: center; border-radius: 7px; background: #FBE9E2; color: #8F3520; font-size: 12px; font-weight: 700">Сытно</span>
+        </div>
+        <h1 style="margin: 0; font-size: 24px; line-height: 30px; font-weight: 700">Борщ с говядиной</h1>
+        <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px">
+          <span style="font-size: 22px; line-height: 28px; font-weight: 700">85 000 ₫</span>
+          <span style="font-size: 15px; color: #6B6B73; text-decoration: line-through">100 000 ₫</span>
+          <span style="height: 20px; padding: 0 6px; display: inline-flex; align-items: center; align-self: center; border-radius: 6px; background: #C2410C; color: #FFFFFF; font-size: 12px; font-weight: 700">−15%</span>
+          <sc-if value="{{soldOut}}" hint-placeholder-val="{{ false }}">
+            <span style="height: 24px; padding: 0 8px; display: inline-flex; align-items: center; align-self: center; border-radius: 7px; background: #EFEFF3; color: #6B6B73; font-size: 13px; font-weight: 600">Закончилось</span>
+          </sc-if>
+        </div>
+        <p style="margin: 0; font-size: 15px; line-height: 21px; color: #3C3C43">Наваристый борщ на говяжьей грудинке: свёкла, капуста, картофель и томаты. Подаём со сметаной и чесночной пампушкой.</p>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding-top: 4px">
+          <div style="display: flex; flex-direction: column; padding: 10px 12px; border-radius: 12px; background: #F2F2F7">
+            <span style="font-size: 12px; line-height: 16px; color: #6B6B73">Порция</span>
+            <span style="font-weight: 600">450 мл</span>
+          </div>
+          <div style="display: flex; flex-direction: column; padding: 10px 12px; border-radius: 12px; background: #F2F2F7">
+            <span style="font-size: 12px; line-height: 16px; color: #6B6B73">Калорийность</span>
+            <span style="font-weight: 600">380 ккал</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 10px; padding: 12px 16px 20px; background: #FFFFFF; border-top: 1px solid #EFEFF3">
+      <sc-if value="{{soldOut}}" hint-placeholder-val="{{ false }}">
+        <button disabled style="flex: 1; height: 52px; border: 0; border-radius: 14px; background: #EFEFF3; color: #6B6B73; font-size: 16px; font-weight: 600">Закончилось</button>
+      </sc-if>
+      <sc-if value="{{canAdd}}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{add}}" style="flex: 1; height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; border: 0; border-radius: 14px; background: #B5482A; color: #FFFFFF; font-size: 16px; font-weight: 600; cursor: pointer">
+          <span>Добавить</span>
+          <span>85 000 ₫</span>
+        </button>
+      </sc-if>
+      <sc-if value="{{inCart}}" hint-placeholder-val="{{ false }}">
+        <div style="height: 52px; flex: none; display: flex; align-items: center; border-radius: 14px; background: #FBE9E2; color: #8F3520; font-size: 17px; font-weight: 700">
+          <button aria-label="Убрать одну порцию" onClick="{{remove}}" style="width: 44px; height: 52px; border: 0; background: transparent; color: #8F3520; font-size: 22px; cursor: pointer">−</button>
+          <span style="min-width: 20px; text-align: center">{{qty}}</span>
+          <button aria-label="Добавить порцию" onClick="{{add}}" style="width: 44px; height: 52px; border: 0; background: transparent; color: #8F3520; font-size: 22px; cursor: pointer">+</button>
+        </div>
+        <a href="ShopClosed.dc.html" style="flex: 1; min-width: 0; height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 16px; border-radius: 14px; background: #B5482A; color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none">
+          <span>Корзина · {{count}}</span>
+          <span>{{total}}</span>
+        </a>
+      </sc-if>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["photos","one","nophoto","soldout","gone"],"default":"photos"},"qty":{"editor":"int","min":0,"max":50,"default":0},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { slide: 0, qty: null };
+  }
+  renderVals() {
+    const st = this.props.state ?? 'photos';
+    const n = st === 'photos' || st === 'soldout' ? 3 : st === 'one' ? 1 : 0;
+    const slide = Math.min(this.state.slide, Math.max(n - 1, 0));
+    const qty = this.state.qty ?? (this.props.qty ?? 0);
+    const soldOut = st === 'soldout';
+    const fmt = (v) => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₫';
+    const go = (i) => this.setState({ slide: (i + n) % n });
+    return {
+      gone: st === 'gone',
+      shown: st !== 'gone',
+      noPhoto: n === 0,
+      hasPhoto: n > 0,
+      multi: n > 1,
+      stripW: (390 * 3) + 'px',
+      offset: (-390 * slide) + 'px',
+      dots: Array.from({ length: n }, (_, i) => ({ n: i + 1, current: i === slide ? 'true' : 'false', w: i === slide ? '18px' : '6px', bg: i === slide ? '#FFFFFF' : 'rgba(255,255,255,0.55)', pick: () => go(i) })),
+      prev: () => go(slide - 1),
+      next: () => go(slide + 1),
+      soldOut: soldOut,
+      canAdd: !soldOut && qty === 0,
+      inCart: !soldOut && qty > 0,
+      qty: qty,
+      count: 1 + qty,
+      total: fmt(160000 + qty * 85000),
+      add: () => this.setState({ qty: Math.min(qty + 1, 50) }),
+      remove: () => this.setState({ qty: Math.max(qty - 1, 0) })
+    };
+  }
+}
+</script>
+</body>
+</html>
