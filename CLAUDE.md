@@ -41,6 +41,7 @@ pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест 
 - Сервис заказов (`src/orders/service.ts`) не пишет в Telegram: сообщает событие `Notifier`, бот (`src/bot/notifier.ts`) решает, кому писать. События одного заказа идут по очереди.
 - Смена статуса — условный `UPDATE … WHERE status = <ожидаемый>`. better-sqlite3 синхронный и с одним соединением: запросы к `db` внутри `db.transaction(() => …)` идут в той же транзакции.
 - После правки `src/db/schema.ts` — `pnpm --filter @store/server db:generate`, миграция применяется при запуске.
+- Замена колонки с переносом данных (как `image` → `images`): drizzle-kit, видя «одна колонка ушла, другая появилась», спрашивает интерактивно, переименование ли это, — в неинтерактивном запуске не пройти. Делаем две миграции: добавить колонку (+ `UPDATE` руками в SQL), затем удалить старую. Тест переноса — `apps/server/test/migrations.test.ts`.
 
 ## apps/shop — как устроено
 
