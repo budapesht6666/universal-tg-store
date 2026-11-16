@@ -8,6 +8,8 @@
   --color-page: var(--tg-theme-secondary-bg-color, #f2f2f7);
   --color-card: var(--tg-theme-bg-color, #ffffff);
   --color-ink: var(--tg-theme-text-color, #0b0b0c);
+  /* Длинный текст (описание блюда): чуть мягче основного в светлой теме */
+  --color-ink-soft: var(--ink-soft);
   --color-hint: var(--tg-theme-hint-color, #6b6b73);
   --color-line: var(--line);
   --color-muted: var(--muted);
@@ -31,6 +33,7 @@
   --accent: #b5482a;
   --accent-soft: #fbe9e2;
   --accent-ink: #8f3520;
+  --ink-soft: #3c3c43;
   --line: #e4e4ea;
   --muted: #efeff3;
   --ok: #17753a;
@@ -46,6 +49,7 @@
   --accent: #e0734f;
   --accent-soft: rgb(224 115 79 / 0.16);
   --accent-ink: #f0a488;
+  --ink-soft: var(--tg-theme-text-color, #ffffff);
   --line: rgb(255 255 255 / 0.1);
   --muted: rgb(255 255 255 / 0.08);
   --ok: #4ccb72;

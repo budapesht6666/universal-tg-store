@@ -1,4 +1,4 @@
-import { formatMoney } from "@store/schema";
+import { type AttributeDefinition, formatMoney } from "@store/schema";
 import { useQuery } from "@tanstack/react-query";
 import { api, type Product, type ShopData } from "./api.ts";
 import { useCart } from "./cart.ts";
@@ -17,6 +17,21 @@ export function useReadyShop(): ShopData {
 export function useMoney() {
   const { region } = useReadyShop();
   return (minor: number) => formatMoney(minor, region.currency, region.locale);
+}
+
+/**
+ * Значение характеристики текстом: список — через запятую, «да» — название характеристики,
+ * «нет» — пустая строка (не показываем), с единицей измерения, если она есть.
+ */
+export function attributeText(def: AttributeDefinition, value: unknown): string {
+  const text = Array.isArray(value)
+    ? value.join(", ")
+    : typeof value === "boolean"
+      ? value
+        ? def.label
+        : ""
+      : String(value);
+  return text && "unit" in def && def.unit ? `${text} ${def.unit}` : text;
 }
 
 export type CartLine = { product: Product; qty: number };

@@ -17,7 +17,7 @@ import { BrandMark } from "../brand.tsx";
 import { AddButton, BottomBar, Screen, Stepper } from "../components/ui.tsx";
 import { api, type Product } from "../lib/api.ts";
 import { useCart } from "../lib/cart.ts";
-import { statusText, useCartLines, useMoney, useReadyShop } from "../lib/shop.ts";
+import { attributeText, statusText, useCartLines, useMoney, useReadyShop } from "../lib/shop.ts";
 
 export function MenuScreen() {
   const shop = useReadyShop();
@@ -199,17 +199,7 @@ function useCardAttributes(product: Product): string[] {
   const { catalog } = useReadyShop();
   return catalog.attributes
     .filter((a) => a.showInCard && product.attributes[a.key] !== undefined)
-    .map((a) => {
-      const v = product.attributes[a.key];
-      const text = Array.isArray(v)
-        ? v.join(", ")
-        : typeof v === "boolean"
-          ? v
-            ? a.label
-            : ""
-          : String(v);
-      return "unit" in a && a.unit ? `${text} ${a.unit}` : text;
-    })
+    .map((a) => attributeText(a, product.attributes[a.key]))
     .filter(Boolean);
 }
 
@@ -237,7 +227,12 @@ export function DishImage({ product, size }: { product: Product; size: number })
   );
 }
 
+/**
+ * Строка блюда. При features.dishPage вся строка — ссылка на страницу блюда (растянутая
+ * ссылка на названии), а «+», счётчик и «Закончилось» лежат поверх и страницу не открывают.
+ */
 function DishRow({ product: p }: { product: Product }) {
+  const dishPage = useReadyShop().features.dishPage;
   const money = useMoney();
   const qty = useCart((s) => s.items[p.id] ?? 0);
   const add = useCart((s) => s.add);
@@ -246,7 +241,7 @@ function DishRow({ product: p }: { product: Product }) {
 
   return (
     <article
-      className={`flex gap-3 border-b border-line px-4 py-3 last:border-b-0 ${p.available ? "" : "opacity-55"}`}
+      className={`relative flex gap-3 border-b border-line px-4 py-3 last:border-b-0 ${p.available ? "" : "opacity-55"}`}
     >
       <div className="relative">
         <DishImage product={p} size={92} />
@@ -264,7 +259,19 @@ function DishRow({ product: p }: { product: Product }) {
         )}
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <h3 className="m-0 text-[15px] leading-5 font-semibold">{p.title}</h3>
+        <h3 className="m-0 text-[15px] leading-5 font-semibold">
+          {dishPage ? (
+            <Link
+              to="/dish/$id"
+              params={{ id: p.id }}
+              className="after:absolute after:inset-0 after:content-['']"
+            >
+              {p.title}
+            </Link>
+          ) : (
+            p.title
+          )}
+        </h3>
         {p.description && (
           <p className="m-0 line-clamp-2 text-[13px] leading-[17px] text-hint">{p.description}</p>
         )}
@@ -287,15 +294,19 @@ function DishRow({ product: p }: { product: Product }) {
             <span className="flex h-8 flex-none items-center rounded-[10px] bg-muted px-2.5 text-[13px] font-semibold text-hint">
               Закончилось
             </span>
-          ) : qty > 0 ? (
-            <Stepper
-              qty={qty}
-              max={MAX_QTY_PER_ITEM}
-              onAdd={() => add(p.id)}
-              onRemove={() => remove(p.id)}
-            />
           ) : (
-            <AddButton label={p.title} onClick={() => add(p.id)} />
+            <div className="relative z-[1] flex-none">
+              {qty > 0 ? (
+                <Stepper
+                  qty={qty}
+                  max={MAX_QTY_PER_ITEM}
+                  onAdd={() => add(p.id)}
+                  onRemove={() => remove(p.id)}
+                />
+              ) : (
+                <AddButton label={p.title} onClick={() => add(p.id)} />
+              )}
+            </div>
           )}
         </div>
       </div>

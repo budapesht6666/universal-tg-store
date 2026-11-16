@@ -14,7 +14,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { ApiError, api, type Catalog, type Product } from "../lib/api.ts";
-import { ImageUpload } from "./ImageUpload.tsx";
+import { PhotoGallery } from "./PhotoGallery.tsx";
 import {
   FIELD_LABEL,
   FieldError,
@@ -64,8 +64,8 @@ export function ProductForm({
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? defaultCategoryId);
   const [badges, setBadges] = useState<string[]>(product?.badges ?? []);
   const [badgeInput, setBadgeInput] = useState("");
-  // Пока одно поле — главное фото images[0]; остальные (например, из импорта) сохраняются.
   const [images, setImages] = useState<ImageRef[]>(product?.images ?? []);
+  const [uploading, setUploading] = useState(false);
   const [available, setAvailable] = useState(product?.available ?? true);
   const [hidden, setHidden] = useState(product ? !product.isActive : false);
   const [attrs, setAttrs] = useState<Record<string, unknown>>(product?.attributes ?? {});
@@ -147,11 +147,11 @@ export function ProductForm({
         </button>
       </header>
 
-      <ImageUpload
-        value={images[0]}
-        onChange={(img) => setImages(img ? [img, ...images.slice(1)] : images.slice(1))}
-        hint="Квадрат, от 800 px. Сожмём сами."
-        error={errors.images ?? errors["images.0.url"]}
+      <PhotoGallery
+        images={images}
+        setImages={setImages}
+        onBusyChange={setUploading}
+        error={errors.images ?? Object.entries(errors).find(([k]) => k.startsWith("images."))?.[1]}
       />
 
       <TextField
@@ -171,6 +171,9 @@ export function ProductForm({
           placeholder="Со сметаной и чесночной пампушкой"
           className={TEXTAREA}
         />
+        <span className="text-xs leading-4 text-hint">
+          В меню видны первые две строки, целиком — на странице блюда
+        </span>
         <FieldError message={errors.description} />
       </label>
 
@@ -281,7 +284,7 @@ export function ProductForm({
 
       <FieldError message={errors.form ?? (Object.keys(errors).length ? undefined : undefined)} />
       <div className="flex gap-2">
-        <PrimaryButton type="submit" loading={save.isPending}>
+        <PrimaryButton type="submit" loading={save.isPending} disabled={uploading}>
           Сохранить
         </PrimaryButton>
       </div>
