@@ -84,6 +84,7 @@ pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест 
 - Ссылка `t.me/<бот>?startapp=…` открывает Mini App, только если в BotFather включён Main Mini App; `startapp` — `A-Za-z0-9_-`, до 512 символов. Включён ли — `getMe().has_main_web_app` (botInfo из `bot.init()` снят один раз при старте).
 - `<input type="number">` с `step="0.5"` молча блокирует отправку формы, если значение не кратно шагу (радиус 10,7 км, выставленный перетаскиванием на карте), — для свободных чисел `step="any"`.
 - Bot API: `setMyProfilePhoto` каждый раз добавляет новое фото в профиль (переиспользовать нельзя) — аватар ставим один раз, а имя и описания синхронизируем из настроек, сверяя с `getMy*` (у `setMyName` жёсткий лимит частоты). «Allow Groups» и Main Mini App — только в BotFather.
+- Иконка заставки Mini App (BotFather → Configure Splash Screen) — `design/brand/pechka-splash.svg`: один контур без цветов и дуг, вырез — обратным направлением контура (`evenodd` Telegram отбрасывает). Цвета фона и шапки там — Default: магазин ставит цвета темы сам.
 
 ## Прод
 
