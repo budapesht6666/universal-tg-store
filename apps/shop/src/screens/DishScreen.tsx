@@ -6,7 +6,7 @@
 import { discountPercent, MAX_QTY_PER_ITEM } from "@store/schema";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Minus, Plus } from "lucide-react";
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useRef, useState, type WheelEvent } from "react";
 import { BrandMark } from "../brand.tsx";
 import { Screen } from "../components/ui.tsx";
 import type { Product } from "../lib/api.ts";
@@ -33,7 +33,7 @@ function Dish({ product: p }: { product: Product }) {
     <Screen>
       <Photos product={p} />
 
-      <section className="relative -mt-5 flex flex-1 flex-col gap-2.5 rounded-t-[20px] bg-card px-4 pt-[18px] pb-[calc(108px+var(--tg-viewport-safe-area-inset-bottom,0px))]">
+      <section className="relative -mt-[20px] flex flex-1 flex-col gap-2.5 rounded-t-[20px] bg-card px-4 pt-[18px] pb-[calc(108px+var(--tg-viewport-safe-area-inset-bottom,0px))]">
         {p.badges.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {p.badges.map((b) => (
@@ -104,9 +104,14 @@ function Photos({ product: p }: { product: Product }) {
     const el = stripRef.current;
     if (el) el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
   };
+  // Зоны лежат поверх ленты, а не в ней: горизонтальную прокрутку трекпада передаём ленте.
+  const wheelToStrip = (e: WheelEvent<HTMLButtonElement>) => {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) stripRef.current?.scrollBy({ left: e.deltaX });
+  };
 
   return (
-    <div className="relative aspect-[390/340] w-full flex-none bg-muted">
+    // overflow-hidden: иначе квадратное фото с h-full распирает блок до квадрата.
+    <div className="relative aspect-[390/340] w-full flex-none overflow-hidden bg-muted">
       <div
         ref={stripRef}
         className="no-scrollbar flex h-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain"
@@ -126,8 +131,33 @@ function Photos({ product: p }: { product: Product }) {
           />
         ))}
       </div>
+      {/*
+       * Зоны «предыдущее / следующее» по трети ширины — для мыши и трекпада (ПК, Telegram Desktop).
+       * На сенсорных экранах их нет: кнопка поверх ленты забрала бы касание, и свайп по краям
+       * перестал бы работать.
+       */}
       {p.images.length > 1 && (
-        <div className="absolute bottom-8 left-1/2 flex h-5 -translate-x-1/2 items-center gap-1.5 rounded-[10px] bg-[rgb(11_11_12/0.35)] px-2">
+        <>
+          <button
+            type="button"
+            aria-label="Предыдущее фото"
+            disabled={slide === 0}
+            onClick={() => goTo(slide - 1)}
+            onWheel={wheelToStrip}
+            className="absolute inset-y-0 left-0 hidden w-1/3 disabled:cursor-default [@media(pointer:fine)]:block"
+          />
+          <button
+            type="button"
+            aria-label="Следующее фото"
+            disabled={slide === p.images.length - 1}
+            onClick={() => goTo(slide + 1)}
+            onWheel={wheelToStrip}
+            className="absolute inset-y-0 right-0 hidden w-1/3 disabled:cursor-default [@media(pointer:fine)]:block"
+          />
+        </>
+      )}
+      {p.images.length > 1 && (
+        <div className="absolute bottom-[32px] left-1/2 flex h-[20px] -translate-x-1/2 items-center gap-[6px] rounded-[10px] bg-[rgb(11_11_12/0.35)] px-[8px]">
           {p.images.map((img, i) => (
             <button
               key={img.url}
@@ -135,8 +165,8 @@ function Photos({ product: p }: { product: Product }) {
               aria-label={`Фото ${i + 1}`}
               aria-current={i === slide}
               onClick={() => goTo(i)}
-              className={`h-1.5 rounded-[3px] transition-[width] duration-200 ${
-                i === slide ? "w-[18px] bg-white" : "w-1.5 bg-white/55"
+              className={`h-[6px] rounded-[3px] transition-[width] duration-200 ${
+                i === slide ? "w-[18px] bg-white" : "w-[6px] bg-white/55"
               }`}
             />
           ))}
