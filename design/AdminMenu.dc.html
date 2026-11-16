@@ -109,6 +109,28 @@ a{color:#8F3520}a:hover{color:#6E2817}
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg>
           </button>
         </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span id="am-link" style="font-weight: 500">Ссылка на блюдо</span>
+          <div style="display: flex; gap: 8px">
+            <span aria-labelledby="am-link" style="flex: 1; min-width: 0; height: 38px; padding: 0 12px; display: flex; align-items: center; border-radius: 8px; background: #F4F4F5; color: #52525B; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">t.me/pechka_hoian_bot?startapp=dish_borscht</span>
+            <button onClick="{{copyLink}}" style="height: 38px; flex: none; padding: 0 12px; display: flex; align-items: center; gap: 6px; border: 0; border-radius: 8px; background: #FFFFFF; box-shadow: inset 0 0 0 1px #E4E4E7; color: {{copyColor}}; font-weight: 500; cursor: pointer">
+              <sc-if value="{{copied}}" hint-placeholder-val="{{ false }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+                Скопировано
+              </sc-if>
+              <sc-if value="{{notCopied}}" hint-placeholder-val="{{ true }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Скопировать
+              </sc-if>
+            </button>
+          </div>
+          <sc-if value="{{linkReady}}" hint-placeholder-val="{{ true }}">
+            <span style="font-size: 12px; line-height: 16px; color: #71717A">Вставьте в пост канала или отправьте в чат — блюдо откроется сразу в магазине</span>
+          </sc-if>
+          <sc-if value="{{linkNotReady}}" hint-placeholder-val="{{ false }}">
+            <span style="padding: 8px 10px; border-radius: 8px; background: #FEF3C7; color: #92400E; font-size: 12px; line-height: 16px">Ссылка заработает, когда в @BotFather у бота включат Main Mini App</span>
+          </sc-if>
+        </div>
         <div style="display: flex; flex-direction: column; gap: 8px">
           <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
             <span style="font-weight: 500">Фото</span>
@@ -214,11 +236,11 @@ a{color:#8F3520}a:hover{color:#6E2817}
   </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"photos":{"editor":"enum","options":["three","none","five","uploading","overLimit"],"default":"three"},"$preview":{"width":1440,"height":900}}'>
+<script type="text/x-dc" data-dc-script data-props='{"photos":{"editor":"enum","options":["three","none","five","uploading","overLimit"],"default":"three"},"link":{"editor":"enum","options":["ready","notReady"],"default":"ready"},"$preview":{"width":1440,"height":900}}'>
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    this.state = { list: null, mode: null };
+    this.state = { list: null, mode: null, copied: false };
   }
   photoList() {
     const mode = this.props.photos ?? 'three';
@@ -265,7 +287,18 @@ class Component extends DCLogic {
     ].map((n) => ({ id: n[0], label: n[1], icon: n[2], badge: n[3], hasBadge: !!n[3], current: n[0] === 'menu' ? 'page' : 'false', bg: n[0] === 'menu' ? '#F4ECE8' : 'transparent', fg: n[0] === 'menu' ? '#09090B' : '#52525B', weight: n[0] === 'menu' ? '600' : '500' }));
     const cats = [['Обеды', 3], ['Супы', 5], ['Горячее', 7], ['Заморозка', 6], ['Салаты', 4], ['Десерты', 4], ['Напитки', 2]].map((c) => ({ name: c[0], count: c[1], current: c[0] === 'Супы' ? 'true' : 'false', bg: c[0] === 'Супы' ? '#F4ECE8' : 'transparent', weight: c[0] === 'Супы' ? '600' : '400' }));
     const d = (name, meta, price, on, extra) => Object.assign({ name: name, meta: meta, price: price, on: on ? 'true' : 'false', track: on ? '#17753A' : '#D4D4D8', knob: on ? '21px' : '3px', hidden: false, bg: '#FFFFFF', tile: '#FBE9E2' }, extra || {});
+    const copied = this.state.copied;
     return {
+      copied: copied,
+      notCopied: !copied,
+      copyColor: copied ? '#17753A' : '#09090B',
+      copyLink: () => {
+        this.setState({ copied: true });
+        clearTimeout(this.copyTimer);
+        this.copyTimer = setTimeout(() => this.setState({ copied: false }), 2000);
+      },
+      linkReady: (this.props.link ?? 'ready') === 'ready',
+      linkNotReady: this.props.link === 'notReady',
       photos: photos,
       photoCount: ready,
       canAddPhoto: list.length < 5,
