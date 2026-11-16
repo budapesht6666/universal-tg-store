@@ -49,7 +49,7 @@ input::placeholder,textarea::placeholder{color:#8E8E96}
             <circle cx="12" cy="12" r="4" fill="#FFFFFF"></circle>
           </svg>
           <span style="position: absolute; left: 10px; top: 10px; height: 28px; padding: 0 10px; display: flex; align-items: center; gap: 6px; border-radius: 14px; background: rgba(255,255,255,0.94); box-shadow: 0 1px 3px rgba(0,0,0,0.14); font-size: 12px; font-weight: 600">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9 2 12l3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"></path></svg>Двигайте карту — пин встанет точно
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9 2 12l3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"></path></svg>{{chip}}
           </span>
         </div>
         <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: {{rowBg}}">
@@ -85,11 +85,19 @@ input::placeholder,textarea::placeholder{color:#8E8E96}
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 6px">
-        <label for="co-link" style="display: flex; flex-direction: column; font-size: 13px; line-height: 18px; color: #6B6B73"><span>Вставьте ссылку из Google Maps — пин встанет туда сам.</span><span>В картах: выберите место → «Поделиться» → «Копировать».</span></label>
-        <div style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 6px 0 14px; border-radius: 12px; background: #FFFFFF">
+        <label for="co-link" style="display: flex; flex-direction: column; font-size: 13px; line-height: 18px; color: #6B6B73"><span>Вставьте ссылку из Google Maps или Apple Maps — пин встанет туда сам.</span><span>В картах: выберите место → «Поделиться» → «Копировать».</span></label>
+        <div style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 4px 0 14px; border-radius: 12px; background: {{linkBg}}; box-shadow: {{linkRing}}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8E8E96" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path></svg>
-          <input id="co-link" placeholder="Ссылка Google Maps или координаты" style="flex: 1; min-width: 0; height: 40px; border: 0; background: transparent; font-size: 15px; outline: none">
+          <input id="co-link" value="{{linkValue}}" placeholder="Ссылка на карту или координаты" style="flex: 1; min-width: 0; height: 40px; border: 0; background: transparent; font-size: 15px; outline: none">
+          <sc-if value="{{linkError}}" hint-placeholder-val="{{ false }}">
+            <button type="button" aria-label="Очистить ссылку" style="width: 36px; height: 36px; flex: none; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 18px; background: transparent; color: #8E8E96; cursor: pointer">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+            </button>
+          </sc-if>
         </div>
+        <sc-if value="{{linkError}}" hint-placeholder-val="{{ false }}">
+          <span role="alert" style="display: flex; flex-direction: column; font-size: 13px; line-height: 18px; color: #9A2B12"><span style="font-weight: 600">Не нашли точку в ссылке.</span><span>Вставьте другую ссылку или очистите поле и подвиньте карту.</span></span>
+        </sc-if>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 6px">
@@ -119,19 +127,35 @@ input::placeholder,textarea::placeholder{color:#8E8E96}
 
   <div style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 20px; background: #F2F2F7; border-top: 1px solid #E4E4EA">
     <span style="text-align: center; font-size: 13px; color: {{footFg}}; font-weight: {{footWeight}}">{{foot}}</span>
-    <button disabled="{{blocked}}" style="height: 52px; border: 0; border-radius: 14px; background: {{btnBg}}; color: {{btnFg}}; font-size: 16px; font-weight: 600; cursor: pointer">Оформить заказ · 330 000 ₫</button>
+    <button disabled="{{blocked}}" style="height: 52px; border: 0; border-radius: 14px; background: {{btnBg}}; color: {{btnFg}}; font-size: 16px; font-weight: 600; cursor: pointer">Проверить заказ</button>
   </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;geo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;good&quot;,&quot;poor&quot;,&quot;outside&quot;],&quot;default&quot;:&quot;outside&quot;},&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;geo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;good&quot;,&quot;poor&quot;,&quot;coarse&quot;,&quot;outside&quot;,&quot;linkError&quot;],&quot;default&quot;:&quot;outside&quot;},&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844}}">
 class Component extends DCLogic {
   renderVals() {
     const geo = this.props.geo ?? 'good';
     const base = {
       outside: false, blocked: false, outFill: 'none', zoneLine: 'none',
       foot: '3 порции · доставка бесплатно · оплата курьеру', footFg: '#6B6B73', footWeight: '400',
-      btnBg: '#B5482A', btnFg: '#FFFFFF'
+      btnBg: '#B5482A', btnFg: '#FFFFFF',
+      chip: 'Двигайте карту — пин встанет точно',
+      linkError: false, linkValue: '', linkBg: '#FFFFFF', linkRing: 'none'
     };
+    if (geo === 'linkError') return Object.assign(base, {
+      warn: true, good: false, accR: 0, accFill: 'none', accStroke: 'none',
+      rowBg: '#FFFFFF', iconBg: '#FDF1DC', iconFg: '#8A4B06',
+      status: 'Точка не поставлена', sub: 'Подвиньте карту, нажмите «Я сейчас здесь» или вставьте ссылку', subFg: '#6B6B73',
+      linkError: true, linkValue: 'https://maps.apple/p/EoH2bXiuMFPq', linkBg: '#FCEBE7', linkRing: 'inset 0 0 0 1.5px #E3A08E',
+      foot: 'Ссылку на точку не распознали', footFg: '#9A2B12', footWeight: '600',
+      btnBg: '#E4E4EA', btnFg: '#8E8E96', blocked: true
+    });
+    if (geo === 'coarse') return Object.assign(base, {
+      warn: true, good: false, accR: 0, accFill: 'none', accStroke: 'none',
+      rowBg: '#FDF1DC', iconBg: '#F7DDB0', iconFg: '#8A4B06',
+      status: 'Точка примерная', sub: 'Приблизьте карту и поставьте пин на свой вход', subFg: '#6B3F05',
+      chip: 'Приблизьте карту — так точнее'
+    });
     if (geo === 'outside') return Object.assign(base, {
       warn: true, good: false, outside: true, blocked: true,
       accR: 14, accFill: 'rgba(154,43,18,0.10)', accStroke: 'rgba(154,43,18,0.40)',

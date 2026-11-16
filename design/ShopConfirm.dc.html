@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Проверьте заказ</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 980px; position: relative; overflow: hidden; display: flex; flex-direction: column; background: #F2F2F7; color: #0B0B0C; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 15px; line-height: 20px">
+
+  <div style="height: 48px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; background: #FFFFFF; border-bottom: 1px solid #E4E4EA">
+    <a href="ShopCheckout.dc.html" style="width: 80px; height: 40px; display: flex; align-items: center; gap: 2px; padding: 0 8px; color: #B5482A; font-size: 16px; text-decoration: none">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Назад
+    </a>
+    <span style="font-size: 16px; font-weight: 600">Проверьте заказ</span>
+    <span style="width: 80px"></span>
+  </div>
+
+  <div style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 20px; padding: 16px 16px 120px">
+
+    <sc-if value="{{error}}" hint-placeholder-val="{{ false }}">
+      <div role="alert" style="display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 16px; background: #FCEBE7; color: #7A2410">
+        <div style="display: flex; gap: 12px">
+          <span style="width: 28px; height: 28px; flex: none; border-radius: 14px; background: #F6CFC5; color: #9A2B12; display: flex; align-items: center; justify-content: center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 7v6M12 17h.01"></path></svg>
+          </span>
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <span style="font-weight: 700">Заказ не отправлен</span>
+            <span style="font-size: 13px; line-height: 18px">«Борщ с говядиной» закончилось.</span>
+            <span style="font-size: 13px; line-height: 18px">Уберите его в корзине — остальное сохранится.</span>
+          </div>
+        </div>
+        <a href="ShopClosed.dc.html" style="height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: #FFFFFF; color: #8F3520; font-size: 14px; font-weight: 600; text-decoration: none">В корзину</a>
+      </div>
+    </sc-if>
+
+    <section style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; justify-content: space-between; height: 24px">
+        <h2 style="margin: 0; font-size: 17px; line-height: 22px; font-weight: 700">Куда привезти</h2>
+        <a href="ShopCheckout.dc.html" style="height: 44px; display: flex; align-items: center; padding: 0 4px; margin-right: -4px; color: #B5482A; font-size: 15px; font-weight: 600; text-decoration: none">Изменить</a>
+      </div>
+      <div style="display: flex; flex-direction: column; border-radius: 16px; background: #FFFFFF; overflow: hidden">
+        <div style="position: relative; height: 176px; background: #E7ECE2">
+          <sc-if value="{{near}}" hint-placeholder-val="{{ true }}">
+            <svg width="358" height="176" viewBox="0 0 358 176" aria-hidden="true" style="position: absolute; inset: 0">
+              <path d="M-10 140C60 128 110 156 180 142s120-40 190-30" stroke="#B9D3E6" stroke-width="26" fill="none"></path>
+              <path d="M0 40h358M0 104h358M70 0v176M200 0v176M300 0v176" stroke="#FFFFFF" stroke-width="10"></path>
+              <rect x="88" y="54" width="94" height="36" rx="4" fill="#D9E4D0"></rect>
+              <rect x="216" y="54" width="70" height="36" rx="4" fill="#E0D9CC"></rect>
+              <rect x="10" y="54" width="46" height="36" rx="4" fill="#D9E4D0"></rect>
+              <circle cx="179" cy="88" r="{{accR}}" fill="rgba(181,72,42,0.10)" stroke="rgba(181,72,42,0.40)" stroke-width="1.5"></circle>
+            </svg>
+          </sc-if>
+          <sc-if value="{{far}}" hint-placeholder-val="{{ false }}">
+            <svg width="358" height="176" viewBox="0 0 358 176" aria-hidden="true" style="position: absolute; inset: 0">
+              <path d="M-10 150C60 140 110 162 180 150s120-36 190-26" stroke="#B9D3E6" stroke-width="12" fill="none"></path>
+              <path d="M0 22h358M0 48h358M0 76h358M0 100h358M0 124h358M30 0v176M64 0v176M100 0v176M140 0v176M176 0v176M214 0v176M250 0v176M288 0v176M326 0v176" stroke="#FFFFFF" stroke-width="3"></path>
+              <path d="M-10 10l120 70 120-70 140 56" stroke="#F7E3A6" stroke-width="5" fill="none"></path>
+              <circle cx="179" cy="88" r="56" fill="rgba(176,96,8,0.10)" stroke="rgba(176,96,8,0.45)" stroke-width="1.5"></circle>
+            </svg>
+          </sc-if>
+          <svg width="34" height="44" viewBox="0 0 24 32" aria-hidden="true" style="position: absolute; left: 162px; top: 44px">
+            <path d="M12 31s10-11.2 10-19A10 10 0 0 0 2 12c0 7.8 10 19 10 19Z" fill="#B5482A"></path>
+            <circle cx="12" cy="12" r="4" fill="#FFFFFF"></circle>
+          </svg>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: {{p.rowBg}}">
+          <span style="width: 28px; height: 28px; flex: none; border-radius: 14px; background: {{p.iconBg}}; color: {{p.iconFg}}; display: flex; align-items: center; justify-content: center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{p.icon}}"></path></svg>
+          </span>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+            <span style="font-weight: 600">{{p.title}}</span>
+            <span style="font-size: 13px; line-height: 17px; color: {{p.subFg}}">{{p.sub}}</span>
+            <sc-if value="{{p.sub2}}" hint-placeholder-val="{{ false }}">
+              <span style="font-size: 13px; line-height: 17px; color: {{p.subFg}}">{{p.sub2}}</span>
+            </sc-if>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid #EFEFF3">
+          <span style="width: 28px; height: 28px; flex: none; display: flex; align-items: center; justify-content: center; color: #6B6B73">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"></path></svg>
+          </span>
+          <span style="flex: 1; min-width: 0">Вилла 12, второй этаж</span>
+        </div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; justify-content: space-between; height: 24px">
+        <h2 style="margin: 0; font-size: 17px; line-height: 22px; font-weight: 700">Получатель</h2>
+        <a href="ShopCheckout.dc.html" style="height: 44px; display: flex; align-items: center; padding: 0 4px; margin-right: -4px; color: #B5482A; font-size: 15px; font-weight: 600; text-decoration: none">Изменить</a>
+      </div>
+      <div style="display: flex; flex-direction: column; border-radius: 16px; background: #FFFFFF">
+        <div style="display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-bottom: 1px solid #EFEFF3">
+          <span style="font-size: 13px; line-height: 17px; color: #6B6B73">Анна</span>
+          <span style="font-size: 20px; line-height: 26px; font-weight: 700; letter-spacing: 0.01em">+84 91 234 56 78</span>
+          <span style="font-size: 13px; line-height: 17px; color: #6B6B73">Курьер позвонит на этот номер</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px; padding: 12px 14px">
+          <span style="font-size: 13px; line-height: 17px; color: #6B6B73">Комментарий</span>
+          <span>Без лука, позвонить у ворот</span>
+        </div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; justify-content: space-between; height: 24px">
+        <h2 style="margin: 0; font-size: 17px; line-height: 22px; font-weight: 700">Заказ</h2>
+        <a href="ShopClosed.dc.html" style="height: 44px; display: flex; align-items: center; padding: 0 4px; margin-right: -4px; color: #B5482A; font-size: 15px; font-weight: 600; text-decoration: none">Изменить</a>
+      </div>
+      <div style="display: flex; flex-direction: column; border-radius: 16px; background: #FFFFFF; overflow: hidden">
+        <sc-for list="{{items}}" as="it" hint-placeholder-count="2">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-bottom: 1px solid #EFEFF3">
+            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+              <span style="font-weight: 600">{{it.name}}</span>
+              <span style="font-size: 13px; line-height: 17px; color: {{it.subFg}}; font-weight: {{it.subWeight}}">{{it.sub}}</span>
+            </div>
+            <span style="flex: none; font-weight: 600; color: {{it.sumFg}}; text-decoration: {{it.sumDeco}}">{{it.sum}}</span>
+          </div>
+        </sc-for>
+        <div style="display: flex; flex-direction: column; gap: 6px; padding: 14px">
+          <div style="display: flex; justify-content: space-between; color: #6B6B73"><span>Доставка</span><span style="color: #17753A; font-weight: 600">Бесплатно</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 17px; line-height: 22px; font-weight: 700"><span>Итого</span><span>{{total}}</span></div>
+          <span style="font-size: 13px; color: #6B6B73">Оплата курьеру при получении — наличными или переводом</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 20px; background: #F2F2F7; border-top: 1px solid #E4E4EA">
+    <button disabled="{{blocked}}" style="height: 52px; border: 0; border-radius: 14px; background: {{btnBg}}; color: {{btnFg}}; font-size: 16px; font-weight: 600; cursor: pointer">Подтвердить заказ · {{total}}</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;point&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;link&quot;,&quot;gps&quot;,&quot;pin&quot;,&quot;last&quot;,&quot;coarse&quot;,&quot;poor&quot;],&quot;default&quot;:&quot;link&quot;},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ready&quot;,&quot;error&quot;],&quot;default&quot;:&quot;error&quot;},&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:980}}">
+class Component extends DCLogic {
+  renderVals() {
+    const point = this.props.point ?? 'link';
+    const error = (this.props.state ?? 'ready') === 'error';
+    const ICON_PIN = 'M12 21s7-7.6 7-12a7 7 0 0 0-14 0c0 4.4 7 12 7 12ZM12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z';
+    const ICON_LINK = 'M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7';
+    const ICON_GPS = 'M3 11 22 2l-9 19-2-8-8-2Z';
+    const ICON_CLOCK = 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM12 7v5l3 2';
+    const ICON_WARN = 'M12 7v6M12 17h.01';
+    const neutral = { rowBg: '#FFFFFF', iconBg: '#FBE9E2', iconFg: '#8F3520', subFg: '#6B6B73', sub2: false };
+    const variants = {
+      link: { icon: ICON_LINK, title: 'Con Market', sub: 'Из ссылки Apple Maps' },
+      gps: { icon: ICON_GPS, title: 'Ваше место · ±15 м', sub: 'По геопозиции Telegram' },
+      pin: { icon: ICON_PIN, title: 'Точка на карте', sub: '16.06804, 108.21436' },
+      last: { icon: ICON_CLOCK, title: 'Как в прошлом заказе', sub: 'Переехали? Нажмите «Изменить»' },
+      coarse: {
+        icon: ICON_WARN, title: 'Точка примерная', sub: 'Курьеру будет трудно вас найти.', sub2: 'Приблизьте карту и поставьте пин на свой вход',
+        rowBg: '#FDF1DC', iconBg: '#F7DDB0', iconFg: '#8A4B06', subFg: '#6B3F05'
+      },
+      poor: {
+        icon: ICON_WARN, title: 'Неточно: ±400 м', sub: 'Курьеру будет трудно вас найти.', sub2: 'Подвиньте карту, чтобы пин встал на ваш дом',
+        rowBg: '#FDF1DC', iconBg: '#F7DDB0', iconFg: '#8A4B06', subFg: '#6B3F05'
+      }
+    };
+    const p = Object.assign({}, neutral, variants[point] || variants.link);
+    const items = [
+      { name: 'Комплексный обед', sub: '1 × 160 000 ₫', sum: '160 000 ₫', subFg: '#6B6B73', subWeight: '400', sumFg: '#0B0B0C', sumDeco: 'none' },
+      error
+        ? { name: 'Борщ с говядиной', sub: 'Закончилось', sum: '170 000 ₫', subFg: '#9A2B12', subWeight: '600', sumFg: '#6B6B73', sumDeco: 'line-through' }
+        : { name: 'Борщ с говядиной', sub: '2 × 85 000 ₫', sum: '170 000 ₫', subFg: '#6B6B73', subWeight: '400', sumFg: '#0B0B0C', sumDeco: 'none' }
+    ];
+    return {
+      error: error,
+      near: point !== 'coarse',
+      far: point === 'coarse',
+      accR: point === 'gps' ? 22 : point === 'poor' ? 70 : 0,
+      p: p,
+      items: items,
+      blocked: error,
+      total: error ? '160 000 ₫' : '330 000 ₫',
+      btnBg: error ? '#E4E4EA' : '#B5482A',
+      btnFg: error ? '#8E8E96' : '#FFFFFF'
+    };
+  }
+}
+</script>
+</body>
+</html>
