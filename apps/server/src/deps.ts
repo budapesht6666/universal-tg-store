@@ -11,6 +11,8 @@ export type Deps = {
   fetch: typeof fetch;
   /** Имя бота без @ (после запуска бота) — для ссылок t.me/<бот>?start=… */
   botUsername: string | null;
+  /** Включён ли у бота Main Mini App (для ссылок ?startapp=…); null — бот не запущен. */
+  mainAppReady: (() => Promise<boolean>) | null;
   /** Обновить профиль бота (имя, описания) из настроек — после их сохранения. Не ждёт и не падает. */
   syncBotProfile: () => void;
 };

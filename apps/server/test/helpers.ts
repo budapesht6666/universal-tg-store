@@ -47,6 +47,7 @@ export function setup() {
         : new Response("ok", { status: 200 });
     }) as typeof fetch,
     botUsername: "pechka_test_bot",
+    mainAppReady: async () => true,
     syncBotProfile: () => {},
   };
   const app = createApp(deps);

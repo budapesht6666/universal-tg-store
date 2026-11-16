@@ -35,9 +35,17 @@ function productSchema(c: { var: AppEnv["Variables"] }) {
 
 export const adminRoutes = new Hono<AppEnv>()
   // ───────────── Меню ─────────────
-  .get("/admin/catalog", (c) => {
+  .get("/admin/catalog", async (c) => {
     requirePermission(c, "catalog.manage");
-    return c.json(loadCatalog(c.var.deps.db));
+    const { db, botUsername, mainAppReady } = c.var.deps;
+    // Ссылка на блюдо: base + dishStartParam(id). Бот не подключён (BOT_MODE=off, вебхук занят) — null.
+    const dishLink = botUsername
+      ? {
+          base: `https://t.me/${botUsername}?startapp=`,
+          mainAppReady: mainAppReady ? await mainAppReady() : false,
+        }
+      : null;
+    return c.json({ ...loadCatalog(db), dishLink });
   })
 
   .post("/admin/categories", async (c) => {

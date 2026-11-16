@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { normalizeTelegramUsername, telegramLink, telegramUsernameSchema } from "../src/index.ts";
+import {
+  dishStartParam,
+  normalizeTelegramUsername,
+  parseStartParam,
+  telegramLink,
+  telegramUsernameSchema,
+} from "../src/index.ts";
 
 describe("Telegram менеджера", () => {
   it("принимает @имя, имя и ссылку t.me — хранит без @", () => {
@@ -28,5 +34,36 @@ describe("Telegram менеджера", () => {
 
   it("ссылка на чат", () => {
     expect(telegramLink("pechka_manager")).toBe("https://t.me/pechka_manager");
+  });
+});
+
+describe("ссылка на блюдо: startapp", () => {
+  it("dish_<id> туда и обратно", () => {
+    expect(dishStartParam("borscht")).toBe("dish_borscht");
+    expect(parseStartParam(dishStartParam("lunch-kids"))).toEqual({ dishId: "lunch-kids" });
+  });
+
+  it("самый длинный id помещается в ограничения Telegram", () => {
+    const id = `a${"-b".repeat(31)}a`; // 64 символа — максимум IdSchema
+    expect(id).toHaveLength(64);
+    const param = dishStartParam(id);
+    expect(param).toMatch(/^[A-Za-z0-9_-]{1,512}$/);
+    expect(parseStartParam(param)).toEqual({ dishId: id });
+  });
+
+  it("чужие и испорченные параметры — null", () => {
+    for (const bad of [
+      undefined,
+      null,
+      "",
+      "dish_",
+      "order_15",
+      "dish_Борщ",
+      "dish_UPPER",
+      "dish_a b",
+      `dish_${"a".repeat(65)}`,
+    ]) {
+      expect(parseStartParam(bad)).toBeNull();
+    }
   });
 });

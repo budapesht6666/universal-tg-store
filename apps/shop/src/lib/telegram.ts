@@ -38,9 +38,12 @@ async function mockOutsideTelegram(): Promise<void> {
   if (!res.ok) throw new Error("Откройте магазин из Telegram");
   const initData = await res.text();
   const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  // Ссылка t.me/<бот>?startapp=… на стенде: /?startapp=dish_borscht
+  const startParam = new URLSearchParams(window.location.search).get("startapp");
   mockTelegramEnv({
     launchParams: {
       tgWebAppData: initData,
+      ...(startParam && { tgWebAppStartParam: startParam }),
       tgWebAppVersion: "9.1",
       // Как веб-версия Telegram: в браузере работает геопозиция, кнопка «Я сейчас здесь» видна.
       tgWebAppPlatform: "weba",
@@ -97,6 +100,16 @@ export async function initTelegram(): Promise<void> {
   });
   attempt(() => backButton.mount());
   attempt(() => miniApp.ready());
+}
+
+/** Параметр запуска из ссылки t.me/<бот>?startapp=… (null — открыли без него). */
+export function startParam(): string | null {
+  try {
+    const lp = retrieveLaunchParams();
+    return lp.tgWebAppStartParam ?? lp.tgWebAppData?.start_param ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export function authHeader(): Record<string, string> {

@@ -136,6 +136,24 @@ describe("меню в админке", () => {
     expect(none.json.images).toEqual([]);
   });
 
+  it("ссылка на блюдо: база t.me/<бот>?startapp=, без бота — null", async () => {
+    const t = setup();
+    await openShop(t);
+    const catalog = (await t.call("GET", "/api/admin/catalog", { as: OWNER })).json;
+    expect(catalog.dishLink).toEqual({
+      base: "https://t.me/pechka_test_bot?startapp=",
+      mainAppReady: true,
+    });
+
+    t.deps.mainAppReady = async () => false;
+    expect(
+      (await t.call("GET", "/api/admin/catalog", { as: OWNER })).json.dishLink.mainAppReady,
+    ).toBe(false);
+
+    t.deps.botUsername = null; // BOT_MODE=off или вебхук занят
+    expect((await t.call("GET", "/api/admin/catalog", { as: OWNER })).json.dishLink).toBeNull();
+  });
+
   it("фото блюда → WebP в UPLOADS_DIR", async () => {
     const t = setup();
     await openShop(t);

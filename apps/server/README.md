@@ -59,7 +59,7 @@ pnpm --filter @store/server db:generate  # после правки src/db/schema
 | `GET /api/staff/couriers`                | кого можно назначить                                                    |
 | `POST /api/staff/pause`                  | `{ pause: "30m" \| "1h" \| "today" \| "off" }`                          |
 
-**Админка**: `GET /api/admin/catalog`; категории — `POST /api/admin/categories`, `PATCH|DELETE /api/admin/categories/:id`, `PUT /api/admin/categories/order`, `PUT /api/admin/categories/:id/products/order`; блюда — `POST /api/admin/products`, `PUT|PATCH|DELETE /api/admin/products/:id`; фото — `POST /api/admin/uploads` (multipart, поле `file`, → WebP); настройки — `GET|PUT /api/admin/settings` (регион не меняется); команда — `GET /api/admin/team`, `POST /api/admin/team/invites`, `PATCH /api/admin/team/:userId`.
+**Админка**: `GET /api/admin/catalog` (меню + `dishLink: { base, mainAppReady } | null` — ссылка на блюдо `base + dish_<id>`; `null`, если бот не подключён; `mainAppReady` — `getMe().has_main_web_app`, раз в минуту, `src/bot/main-app.ts`); категории — `POST /api/admin/categories`, `PATCH|DELETE /api/admin/categories/:id`, `PUT /api/admin/categories/order`, `PUT /api/admin/categories/:id/products/order`; блюда — `POST /api/admin/products`, `PUT|PATCH|DELETE /api/admin/products/:id`; фото — `POST /api/admin/uploads` (multipart, поле `file`, → WebP); настройки — `GET|PUT /api/admin/settings` (регион не меняется); команда — `GET /api/admin/team`, `POST /api/admin/team/invites`, `PATCH /api/admin/team/:userId`.
 
 ## Бот
 

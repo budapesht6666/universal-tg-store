@@ -4,6 +4,7 @@ import { serve } from "@hono/node-server";
 import { webhookCallback } from "grammy";
 import { type AppOptions, createApp } from "./app.ts";
 import { createBot, setupBotUi } from "./bot/bot.ts";
+import { mainAppCheck } from "./bot/main-app.ts";
 import { createBotNotifier } from "./bot/notifier.ts";
 import { syncBotProfile } from "./bot/profile.ts";
 import { startReminders } from "./bot/reminders.ts";
@@ -22,6 +23,7 @@ const deps: Deps = {
   notifier: silentNotifier,
   fetch,
   botUsername: null,
+  mainAppReady: null,
   syncBotProfile: () => {},
 };
 
@@ -53,6 +55,10 @@ if (probe && !takenBy) {
   const bot = probe;
   await bot.init();
   deps.botUsername = bot.botInfo.username;
+  deps.mainAppReady = mainAppCheck(
+    async () => (await bot.api.getMe()).has_main_web_app,
+    () => Date.now(),
+  );
   deps.notifier = createBotNotifier(bot.api, deps);
   await setupBotUi(bot, deps);
   deps.syncBotProfile = () => {

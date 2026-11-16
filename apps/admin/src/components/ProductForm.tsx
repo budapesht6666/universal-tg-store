@@ -14,6 +14,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { ApiError, api, type Catalog, type Product } from "../lib/api.ts";
+import { DishLink } from "./DishLink.tsx";
 import { PhotoGallery } from "./PhotoGallery.tsx";
 import {
   FIELD_LABEL,
@@ -148,6 +149,8 @@ export function ProductForm({
           <X size={20} />
         </button>
       </header>
+
+      {product && catalog.dishLink && <DishLink link={catalog.dishLink} dishId={product.id} />}
 
       <PhotoGallery
         images={images}

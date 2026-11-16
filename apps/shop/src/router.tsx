@@ -1,3 +1,4 @@
+import { parseStartParam } from "@store/schema";
 import {
   createRootRoute,
   createRoute,
@@ -11,7 +12,7 @@ import { Store } from "lucide-react";
 import { useEffect } from "react";
 import { Screen, Spinner } from "./components/ui.tsx";
 import { useShop } from "./lib/shop.ts";
-import { setBackButton } from "./lib/telegram.ts";
+import { setBackButton, startParam } from "./lib/telegram.ts";
 import { CartScreen } from "./screens/CartScreen.tsx";
 import { CheckoutScreen } from "./screens/CheckoutScreen.tsx";
 import { DishScreen } from "./screens/DishScreen.tsx";
@@ -34,9 +35,31 @@ function useTelegramBack() {
   );
 }
 
+let startLinkHandled = false;
+
+/**
+ * Ссылка на блюдо (t.me/<бот>?startapp=dish_<id>): один раз при запуске открываем страницу
+ * блюда так, чтобы под ней в истории было меню, — «Назад» ведёт в меню. Страница блюда
+ * выключена (features.dishPage) — просто меню. Блюда нет — на странице блюда своя заглушка.
+ */
+function useStartLink(dishPage: boolean | undefined) {
+  const router = useRouter();
+  useEffect(() => {
+    if (startLinkHandled || dishPage === undefined) return;
+    startLinkHandled = true;
+    const target = parseStartParam(startParam());
+    if (!target) return;
+    void (async () => {
+      await router.navigate({ to: "/", replace: true });
+      if (dishPage) await router.navigate({ to: "/dish/$id", params: { id: target.dishId } });
+    })();
+  }, [dishPage, router]);
+}
+
 function Root() {
   useTelegramBack();
   const shop = useShop();
+  useStartLink(shop.data?.ready ? shop.data.features.dishPage : undefined);
   if (shop.isPending) return <Spinner />;
   if (shop.isError) {
     return (

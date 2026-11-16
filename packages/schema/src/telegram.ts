@@ -2,6 +2,7 @@
  * Аккаунт менеджера в Telegram — контакт магазина для покупателей. Телефон магазина нигде
  * не показываем: вопрос по заказу покупатель пишет в чат с ботом, другой вопрос — менеджеру.
  */
+import { IdSchema } from "./catalog.ts";
 import { z } from "./zod.ts";
 
 /** Имя пользователя Telegram: 4–32 символа, латиница, цифры и «_», начинается с буквы. */
@@ -43,3 +44,25 @@ export const telegramUsernameSchema = z
     return name;
   })
   .optional();
+
+// ───────────── Ссылка на блюдо (t.me/<бот>?startapp=…) ─────────────
+
+const DISH_PREFIX = "dish_";
+/** Что Telegram пропускает в startapp: A-Za-z0-9_- и не длиннее 512 символов. */
+const START_PARAM = /^[A-Za-z0-9_-]{1,512}$/;
+
+/**
+ * Параметр запуска Mini App для ссылки на блюдо: borscht → dish_borscht.
+ * id блюда (IdSchema: латиница в нижнем регистре, цифры, дефис, до 64 символов) в startapp
+ * помещается как есть.
+ */
+export function dishStartParam(id: string): string {
+  return `${DISH_PREFIX}${id}`;
+}
+
+/** Разбор параметра запуска: dish_borscht → { dishId: "borscht" }; незнакомый — null. */
+export function parseStartParam(param: string | null | undefined): { dishId: string } | null {
+  if (!param || !START_PARAM.test(param) || !param.startsWith(DISH_PREFIX)) return null;
+  const dishId = param.slice(DISH_PREFIX.length);
+  return IdSchema.safeParse(dishId).success ? { dishId } : null;
+}
