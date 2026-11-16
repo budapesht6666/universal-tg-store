@@ -82,9 +82,11 @@ pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест 
 - Mini App: `readTextFromClipboard` работает только у ботов из меню вложений, поэтому ссылку на точку принимаем обычным полем ввода. Геопозиция — LocationManager (Bot API 8.0), отдаёт `horizontal_accuracy`. Короткие ссылки `maps.app.goo.gl` координат не содержат: сервер сам раскрывает перенаправление.
 - Tailwind считает размеры в rem: `font-size` на `html` (было 15px) молча уменьшает все `px-4`, `h-6`, `text-sm`… на ~6% против макетов (они в px от 16). Базовый 15/20 — только на `body`.
 - Ссылка `t.me/<бот>?startapp=…` открывает Mini App, только если в BotFather включён Main Mini App; `startapp` — `A-Za-z0-9_-`, до 512 символов. Включён ли — `getMe().has_main_web_app` (botInfo из `bot.init()` снят один раз при старте).
+- MapLibre: `movestart` приходит, когда карта уже сдвинулась на первый шаг (при синтетическом перетаскивании — сразу на весь). Сдвиг пальцем считаем от центра после прошлого `moveend`, а не от `getCenter()` в `movestart` — иначе он всегда ≈ 0.
+- Apple Maps: `maps.apple/p/<id>` → 301 на `maps.apple.com/place?place-id=…` без координат; координаты и название — в мета-тегах `place:location:latitude/longitude` и `og:title` в первом килобайте страницы. Ссылки «метки» — `maps.apple.com/?ll=…` или `place?coordinate=…&name=…`.
 - `<input type="number">` с `step="0.5"` молча блокирует отправку формы, если значение не кратно шагу (радиус 10,7 км, выставленный перетаскиванием на карте), — для свободных чисел `step="any"`.
 - Bot API: `setMyProfilePhoto` каждый раз добавляет новое фото в профиль (переиспользовать нельзя) — аватар ставим один раз, а имя и описания синхронизируем из настроек, сверяя с `getMy*` (у `setMyName` жёсткий лимит частоты). «Allow Groups» и Main Mini App — только в BotFather.
-- Иконка заставки Mini App (BotFather → Configure Splash Screen) — `design/brand/pechka-splash.svg`: один контур без цветов и дуг, без внутренних вырезов — устье открыто к нижнему краю (`evenodd` Telegram отбрасывает, вырез направлением контура на iPhone не виден). Цвета фона и шапки там — Default: магазин ставит цвета темы сам.
+- Иконка заставки Mini App (BotFather → Configure Splash Screen) — `design/brand/pechka-splash.svg`: один контур без цветов и дуг, без внутренних вырезов — устье открыто к нижнему краю (`evenodd` Telegram отбрасывает; вырез направлением контура на iPhone был не виден — возможно, из-за кеша). iPhone держит старую заставку, пока не откроешь профиль бота. Цвета фона и шапки там — Default: магазин ставит цвета темы сам.
 
 ## Прод
 
