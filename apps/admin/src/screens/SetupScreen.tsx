@@ -82,7 +82,7 @@ export function SetupScreen() {
 
       {step === 1 && (
         <>
-          <h1 className="m-0 text-2xl font-bold">Страна и магазин</h1>
+          <h1 className="m-0 text-[20px] leading-[26px] font-bold">Страна и магазин</h1>
           <div className="flex flex-col gap-1.5">
             <span className="text-[13px] text-hint">Страна</span>
             <div className="grid grid-cols-2 gap-2">
@@ -131,7 +131,7 @@ export function SetupScreen() {
 
       {step === 2 && (
         <>
-          <h1 className="m-0 text-2xl font-bold">Когда принимаете заказы?</h1>
+          <h1 className="m-0 text-[20px] leading-[26px] font-bold">Когда принимаете заказы?</h1>
           <span className="flex flex-col gap-1 text-[13px] text-hint">
             <span>Вне этих часов меню видно, но оформить заказ нельзя.</span>
             <span>Работаете за полночь, например 18:00–02:00, — тоже можно.</span>
@@ -144,7 +144,7 @@ export function SetupScreen() {
 
       {step === 3 && (
         <>
-          <h1 className="m-0 text-2xl font-bold">С чего начать меню?</h1>
+          <h1 className="m-0 text-[20px] leading-[26px] font-bold">С чего начать меню?</h1>
           {(
             [
               {
@@ -210,7 +210,7 @@ function SetupDone({ shopName, onOpen }: { shopName: string; onOpen: () => void 
       <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e3f2e7] text-[#17753a]">
         <Check size={28} strokeWidth={2.6} />
       </span>
-      <h1 className="m-0 text-2xl font-bold">Магазин «{shopName}» открыт</h1>
+      <h1 className="m-0 text-2xl leading-[30px] font-bold">Магазин «{shopName}» открыт</h1>
       <span className="text-hint">Новые заказы придут в чат с ботом — со звуком.</span>
 
       <div className="flex flex-col gap-2 rounded-2xl bg-card p-4">

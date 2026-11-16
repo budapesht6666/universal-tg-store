@@ -104,7 +104,7 @@ function SettingsForm({ initial }: { initial: Settings }) {
       }}
     >
       <header className="flex flex-wrap items-center gap-3">
-        <h1 className="m-0 flex-1 basis-48 text-2xl font-bold">Настройки</h1>
+        <h1 className="m-0 flex-1 basis-48 text-2xl leading-[30px] font-bold">Настройки</h1>
         {dirty && <span className="hidden text-hint lg:inline">Есть несохранённые изменения</span>}
         <button
           type="submit"

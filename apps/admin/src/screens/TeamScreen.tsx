@@ -28,7 +28,7 @@ export function TeamScreen() {
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 p-4 lg:gap-5 lg:px-7 lg:py-6">
       <header className="flex flex-col">
-        <h1 className="m-0 text-2xl font-bold">Команда</h1>
+        <h1 className="m-0 text-2xl leading-[30px] font-bold">Команда</h1>
         <span className="text-[13px] text-hint lg:text-sm">
           {people(members.length)} · курьеров: {couriers} · менеджеров: {managers}
         </span>

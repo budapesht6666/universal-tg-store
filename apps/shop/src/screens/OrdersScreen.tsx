@@ -15,7 +15,7 @@ export function OrdersScreen() {
   return (
     <Screen>
       <div className="flex flex-col gap-3 p-4">
-        <h1 className="m-0 text-xl font-bold">Мои заказы</h1>
+        <h1 className="m-0 text-[22px] leading-[28px] font-bold">Мои заказы</h1>
         {list.length === 0 && <span className="text-hint">Заказов пока нет</span>}
         <div className="flex flex-col overflow-hidden rounded-2xl bg-card">
           {list.map((o) => (

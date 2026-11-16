@@ -136,7 +136,9 @@ export function ProductForm({
       }}
     >
       <header className="flex items-center justify-between">
-        <h2 className="m-0 text-lg font-bold">{product ? product.title : "Новое блюдо"}</h2>
+        <h2 className="m-0 text-base leading-[22px] font-bold">
+          {product ? product.title : "Новое блюдо"}
+        </h2>
         <button
           type="button"
           aria-label="Закрыть"

@@ -151,13 +151,18 @@ export function OrderCard({
       }`}
     >
       <header className="flex items-center gap-2">
-        <button type="button" onClick={onToggle} className="flex items-center gap-2">
+        {/* Чипы переносятся на вторую строку, а сумма и «…» остаются справа: на 390 px три чипа не влезают. */}
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-left"
+        >
           <span className="text-[17px] leading-[22px] font-bold">#{o.id}</span>
           <StatusChip order={o} waiting={waiting} />
           {firstOrder && <FirstOrderChip />}
           {o.review && <RatingChip rating={o.review.rating} fresh={false} />}
         </button>
-        <span className="ml-auto text-[17px] font-bold">{money(o.total)}</span>
+        <span className="ml-auto text-[17px] font-bold whitespace-nowrap">{money(o.total)}</span>
         {!finished && (
           <button
             type="button"
@@ -475,7 +480,7 @@ export function DoneRow({
 function StatusChip({ order: o, waiting }: { order: StaffOrder; waiting: number | null }) {
   if (waiting !== null) {
     return (
-      <span className="flex h-6 items-center gap-1 rounded-lg bg-accent-soft px-2 text-[13px] font-bold whitespace-nowrap text-accent-ink">
+      <span className="flex h-[22px] items-center gap-1 rounded-[7px] bg-accent-soft px-[7px] text-xs font-bold whitespace-nowrap text-accent-ink">
         <Clock size={13} /> ждёт {waiting} мин
       </span>
     );
@@ -489,7 +494,9 @@ function StatusChip({ order: o, waiting }: { order: StaffOrder; waiting: number 
     cancelled: "bg-muted text-hint",
   }[o.status];
   return (
-    <span className={`flex h-6 items-center rounded-lg px-2 text-[13px] font-semibold ${tone}`}>
+    <span
+      className={`flex h-[22px] items-center rounded-[7px] px-[7px] text-xs font-semibold ${tone}`}
+    >
       {ORDER_STATUS_LABELS[o.status]}
     </span>
   );
@@ -507,7 +514,7 @@ function reviewTime(iso: string) {
 /** Покупателю ещё ничего не доставляли. Цвет — по макетам StaffOrders и AdminOrdersBoard. */
 function FirstOrderChip() {
   return (
-    <span className="flex h-6 items-center rounded-lg bg-[#efe8fb] px-2 text-[13px] font-semibold whitespace-nowrap text-[#5b3aa8] lg:h-5 lg:rounded-md lg:px-1.5 lg:text-xs">
+    <span className="flex h-[22px] items-center rounded-[7px] bg-[#efe8fb] px-[7px] text-xs font-semibold whitespace-nowrap text-[#5b3aa8] lg:h-5 lg:rounded-md lg:px-1.5 lg:text-xs">
       Первый заказ
     </span>
   );
@@ -523,7 +530,7 @@ export function RatingChip({ rating, fresh }: { rating: number; fresh: boolean }
     );
   }
   return (
-    <span className="flex h-6 items-center gap-1 rounded-lg bg-accent-soft px-2 text-[13px] font-bold whitespace-nowrap text-accent-ink lg:h-5 lg:rounded-md lg:px-1.5 lg:text-xs">
+    <span className="flex h-[22px] items-center gap-1 rounded-[7px] bg-accent-soft px-[7px] text-xs font-bold whitespace-nowrap text-accent-ink lg:h-5 lg:rounded-md lg:px-1.5 lg:text-xs">
       <Star size={12} className="fill-current" /> {rating} · новый отзыв
     </span>
   );

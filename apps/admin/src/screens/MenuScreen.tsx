@@ -55,7 +55,7 @@ export function MenuScreen() {
     <div className="flex flex-col gap-3 p-4 lg:gap-5 lg:px-7 lg:py-6">
       <header className="flex flex-wrap items-center gap-3">
         <div className="flex flex-1 basis-60 flex-col">
-          <h1 className="m-0 text-2xl font-bold">Меню</h1>
+          <h1 className="m-0 text-2xl leading-[30px] font-bold">Меню</h1>
           <span className="text-[13px] text-hint lg:text-sm">
             {c.categories.length} категорий · {c.products.length} блюд
             {soldOut ? ` · ${soldOut} закончились` : ""}

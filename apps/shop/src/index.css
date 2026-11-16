@@ -110,14 +110,18 @@ body {
   background: var(--color-page);
   color: var(--color-ink);
   font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 20px;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
 }
 
+/*
+ * Базовый текст 15/20 — только на body. На html не ставим: тогда 1rem стал бы 15px, и все размеры
+ * Tailwind (px-4, h-6, text-sm…) вышли бы на ~6% мельче макетов, которые считают от 16px.
+ */
 body {
   margin: 0;
+  font-size: 15px;
+  line-height: 20px;
   min-height: var(--tg-viewport-height, 100vh);
 }
 

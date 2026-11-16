@@ -81,7 +81,7 @@ export function OrderScreen({ id }: { id: number }) {
             Заказ #{o.id} · {time(o.createdAt)}
           </span>
           <h1
-            className={`m-0 text-2xl leading-7 font-bold ${o.status === "cancelled" ? "text-hint" : ""}`}
+            className={`m-0 text-[22px] leading-[28px] font-bold ${o.status === "cancelled" ? "text-hint" : ""}`}
           >
             {expect.title}
           </h1>

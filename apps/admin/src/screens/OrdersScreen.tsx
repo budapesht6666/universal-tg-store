@@ -149,7 +149,7 @@ export function OrdersScreen() {
     return (
       <div className="flex flex-col gap-4 px-7 py-6">
         <header className="flex flex-wrap items-center gap-3">
-          <h1 className="m-0 flex-1 basis-40 text-2xl font-bold">Заказы</h1>
+          <h1 className="m-0 flex-1 basis-40 text-2xl leading-[30px] font-bold">Заказы</h1>
           {isManager && isCourier && (
             <div
               role="tablist"
