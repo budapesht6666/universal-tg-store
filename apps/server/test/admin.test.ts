@@ -102,6 +102,40 @@ describe("меню в админке", () => {
     expect(withRegion.status).toBe(400); // регион из админки не меняется
   });
 
+  it("фото блюда: до 5, порядок сохраняется, первое — главное", async () => {
+    const t = setup();
+    await openShop(t);
+    const photo = (n: number) => ({ url: `/uploads/photo-${n}.webp` });
+    const body = { title: "Пельмени", price: 90000, categoryId: "frozen" };
+    const created = await t.call("POST", "/api/admin/products", {
+      as: OWNER,
+      body: { ...body, images: [photo(3), photo(1), photo(2)] },
+    });
+    expect(created.status).toBe(201);
+    expect(created.json.images).toEqual([photo(3), photo(1), photo(2)]);
+
+    const id = created.json.id as string;
+    const reordered = await t.call("PUT", `/api/admin/products/${id}`, {
+      as: OWNER,
+      body: { ...body, images: [photo(2), photo(3)] },
+    });
+    expect(reordered.json.images).toEqual([photo(2), photo(3)]);
+    const inShop = (await t.call("GET", "/api/shop")).json.catalog.products.find(
+      (p: { id: string }) => p.id === id,
+    );
+    expect(inShop.images).toEqual([photo(2), photo(3)]);
+
+    const tooMany = await t.call("PUT", `/api/admin/products/${id}`, {
+      as: OWNER,
+      body: { ...body, images: [1, 2, 3, 4, 5, 6].map(photo) },
+    });
+    expect(tooMany.status).toBe(400);
+    expect(tooMany.json.issues).toEqual([{ path: "images", message: "Не больше 5 фото" }]);
+
+    const none = await t.call("PUT", `/api/admin/products/${id}`, { as: OWNER, body });
+    expect(none.json.images).toEqual([]);
+  });
+
   it("фото блюда → WebP в UPLOADS_DIR", async () => {
     const t = setup();
     await openShop(t);

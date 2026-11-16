@@ -7,7 +7,7 @@
     },
     "version": {
       "type": "number",
-      "const": 1
+      "const": 2
     },
     "attributes": {
       "default": [],
@@ -809,22 +809,28 @@
             "minimum": 0,
             "maximum": 1000000000000
           },
-          "image": {
-            "type": "object",
-            "properties": {
-              "url": {
-                "type": "string",
-                "maxLength": 2048
+          "images": {
+            "default": [],
+            "description": "Фото в порядке показа. Первое — главное: оно в меню и первым на странице блюда",
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "maxLength": 2048
+                },
+                "alt": {
+                  "type": "string",
+                  "maxLength": 200
+                }
               },
-              "alt": {
-                "type": "string",
-                "maxLength": 200
-              }
-            },
-            "required": [
-              "url"
-            ],
-            "additionalProperties": false
+              "required": [
+                "url"
+              ],
+              "additionalProperties": false
+            }
           },
           "categoryId": {
             "type": "string",

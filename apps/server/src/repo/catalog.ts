@@ -25,7 +25,7 @@ function toProduct(row: ProductRow): Product {
     description: row.description,
     price: row.price,
     ...(row.compareAtPrice !== null && { compareAtPrice: row.compareAtPrice }),
-    ...(row.image !== null && { image: row.image }),
+    images: row.images,
     categoryId: row.categoryId,
     badges: row.badges,
     available: row.available,
@@ -98,7 +98,6 @@ export function replaceCatalog(db: Db, catalog: Catalog, now: Date): void {
         .values({
           ...p,
           compareAtPrice: p.compareAtPrice ?? null,
-          image: p.image ?? null,
           createdAt: p.createdAt ? new Date(p.createdAt) : now,
           updatedAt: p.updatedAt ? new Date(p.updatedAt) : now,
         })
@@ -208,8 +207,8 @@ function assertCategory(db: Db, id: string): void {
 }
 
 function productValues(input: ProductInput) {
-  const { id: _id, compareAtPrice, image, ...rest } = input;
-  return { ...rest, compareAtPrice: compareAtPrice ?? null, image: image ?? null };
+  const { id: _id, compareAtPrice, ...rest } = input;
+  return { ...rest, compareAtPrice: compareAtPrice ?? null };
 }
 
 export function createProduct(db: Db, input: ProductInput, now: Date): Product {

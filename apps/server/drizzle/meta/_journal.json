@@ -29,6 +29,20 @@
       "when": 1794758580920,
       "tag": "0003_staff_no_phone",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1794814145608,
+      "tag": "0004_product_images",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1794814154513,
+      "tag": "0005_drop_product_image",
+      "breakpoints": true
     }
   ]
 }

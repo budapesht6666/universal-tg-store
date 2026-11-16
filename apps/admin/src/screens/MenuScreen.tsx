@@ -361,8 +361,8 @@ function Products({
               className="flex min-w-0 flex-1 items-center gap-3 text-left"
             >
               <span className="flex h-12 w-12 flex-none items-center justify-center overflow-hidden rounded-xl bg-accent-soft text-accent-ink">
-                {p.image ? (
-                  <img src={p.image.url} alt="" className="h-full w-full object-cover" />
+                {p.images[0] ? (
+                  <img src={p.images[0].url} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <UtensilsCrossed size={18} />
                 )}

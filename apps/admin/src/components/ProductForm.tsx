@@ -6,6 +6,7 @@
 import {
   type AttributeDefinition,
   currencyDigits,
+  type ImageRef,
   productInputSchema,
   toMinor,
 } from "@store/schema";
@@ -63,7 +64,8 @@ export function ProductForm({
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? defaultCategoryId);
   const [badges, setBadges] = useState<string[]>(product?.badges ?? []);
   const [badgeInput, setBadgeInput] = useState("");
-  const [image, setImage] = useState(product?.image);
+  // Пока одно поле — главное фото images[0]; остальные (например, из импорта) сохраняются.
+  const [images, setImages] = useState<ImageRef[]>(product?.images ?? []);
   const [available, setAvailable] = useState(product?.available ?? true);
   const [hidden, setHidden] = useState(product ? !product.isActive : false);
   const [attrs, setAttrs] = useState<Record<string, unknown>>(product?.attributes ?? {});
@@ -82,7 +84,7 @@ export function ProductForm({
         description,
         price: priceMinor ?? -1,
         ...(oldMinor != null && { compareAtPrice: oldMinor }),
-        ...(image && { image }),
+        images,
         categoryId,
         badges,
         available,
@@ -146,10 +148,10 @@ export function ProductForm({
       </header>
 
       <ImageUpload
-        value={image}
-        onChange={setImage}
+        value={images[0]}
+        onChange={(img) => setImages(img ? [img, ...images.slice(1)] : images.slice(1))}
         hint="Квадрат, от 800 px. Сожмём сами."
-        error={errors["image.url"]}
+        error={errors.images ?? errors["images.0.url"]}
       />
 
       <TextField

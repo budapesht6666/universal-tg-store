@@ -112,6 +112,10 @@ export const FeaturesSchema = z
       .boolean()
       .default(true)
       .meta({ description: "Оценка (1–5 звёзд) и отзыв покупателя после доставки" }),
+    dishPage: z
+      .boolean()
+      .default(true)
+      .meta({ description: "Нажатие на блюдо открывает страницу с фото и характеристиками" }),
   })
   .meta({ description: "Фичи магазина: выключенная пропадает из магазина, данные остаются" });
 export type Features = z.output<typeof FeaturesSchema>;
@@ -121,12 +125,14 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   discounts: "Старая цена и скидка",
   badges: "Метки на блюдах",
   reviews: "Оценка и отзыв после доставки",
+  dishPage: "Страница блюда",
 };
 
 export const FEATURE_HINTS: Record<FeatureKey, string> = {
   discounts: "Зачёркнутая цена и «−15%» на карточке",
   badges: "«Хит», «Острое 🌶», «Вег»",
   reviews: "Покупатель ставит звёзды и пишет отзыв, когда заказ доставлен",
+  dishPage: "Нажатие на блюдо открывает страницу с фото, описанием и характеристиками",
 };
 
 export const OrderSettingsSchema = z.strictObject({

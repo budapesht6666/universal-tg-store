@@ -8,13 +8,16 @@ import { MoneySchema } from "./money.ts";
 import { z } from "./zod.ts";
 
 /** Текущая версия формата. При изменении формата — новая версия и миграция в parse.ts. */
-export const CATALOG_FORMAT_VERSION = 1;
+export const CATALOG_FORMAT_VERSION = 2;
 
 export const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const IdSchema = z.string().max(64).regex(ID_PATTERN, {
   error: "id — латиница в нижнем регистре, цифры и дефис, например borscht",
 });
+
+/** Сколько фото может быть у блюда. */
+export const MAX_PRODUCT_IMAGES = 5;
 
 /** Сколько порций одного блюда можно положить в корзину. */
 export const MAX_QTY_PER_ITEM = 50;
@@ -42,7 +45,13 @@ export const ProductBaseSchema = z.strictObject({
   compareAtPrice: MoneySchema.optional().meta({
     description: "Старая цена: показывается зачёркнутой рядом с «−20%»",
   }),
-  image: ImageRefSchema.optional(),
+  images: z
+    .array(ImageRefSchema)
+    .max(MAX_PRODUCT_IMAGES, { error: `Не больше ${MAX_PRODUCT_IMAGES} фото` })
+    .default([])
+    .meta({
+      description: "Фото в порядке показа. Первое — главное: оно в меню и первым на странице блюда",
+    }),
   categoryId: IdSchema,
   badges: z
     .array(z.string().trim().min(1).max(24))

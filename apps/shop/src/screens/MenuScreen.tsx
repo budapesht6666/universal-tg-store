@@ -214,15 +214,16 @@ function useCardAttributes(product: Product): string[] {
 }
 
 export function DishImage({ product, size }: { product: Product; size: number }) {
+  const image = product.images[0];
   return (
     <div
-      className={`relative flex flex-none items-center justify-center overflow-hidden rounded-[14px] ${product.image ? "bg-muted" : "dish-placeholder"}`}
+      className={`relative flex flex-none items-center justify-center overflow-hidden rounded-[14px] ${image ? "bg-muted" : "dish-placeholder"}`}
       style={{ width: size, height: size }}
     >
-      {product.image ? (
+      {image ? (
         <img
-          src={product.image.url}
-          alt={product.image.alt ?? ""}
+          src={image.url}
+          alt={image.alt ?? ""}
           loading="lazy"
           className="h-full w-full object-cover"
         />

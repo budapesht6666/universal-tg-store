@@ -45,9 +45,21 @@ type Migration = (input: Record<string, unknown>) => Record<string, unknown>;
 
 /**
  * Миграции формата: MIGRATIONS[n] переводит версию n в n + 1.
- * Пока версия одна; при изменении формата добавляем шаг сюда и поднимаем CATALOG_FORMAT_VERSION.
+ * При изменении формата добавляем шаг сюда и поднимаем CATALOG_FORMAT_VERSION.
+ * Шаг не проверяет данные — это делает схема после всех шагов; непонятное оставляет как есть.
  */
-const MIGRATIONS: Record<number, Migration> = {};
+const MIGRATIONS: Record<number, Migration> = {
+  // 1 → 2: одно фото `image` → список `images` (первое — главное).
+  1: (data) => {
+    if (!Array.isArray(data.products)) return data;
+    const products = data.products.map((p: unknown) => {
+      if (typeof p !== "object" || p === null || !("image" in p)) return p;
+      const { image, ...rest } = p as Record<string, unknown>;
+      return image === undefined || image === null ? rest : { images: [image], ...rest };
+    });
+    return { ...data, products };
+  },
+};
 
 function migrate(input: unknown): ParseResult<Record<string, unknown>> {
   if (typeof input !== "object" || input === null || Array.isArray(input)) {

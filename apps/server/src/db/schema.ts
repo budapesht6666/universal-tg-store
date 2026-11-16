@@ -15,6 +15,7 @@ import type {
   Role,
   Settings,
 } from "@store/schema";
+import { sql } from "drizzle-orm";
 import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 const ms = (name: string) => integer(name, { mode: "timestamp_ms" });
@@ -52,7 +53,8 @@ export const products = sqliteTable(
     description: text("description").notNull().default(""),
     price: integer("price").notNull(),
     compareAtPrice: integer("compare_at_price"),
-    image: text("image", { mode: "json" }).$type<ImageRef>(),
+    /** Фото в порядке показа, первое — главное. */
+    images: text("images", { mode: "json" }).$type<ImageRef[]>().notNull().default(sql`'[]'`),
     badges: text("badges", { mode: "json" }).$type<string[]>().notNull(),
     available: bool("available").notNull().default(true),
     isActive: bool("is_active").notNull().default(true),

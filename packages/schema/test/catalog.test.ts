@@ -29,7 +29,7 @@ function issuesOf(input: unknown): CatalogIssue[] {
 }
 
 const minimal = {
-  version: 1,
+  version: 2,
   categories: [{ id: "soups", title: "Супы" }],
   products: [{ id: "pho", title: "Фо", price: 75000, categoryId: "soups" }],
 };
@@ -68,6 +68,7 @@ describe("parseCatalog: корректное меню", () => {
       isActive: true,
       sort: 0,
       attributes: {},
+      images: [],
     });
   });
 
@@ -82,13 +83,59 @@ describe("parseCatalog: корректное меню", () => {
   });
 });
 
+describe("parseCatalog: фото блюда", () => {
+  const photo = (n: number) => ({ url: `https://example.com/${n}.jpg` });
+  const withImages = (images: unknown) => ({
+    ...minimal,
+    products: [{ ...minimal.products[0], images }],
+  });
+
+  it("версия 1: одно фото image становится первым в images", () => {
+    const r = parseCatalog({
+      ...minimal,
+      version: 1,
+      products: [
+        { ...minimal.products[0], image: { url: "https://example.com/pho.jpg", alt: "Фо" } },
+        { id: "borscht", title: "Борщ", price: 85000, categoryId: "soups" },
+      ],
+    });
+    if (!r.ok) throw new Error(JSON.stringify(r.issues));
+    expect(r.value.version).toBe(2);
+    expect(r.value.products.map((p) => p.images)).toEqual([
+      [{ url: "https://example.com/pho.jpg", alt: "Фо" }],
+      [],
+    ]);
+    expect(r.value.products[0]).not.toHaveProperty("image");
+  });
+
+  it("версия 1: ошибка в старом фото — с путём в новом формате", () => {
+    const issues = issuesOf({
+      ...minimal,
+      version: 1,
+      products: [{ ...minimal.products[0], image: { url: "ftp://x" } }],
+    });
+    expect(issues.map((i) => i.path)).toEqual(["products[0].images[0].url"]);
+  });
+
+  it("порядок сохраняется, больше 5 — ошибка", () => {
+    const r = parseCatalog(withImages([photo(3), photo(1), photo(2)]));
+    if (!r.ok) throw new Error(JSON.stringify(r.issues));
+    expect(r.value.products[0]?.images).toEqual([photo(3), photo(1), photo(2)]);
+
+    expect(parseCatalog(withImages([1, 2, 3, 4, 5].map(photo))).ok).toBe(true);
+    expect(issuesOf(withImages([1, 2, 3, 4, 5, 6].map(photo)))).toEqual([
+      { path: "products[0].images", message: "Не больше 5 фото" },
+    ]);
+  });
+});
+
 describe("parseCatalog: ошибки с понятными путями", () => {
   it("не объект и без версии", () => {
     expect(issuesOf([])[0]?.message).toBe("Меню должно быть JSON-объектом");
     expect(issuesOf({ products: [] })).toEqual([
-      { path: "version", message: 'Укажите версию формата: "version": 1' },
+      { path: "version", message: 'Укажите версию формата: "version": 2' },
     ]);
-    expect(issuesOf({ ...minimal, version: 7 })[0]?.message).toMatch(/версии 7.*до 1/);
+    expect(issuesOf({ ...minimal, version: 7 })[0]?.message).toMatch(/версии 7.*до 2/);
   });
 
   it("ошибки структуры — с путём до поля", () => {
