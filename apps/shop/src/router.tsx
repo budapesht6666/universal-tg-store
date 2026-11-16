@@ -15,6 +15,7 @@ import { useShop } from "./lib/shop.ts";
 import { setBackButton, startParam } from "./lib/telegram.ts";
 import { CartScreen } from "./screens/CartScreen.tsx";
 import { CheckoutScreen } from "./screens/CheckoutScreen.tsx";
+import { ConfirmScreen } from "./screens/ConfirmScreen.tsx";
 import { DishScreen } from "./screens/DishScreen.tsx";
 import { MenuScreen } from "./screens/MenuScreen.tsx";
 import { OrderScreen } from "./screens/OrderScreen.tsx";
@@ -104,6 +105,11 @@ const routeTree = rootRoute.addChildren([
   }),
   createRoute({ getParentRoute: () => rootRoute, path: "/cart", component: CartScreen }),
   createRoute({ getParentRoute: () => rootRoute, path: "/checkout", component: CheckoutScreen }),
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/checkout/confirm",
+    component: ConfirmScreen,
+  }),
   createRoute({ getParentRoute: () => rootRoute, path: "/orders", component: OrdersScreen }),
   createRoute({
     getParentRoute: () => rootRoute,

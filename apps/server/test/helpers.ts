@@ -33,6 +33,8 @@ export function setup() {
   const clock = { now: NOON };
   const fetchCalls: string[] = [];
   const redirects = new Map<string, string>();
+  /** Страницы, которые отдаёт «интернет» в тестах: url → HTML. */
+  const pages = new Map<string, string>();
   const deps: Deps = {
     db: openDb(":memory:"),
     env,
@@ -42,9 +44,8 @@ export function setup() {
       const url = String(input);
       fetchCalls.push(url);
       const location = redirects.get(url);
-      return location
-        ? new Response(null, { status: 302, headers: { location } })
-        : new Response("ok", { status: 200 });
+      if (location) return new Response(null, { status: 302, headers: { location } });
+      return new Response(pages.get(url) ?? "ok", { status: 200 });
     }) as typeof fetch,
     botUsername: "pechka_test_bot",
     mainAppReady: async () => true,
@@ -75,7 +76,7 @@ export function setup() {
     return { status: res.status, json, res };
   }
 
-  return { app, deps, env, notices, clock, fetchCalls, redirects, call, initData };
+  return { app, deps, env, notices, clock, fetchCalls, redirects, pages, call, initData };
 }
 
 export type TestCtx = ReturnType<typeof setup>;

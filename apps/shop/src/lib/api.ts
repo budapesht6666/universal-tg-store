@@ -73,7 +73,7 @@ export const api = {
   reviewOrder: (id: number, review: { rating: number; text: string }) =>
     request<Order>("POST", `/orders/${id}/review`, review),
   resolveMapsUrl: (url: string) =>
-    request<{ point: { lat: number; lng: number } }>(
+    request<{ point: { lat: number; lng: number }; label?: string }>(
       "GET",
       `/geo/resolve?url=${encodeURIComponent(url)}`,
     ),

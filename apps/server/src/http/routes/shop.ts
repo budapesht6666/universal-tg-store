@@ -1,5 +1,5 @@
 /** Покупатель: магазин и меню, профиль, оформление и мои заказы, разбор ссылки на карту. */
-import { isShortMapsUrl } from "@store/schema";
+import { parseLocationText } from "@store/schema";
 import { Hono } from "hono";
 import { AppError } from "../../errors.ts";
 import { resolveMapsUrl } from "../../lib/geo-resolve.ts";
@@ -57,16 +57,18 @@ export const shopRoutes = new Hono<AppEnv>()
     });
   })
 
-  /** Короткая ссылка Google Maps → координаты. */
+  /** Ссылка Google Maps или Apple Maps без координат → координаты и название места. */
   .get("/geo/resolve", async (c) => {
     requireUser(c);
     const url = c.req.query("url") ?? "";
-    if (!isShortMapsUrl(url)) throw new AppError(400, "Нужна короткая ссылка maps.app.goo.gl");
-    const point = await resolveMapsUrl(url, c.var.deps.fetch);
-    if (!point) {
+    if (parseLocationText(url).kind !== "resolve") {
+      throw new AppError(400, "Нужна ссылка Google Maps или Apple Maps");
+    }
+    const place = await resolveMapsUrl(url, c.var.deps.fetch);
+    if (!place) {
       throw new AppError(422, "Не нашли точку по ссылке. Поставьте пин на карте вручную");
     }
-    return c.json({ point });
+    return c.json(place);
   })
 
   .post("/orders", async (c) => {

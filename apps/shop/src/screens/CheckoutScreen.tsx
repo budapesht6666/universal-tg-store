@@ -1,26 +1,26 @@
 /**
  * Оформление — одна страница: точка на карте, дом/этаж, имя и телефон, комментарий.
- * Проверка — той же схемой, что на сервере (createOrderInputSchema); ошибки сервера
- * показываются у своих полей.
+ * Проверка — той же схемой, что на сервере (createOrderInputSchema). Заказ отсюда не уходит:
+ * «Проверить заказ» ведёт на экран проверки (ConfirmScreen), отправка — там.
  */
 import {
   createOrderInputSchema,
   type DeliveryZone,
-  GPS_ACCURACY_WARN_M,
   inDeliveryZone,
   normalizePhone,
   parseLocationText,
   telegramLink,
 } from "@store/schema";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { AlertCircle, Check, Link2, Navigation } from "lucide-react";
+import { AlertCircle, Check, Link2, Navigation, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { MapPicker } from "../components/MapPicker.tsx";
 import { BottomBar, FieldError, PrimaryButton, Screen, Section } from "../components/ui.tsx";
-import { ApiError, api } from "../lib/api.ts";
+import { api, type ShopData } from "../lib/api.ts";
 import { type DraftLocation, useCart } from "../lib/cart.ts";
-import { useCartLines, useMoney, useReadyShop } from "../lib/shop.ts";
+import { coordsText, isCoarse, isPoorGps, toOrderLocation } from "../lib/location.ts";
+import { useCartLines, useReadyShop } from "../lib/shop.ts";
 import {
   canLocate,
   haptic,
@@ -31,19 +31,56 @@ import {
 import { ClosedNotice } from "./CartScreen.tsx";
 
 type Errors = Record<string, string>;
+type Issue = { path: string; message: string };
+
+/** Тело заказа из корзины и черновика — одно для проверки на оформлении и отправки. */
+export function useOrderBody() {
+  const { lines } = useCartLines();
+  const draft = useCart((s) => s.draft);
+  return {
+    items: lines
+      .filter((l) => l.product.available)
+      .map((l) => ({ productId: l.product.id, qty: l.qty })),
+    customer: {
+      name: draft.name,
+      phone: draft.phone,
+      location: toOrderLocation(draft.location),
+      address: draft.address,
+      comment: draft.comment,
+    },
+  };
+}
+
+/** Та же схема, что на сервере: пусто — можно отправлять. */
+export function orderIssues(shop: ShopData, body: ReturnType<typeof useOrderBody>): Issue[] {
+  const parsed = createOrderInputSchema(shop).safeParse(body);
+  if (parsed.success) return [];
+  return parsed.error.issues.map((i) => ({ path: i.path.join("."), message: i.message }));
+}
+
+const FIELD_KEYS = ["name", "phone", "location", "address", "comment"];
+
+/** Ошибки по полям формы: customer.phone → phone. */
+export function fieldErrors(issues: Issue[]): Errors {
+  const byField: Errors = {};
+  for (const i of issues) {
+    const key = i.path.replace(/^customer\./, "");
+    if (FIELD_KEYS.includes(key.split(".")[0] ?? "")) byField[key] ??= i.message;
+  }
+  return byField;
+}
 
 export function CheckoutScreen() {
   const shop = useReadyShop();
-  const money = useMoney();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { lines, count, total } = useCartLines();
+  const { count } = useCartLines();
   const draft = useCart((s) => s.draft);
   const setDraft = useCart((s) => s.setDraft);
-  const clearCart = useCart((s) => s.clear);
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [linkState, setLinkState] = useState<LinkState>("idle");
   const me = useQuery({ queryKey: ["me"], queryFn: api.me });
+  const body = useOrderBody();
 
   // Второй заказ — одним нажатием: подставляем данные прошлого заказа или имя из Telegram.
   const prefilled = useRef(false);
@@ -55,70 +92,35 @@ export function CheckoutScreen() {
       name: draft.name || last?.name || me.data.user.firstName,
       phone: draft.phone || last?.phone || "",
       address: draft.address || last?.address || "",
-      location: draft.location ?? (last ? { ...last.location, source: "pin" } : null),
+      location:
+        draft.location ?? (last ? { ...last.location, source: "pin", fromLastOrder: true } : null),
     });
   }, [me.data, draft, setDraft]);
 
-  const body = {
-    items: lines
-      .filter((l) => l.product.available)
-      .map((l) => ({ productId: l.product.id, qty: l.qty })),
-    customer: {
-      name: draft.name,
-      phone: draft.phone,
-      location: draft.location,
-      address: draft.address,
-      comment: draft.comment,
-    },
-  };
-
-  const submit = useMutation({
-    mutationFn: () => {
-      const parsed = createOrderInputSchema(shop).safeParse(body);
-      if (!parsed.success) {
-        throw new ApiError(
-          400,
-          "Проверьте поля",
-          parsed.error.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
-        );
-      }
-      return api.createOrder(body as Parameters<typeof api.createOrder>[0]);
-    },
-    onMutate: () => {
+  const review = () => {
+    setFormError(null);
+    const issues = orderIssues(shop, body);
+    if (issues.length === 0) {
       setErrors({});
-      setFormError(null);
-    },
-    onSuccess: (order) => {
-      haptic.success();
-      clearCart();
-      setDraft({ comment: "" });
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["me"] });
-      navigate({ to: "/orders/$id", params: { id: String(order.id) }, replace: true });
-    },
-    onError: (err) => {
-      haptic.error();
-      if (err instanceof ApiError && err.issues.length > 0) {
-        const byField: Errors = {};
-        for (const i of err.issues) byField[i.path.replace(/^customer\./, "")] ??= i.message;
-        setErrors(byField);
-        const fieldKeys = ["name", "phone", "location", "address", "comment"];
-        if (!Object.keys(byField).some((k) => fieldKeys.includes(k.split(".")[0] ?? ""))) {
-          setFormError(err.message);
-        }
-        const first = document.querySelector("[data-error='true']");
-        first?.scrollIntoView({ behavior: "smooth", block: "center" });
-      } else {
-        setFormError(err instanceof Error ? err.message : "Не получилось оформить заказ");
-      }
-      queryClient.invalidateQueries({ queryKey: ["shop"] });
-    },
-  });
+      haptic.tap();
+      navigate({ to: "/checkout/confirm" });
+      return;
+    }
+    haptic.error();
+    const byField = fieldErrors(issues);
+    setErrors(byField);
+    if (Object.keys(byField).length === 0) setFormError(issues[0]?.message ?? "Проверьте поля");
+    requestAnimationFrame(() =>
+      document
+        .querySelector("[data-error='true']")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" }),
+    );
+  };
 
   const zone = shop.delivery;
   const outside = !!draft.location && !inDeliveryZone(zone, draft.location);
 
-  if (count === 0 && !submit.isPending) {
+  if (count === 0) {
     return (
       <Screen>
         <div className="flex flex-1 items-center justify-center p-8 text-hint">Корзина пуста</div>
@@ -132,7 +134,7 @@ export function CheckoutScreen() {
         className="flex flex-col gap-5 p-4 pb-40"
         onSubmit={(e) => {
           e.preventDefault();
-          submit.mutate();
+          review();
         }}
       >
         <ClosedNotice />
@@ -152,6 +154,7 @@ export function CheckoutScreen() {
               setErrors(({ location: _, ...rest }) => rest);
             }}
             error={errors.location ?? errors["location.lat"]}
+            onLinkState={setLinkState}
           />
           <div className="flex flex-col gap-1.5">
             <label htmlFor="co-house" className="text-[13px] text-hint">
@@ -229,6 +232,12 @@ export function CheckoutScreen() {
             <span className="text-center text-[13px] font-semibold text-bad-ink">
               Точка вне зоны доставки
             </span>
+          ) : linkState === "error" ? (
+            <span className="text-center text-[13px] font-semibold text-bad-ink">
+              Ссылку на точку не распознали
+            </span>
+          ) : linkState === "loading" ? (
+            <span className="text-center text-[13px] text-hint">Ищем точку по ссылке…</span>
           ) : (
             <span className="text-center text-[13px] text-hint">
               {count} {portions(count)} · доставка бесплатно · оплата курьеру
@@ -236,10 +245,9 @@ export function CheckoutScreen() {
           )}
           <PrimaryButton
             type="submit"
-            loading={submit.isPending}
-            disabled={!shop.status.open || outside}
+            disabled={!shop.status.open || outside || linkState !== "idle"}
           >
-            Оформить заказ · {money(total)}
+            Проверить заказ
           </PrimaryButton>
         </BottomBar>
       </form>
@@ -247,7 +255,7 @@ export function CheckoutScreen() {
   );
 }
 
-function portions(n: number) {
+export function portions(n: number) {
   const m10 = n % 10;
   const m100 = n % 100;
   if (m10 === 1 && m100 !== 11) return "порция";
@@ -255,9 +263,14 @@ function portions(n: number) {
   return "порций";
 }
 
+/** Поле ссылки: пусто или точка взята — idle; ищем — loading; не нашли — error. */
+type LinkState = "idle" | "loading" | "error";
+
 /**
- * Карта + «Я сейчас здесь» (только на телефоне) + ИЛИ + ссылка Google Maps / координаты.
- * С зоной доставки: граница на карте, точка вне зоны — «Сюда не доставляем».
+ * Карта + «Я сейчас здесь» (только на телефоне) + ИЛИ + ссылка Google Maps / Apple Maps /
+ * координаты. С зоной доставки: граница на карте, точка вне зоны — «Сюда не доставляем».
+ * Нераспознанная ссылка не пускает дальше (onLinkState): иначе заказ ушёл бы на старую точку
+ * карты, а покупатель думал бы, что на точку из ссылки.
  */
 function LocationField({
   zone,
@@ -265,12 +278,14 @@ function LocationField({
   value,
   onChange,
   error,
+  onLinkState,
 }: {
   zone: DeliveryZone;
   manager: string | undefined;
   value: DraftLocation | null;
   onChange: (l: DraftLocation) => void;
   error: string | undefined;
+  onLinkState: (state: LinkState) => void;
 }) {
   const [gpsState, setGpsState] = useState<"idle" | "loading" | "denied" | "unavailable">("idle");
   const [gpsShown] = useState(canLocate);
@@ -286,9 +301,16 @@ function LocationField({
     return () => clearTimeout(t);
   }, [link]);
 
-  const poor = value?.source === "gps" && (value.accuracy ?? 0) > GPS_ACCURACY_WARN_M;
+  useEffect(() => {
+    onLinkState(
+      !link.trim() ? "idle" : linkState.loading ? "loading" : linkState.error ? "error" : "idle",
+    );
+  }, [link, linkState, onLinkState]);
+
+  const poor = !!value && isPoorGps(value);
+  const coarse = !!value && isCoarse(value);
   const outside = !!value && !inDeliveryZone(zone, value);
-  const warn = !value || poor;
+  const warn = !value || poor || coarse;
 
   const locate = async () => {
     setGpsState("loading");
@@ -306,15 +328,15 @@ function LocationField({
     const parsed = parseLocationText(text);
     if (parsed.kind === "point") {
       setLinkState({ loading: false, error: null });
-      onChange({ ...parsed.point, source: "link" });
+      onChange({ ...parsed.point, source: "link", via: parsed.via, label: parsed.label });
       return;
     }
     if (parsed.kind === "invalid") return setLinkState({ loading: false, error: parsed.message });
     setLinkState({ loading: true, error: null });
     try {
-      const { point } = await api.resolveMapsUrl(parsed.url);
+      const { point, label } = await api.resolveMapsUrl(parsed.url);
       setLinkState({ loading: false, error: null });
-      onChange({ ...point, source: "link" });
+      onChange({ ...point, source: "link", via: parsed.via, label });
     } catch (err) {
       setLinkState({ loading: false, error: err instanceof Error ? err.message : "Не получилось" });
     }
@@ -326,7 +348,7 @@ function LocationField({
         <MapPicker value={value} onChange={onChange} zone={zone.enabled ? zone.circles : []} />
         <div
           className={`flex items-center gap-3 px-3.5 py-3 ${
-            outside ? "bg-bad-bg text-bad-ink" : poor ? "bg-warn-bg text-warn-ink" : ""
+            outside ? "bg-bad-bg text-bad-ink" : poor || coarse ? "bg-warn-bg text-warn-ink" : ""
           }`}
         >
           <span
@@ -352,7 +374,9 @@ function LocationField({
                   ? "Точка не поставлена"
                   : poor
                     ? `Неточно: ±${Math.round(value.accuracy ?? 0)} м`
-                    : `Точка поставлена${value.accuracy ? ` · ±${Math.round(value.accuracy)} м` : ""}`}
+                    : coarse
+                      ? "Точка примерная"
+                      : `Точка поставлена${value.accuracy ? ` · ±${Math.round(value.accuracy)} м` : ""}`}
             </span>
             <span className={`text-[13px] leading-[17px] ${outside ? "" : "text-hint"}`}>
               {outside
@@ -365,7 +389,11 @@ function LocationField({
                     : "Подвиньте карту или вставьте ссылку"
                   : poor
                     ? "Подвиньте карту, чтобы пин встал на ваш дом"
-                    : `${value.lat.toFixed(5)}, ${value.lng.toFixed(5)}`}
+                    : coarse
+                      ? "Приблизьте карту и поставьте пин на свой вход"
+                      : value.label
+                        ? `${value.label} · ${coordsText(value)}`
+                        : coordsText(value)}
             </span>
           </div>
         </div>
@@ -431,10 +459,15 @@ function LocationField({
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="co-link" className="flex flex-col text-[13px] leading-[18px] text-hint">
-          <span>Вставьте ссылку из Google Maps — пин встанет туда сам.</span>
+          <span>Вставьте ссылку из Google Maps или Apple Maps — пин встанет туда сам.</span>
           <span>В картах: выберите место → «Поделиться» → «Копировать».</span>
         </label>
-        <div className="flex h-11 items-center gap-2 rounded-xl bg-card pr-1.5 pl-3.5">
+        <div
+          className={`flex h-11 items-center gap-2 rounded-xl pr-1 pl-3.5 ${
+            linkState.error ? "bg-bad-bg ring-[1.5px] ring-[#e3a08e] ring-inset" : "bg-card"
+          }`}
+          data-error={!!linkState.error}
+        >
           <Link2 size={16} className="flex-none text-hint" />
           <input
             id="co-link"
@@ -442,14 +475,33 @@ function LocationField({
             onChange={(e) => {
               setLink(e.target.value);
             }}
-            placeholder="Ссылка Google Maps или координаты"
+            placeholder="Ссылка на карту или координаты"
             className="h-10 min-w-0 flex-1 bg-transparent outline-none placeholder:text-hint"
           />
           {linkState.loading && (
-            <span className="h-4 w-4 flex-none animate-spin rounded-full border-2 border-line border-t-accent" />
+            <span className="mr-1.5 h-4 w-4 flex-none animate-spin rounded-full border-2 border-line border-t-accent" />
+          )}
+          {linkState.error && (
+            <button
+              type="button"
+              aria-label="Очистить ссылку"
+              onClick={() => setLink("")}
+              className="flex h-9 w-9 flex-none items-center justify-center rounded-full text-hint"
+            >
+              <X size={18} strokeWidth={2.2} />
+            </button>
           )}
         </div>
-        <FieldError message={linkState.error ?? undefined} />
+        {linkState.error && (
+          <span role="alert" className="flex flex-col text-[13px] leading-[18px] text-bad-ink">
+            <span className="font-semibold">
+              {/https?:\/\//.test(link)
+                ? "Не нашли точку в ссылке."
+                : "Не нашли здесь ссылку или координаты."}
+            </span>
+            <span>Вставьте другую ссылку или очистите поле и подвиньте карту.</span>
+          </span>
+        )}
       </div>
     </>
   );

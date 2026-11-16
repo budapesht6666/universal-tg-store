@@ -2,7 +2,7 @@
  * Корзина и черновик оформления — в localStorage: закрыли Mini App и вернулись — всё на месте.
  * Цены здесь не хранятся: они всегда из актуального меню (а при заказе — из БД сервера).
  */
-import { MAX_QTY_PER_ITEM } from "@store/schema";
+import { type LocationVia, MAX_QTY_PER_ITEM } from "@store/schema";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -11,6 +11,14 @@ export type DraftLocation = {
   lng: number;
   accuracy?: number | undefined;
   source: "pin" | "gps" | "link";
+  /* Дальше — только для экранов магазина, на сервер не уходит (toOrderLocation). */
+  /** Масштаб карты, на котором поставили пин: мелкий — точка примерная. */
+  zoom?: number | undefined;
+  /** Из какой ссылки точка и название места, если карты его отдали. */
+  via?: LocationVia | undefined;
+  label?: string | undefined;
+  /** Подставлена из прошлого заказа и с тех пор не менялась. */
+  fromLastOrder?: boolean | undefined;
 };
 
 export type Draft = {

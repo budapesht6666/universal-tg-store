@@ -276,7 +276,7 @@ describe("короткие ссылки Google Maps", () => {
         as: ANNA,
       },
     );
-    expect(ok.json).toEqual({ point: { lat: 15.8801, lng: 108.338 } });
+    expect(ok.json).toEqual({ point: { lat: 15.8801, lng: 108.338 }, label: "Hoi An" });
 
     t.redirects.set("https://maps.app.goo.gl/evil", "http://169.254.169.254/latest/meta-data");
     const evil = await t.call(
@@ -297,6 +297,52 @@ describe("короткие ссылки Google Maps", () => {
       },
     );
     expect(notShort.status).toBe(400);
+  });
+
+  it("Apple Maps: короткая ссылка → страница места → координаты и название", async () => {
+    const t = setup();
+    t.redirects.set(
+      "https://maps.apple/p/EoH2bXiuMFPqgK",
+      "https://maps.apple.com/place?place-id=IFEA9459921CAA709&_provider=9902",
+    );
+    t.pages.set(
+      "https://maps.apple.com/place?place-id=IFEA9459921CAA709&_provider=9902",
+      '<html><head><meta property="place:location:latitude" content="16.0680424">' +
+        '<meta property="place:location:longitude" content="108.2143557">' +
+        '<meta property="og:title" content="Con Market &amp; Co"></head></html>',
+    );
+    const res = await t.call(
+      "GET",
+      `/api/geo/resolve?url=${encodeURIComponent("https://maps.apple/p/EoH2bXiuMFPqgK")}`,
+      { as: ANNA },
+    );
+    expect(res.json).toEqual({
+      point: { lat: 16.0680424, lng: 108.2143557 },
+      label: "Con Market & Co",
+    });
+
+    t.redirects.set("https://maps.apple/p/evil", "https://evil.example/place");
+    const evil = await t.call(
+      "GET",
+      `/api/geo/resolve?url=${encodeURIComponent("https://maps.apple/p/evil")}`,
+      { as: ANNA },
+    );
+    expect(evil.status).toBe(422);
+    expect(t.fetchCalls).not.toContain("https://evil.example/place");
+  });
+
+  it("Google: название места из раскрытой ссылки", async () => {
+    const t = setup();
+    t.redirects.set(
+      "https://maps.app.goo.gl/named",
+      "https://www.google.com/maps/place/Con+Market/@16.06,108.21,17z/data=!3d16.068!4d108.2143",
+    );
+    const res = await t.call(
+      "GET",
+      `/api/geo/resolve?url=${encodeURIComponent("https://maps.app.goo.gl/named")}`,
+      { as: ANNA },
+    );
+    expect(res.json).toEqual({ point: { lat: 16.068, lng: 108.2143 }, label: "Con Market" });
   });
 });
 

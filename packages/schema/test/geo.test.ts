@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   isAllowedMapsRedirectHost,
+  isAppleMapsUrl,
   isGoogleMapsUrl,
   isShortMapsUrl,
   mapsUrlFromCoords,
   parseLocationText,
 } from "../src/index.ts";
 
-const at = (lat: number, lng: number) => ({ kind: "point", point: { lat, lng } });
+const at = (lat: number, lng: number, via = "google", label?: string) =>
+  label
+    ? { kind: "point", point: { lat, lng }, via, label }
+    : { kind: "point", point: { lat, lng }, via };
 
 describe("ссылки Google Maps", () => {
   it("узнаёт короткие и длинные ссылки", () => {
@@ -44,7 +48,7 @@ describe("разбор вставленного текста", () => {
       parseLocationText(
         "https://www.google.com/maps/place/Pechka/@15.8790,108.3300,17z/data=!3m1!4b1!4m6!3m5!3d15.8801!4d108.338",
       ),
-    ).toEqual(at(15.8801, 108.338));
+    ).toEqual(at(15.8801, 108.338, "google", "Pechka"));
     expect(parseLocationText("https://www.google.com/maps/@15.879,108.33,17z")).toEqual(
       at(15.879, 108.33),
     );
@@ -60,13 +64,36 @@ describe("разбор вставленного текста", () => {
     expect(parseLocationText("Вилла 12\nhttps://maps.app.goo.gl/AbC123")).toEqual({
       kind: "resolve",
       url: "https://maps.app.goo.gl/AbC123",
+      via: "google",
     });
   });
 
+  it("Apple Maps: координаты в ссылке, короткие ссылки и страницы места — серверу", () => {
+    expect(
+      parseLocationText("https://maps.apple.com/?ll=16.0680424,108.2143557&q=Dropped%20Pin"),
+    ).toEqual(at(16.0680424, 108.2143557, "apple"));
+    expect(
+      parseLocationText(
+        "https://maps.apple.com/place?coordinate=16.068,108.2143&name=Con%20Market",
+      ),
+    ).toEqual(at(16.068, 108.2143, "apple", "Con Market"));
+    expect(parseLocationText("Con Market https://maps.apple/p/EoH2bXiuMFPqgK")).toEqual({
+      kind: "resolve",
+      url: "https://maps.apple/p/EoH2bXiuMFPqgK",
+      via: "apple",
+    });
+    expect(
+      parseLocationText("https://maps.apple.com/place?place-id=IFEA9459921CAA709"),
+    ).toMatchObject({ kind: "resolve", via: "apple" });
+    expect(isAppleMapsUrl("https://maps.apple.com.evil.io/p/x")).toBe(false);
+    expect(isAllowedMapsRedirectHost("maps.apple")).toBe(true);
+    expect(isAllowedMapsRedirectHost("apple.com")).toBe(false);
+  });
+
   it("просто координаты — из Zalo, Grab, самих карт", () => {
-    expect(parseLocationText("15.8801, 108.3380")).toEqual(at(15.8801, 108.338));
-    expect(parseLocationText("Мы тут: 15.8801 108.3380")).toEqual(at(15.8801, 108.338));
-    expect(parseLocationText("-33.8688,151.2093")).toEqual(at(-33.8688, 151.2093));
+    expect(parseLocationText("15.8801, 108.3380")).toEqual(at(15.8801, 108.338, "coords"));
+    expect(parseLocationText("Мы тут: 15.8801 108.3380")).toEqual(at(15.8801, 108.338, "coords"));
+    expect(parseLocationText("-33.8688,151.2093")).toEqual(at(-33.8688, 151.2093, "coords"));
   });
 
   it("непонятный текст — подсказка, что вставить", () => {
