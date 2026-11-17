@@ -88,6 +88,8 @@ pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест 
 - Bot API: `setMyProfilePhoto` каждый раз добавляет новое фото в профиль (переиспользовать нельзя) — аватар ставим один раз, а имя и описания синхронизируем из настроек, сверяя с `getMy*` (у `setMyName` жёсткий лимит частоты). «Allow Groups» и Main Mini App — только в BotFather.
 - Иконка заставки Mini App (BotFather → Configure Splash Screen) — `design/brand/pechka-splash.svg`: один контур без цветов и дуг, вырез устья — обратным направлением контура (`evenodd` Telegram отбрасывает). Иконка — по бренду, без упрощений формы. iPhone держит старую заставку, пока не откроешь профиль бота. Цвета фона и шапки там — Default: магазин ставит цвета темы сам.
 
+- Фото блюд: магазин обрезает их по `object-cover` в квадрат (меню) и 390:340 (страница блюда), сервер сводит к WebP до 1200 px без увеличения. Фото из Telegram приходят 960×1280 — режем квадрат 960 по тарелке. Импорта JSON в админке нет (`replaceCatalog` только для демо): блюда заводим формой или через `POST /api/admin/uploads` + `/api/admin/products`. Проверенный быстрый путь (17.11): Claude in Chrome на открытой `/admin` (cookie входа) — добавить в страницу скрытый `<input type=file multiple>`, `file_upload` в него, затем `fetch` из страницы; скрыть блюдо — `PATCH /api/admin/products/:id {isActive:false}`. Рабочие материалы меню — в `today_menu/` (в .gitignore).
+
 ## Прод
 
 - https://pechka.p1gog.duckdns.org (админка — `/admin`), бот @pechka_hoian_bot, вебхук.

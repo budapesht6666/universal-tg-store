@@ -12,3 +12,6 @@ data/
 .vite/
 playwright-report/
 test-results/
+
+# Рабочие материалы меню (фото, тексты) — не для git
+today_menu/
