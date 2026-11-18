@@ -15,3 +15,6 @@ test-results/
 
 # Рабочие материалы меню (фото, тексты) — не для git
 today_menu/
+
+# Рабочие копии агентов Claude Code (git worktree)
+.claude/worktrees/

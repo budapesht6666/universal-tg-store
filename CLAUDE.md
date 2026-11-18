@@ -90,6 +90,10 @@ pnpm schema:gen       # catalog/catalog.schema.json из zod-схем (тест 
 
 - Фото блюд: магазин обрезает их по `object-cover` в квадрат (меню) и 390:340 (страница блюда), сервер сводит к WebP до 1200 px без увеличения. Фото из Telegram приходят 960×1280 — режем квадрат 960 по тарелке. Импорта JSON в админке нет (`replaceCatalog` только для демо): блюда заводим формой или через `POST /api/admin/uploads` + `/api/admin/products`. Проверенный быстрый путь (17.11): Claude in Chrome на открытой `/admin` (cookie входа) — добавить в страницу скрытый `<input type=file multiple>`, `file_upload` в него, затем `fetch` из страницы; скрыть блюдо — `PATCH /api/admin/products/:id {isActive:false}`. Рабочие материалы меню — в `today_menu/` (в .gitignore).
 
+- Остаток порций (`products.stock`) списывается при оформлении и возвращается при отмене. Форма блюда шлёт `stock`, только если его трогали: иначе «Сохранить» затрёт списания заказов, прошедших, пока форма была открыта (`productInputSchema` — `stock` необязательный, не передан — не меняется).
+- Аналитика: события магазина — `POST /api/events`, снимок корзины — `POST /api/cart`, отчёт — `GET /api/admin/analytics`. Сотрудники (все строки `staff`) в статистике не учитываются. Заблокировавшим бот ничего не шлёт: transformer `blockedGuard` (`src/bot/blocked.ts`) отвечает 403 вместо отправки, отметка — по `my_chat_member` и по 403 от Telegram.
+- Две сессии на одной задаче (17–18.11): `Agent` с `isolation: "worktree"` на Windows падает (путь `c:` vs `C:` — «core.worktree redirect»), а недосозданный каталог `.claude/worktrees/…` со своим `biome.json` ронял `pnpm lint` (теперь `.claude` исключена в biome.json и .gitignore). Рабочую копию для второй сессии создаём руками: `git worktree add ../universal-tg-store-<фича> -b feat/<фича>`, стенд второй сессии — на других портах. Две миграции: первая вливается в main, вторая после rebase перегенерируется со следующим номером.
+
 ## Прод
 
 - https://pechka.p1gog.duckdns.org (админка — `/admin`), бот @pechka_hoian_bot, вебхук.

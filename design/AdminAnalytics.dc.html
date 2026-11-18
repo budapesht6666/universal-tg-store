@@ -303,7 +303,7 @@ class Component extends DCLogic {
     const conv = pct(orders, visitors);
 
     const deltas = {
-      today: { visitors: ['−6%', '#B42318'], orders: ['0%', '#71717A'], revenue: ['+4%', '#17753A'], avg: ['+4%', '#17753A'], conv: ['+0,9 п.п.', '#17753A'], cmp: 'к прошлой среде' },
+      today: { visitors: ['−6%', '#B42318'], orders: ['0%', '#71717A'], revenue: ['+4%', '#17753A'], avg: ['+4%', '#17753A'], conv: ['+0,9 п.п.', '#17753A'], cmp: 'ко вчера' },
       '7d': { visitors: ['+18%', '#17753A'], orders: ['+9%', '#17753A'], revenue: ['+12%', '#17753A'], avg: ['+3%', '#17753A'], conv: ['−1,2 п.п.', '#B42318'], cmp: 'к прошлым 7 дням' },
       '30d': { visitors: ['+41%', '#17753A'], orders: ['+33%', '#17753A'], revenue: ['+36%', '#17753A'], avg: ['+2%', '#17753A'], conv: ['−0,9 п.п.', '#B42318'], cmp: 'к прошлым 30 дням' }
     }[period];
@@ -313,7 +313,7 @@ class Component extends DCLogic {
       { id: 'orders', label: 'Заказы', value: sp(orders), title: 'Заказы', unit: (n) => sp(n) + ' ' + plural(n, 'заказ', 'заказа', 'заказов'), axis: (n) => sp(n), key: 'orders' },
       { id: 'revenue', label: 'Выручка', value: money(revenue), title: 'Выручка, доставленные заказы', unit: (n) => money(n), axis: short, key: 'revenue' },
       { id: 'avg', label: 'Средний чек', value: money(avg), title: 'Средний чек', unit: (n) => money(n), axis: short, key: 'avg' },
-      { id: 'conv', label: 'Конверсия в заказ', value: pctText(conv), title: 'Конверсия: заказали из зашедших', unit: (n) => pctText(n), axis: (n) => n + '%', key: 'conv' }
+      { id: 'conv', label: 'Конверсия в заказ', value: pctText(conv), title: 'Конверсия: доля посетителей, которые заказали', unit: (n) => pctText(n), axis: (n) => n + '%', key: 'conv' }
     ];
     const kpis = defs.map((d) => ({
       label: d.label,
