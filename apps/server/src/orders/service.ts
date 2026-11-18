@@ -14,6 +14,7 @@ import {
   customerCancelMode,
   DELIVERY_FAILURE_LABELS,
   isFinalStatus,
+  MAX_STOCK,
   mapsUrlFromCoords,
   ORDER_STATUS_LABELS,
   ORDER_STATUSES,
@@ -21,12 +22,13 @@ import {
   OrderReviewInputSchema,
   type OrderStatus,
   orderTotal,
+  portionsText,
   type Role,
   type StaffOrderAction,
 } from "@store/schema";
 import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, or, sql } from "drizzle-orm";
 import type { Db } from "../db/client.ts";
-import { orderEvents, orders, users } from "../db/schema.ts";
+import { orderEvents, orders, products as productsTable, users } from "../db/schema.ts";
 import type { Deps } from "../deps.ts";
 import { AppError, parseInput } from "../errors.ts";
 import { getProductsByIds } from "../repo/catalog.ts";
@@ -156,13 +158,19 @@ export function createOrder(deps: Deps, customerId: number, body: unknown): Orde
         issues.push({ path: `items[${i}]`, message: "Этого блюда больше нет в меню" });
       } else if (!canOrderProduct(p)) {
         issues.push({ path: `items[${i}]`, message: `«${p.title}» закончилось` });
+      } else if (p.stock !== null && item.qty > p.stock) {
+        issues.push({
+          path: `items[${i}]`,
+          message: `«${p.title}»: осталось ${portionsText(p.stock)}, а у вас ${item.qty}`,
+        });
       } else {
         items.push({ productId: p.id, title: p.title, price: p.price, qty: item.qty });
       }
     });
     if (issues.length > 0) {
-      throw new AppError(409, `${issues[0]?.message}. Уберите из корзины и оформите снова`, issues);
+      throw new AppError(409, `${issues[0]?.message}. Поправьте корзину и оформите снова`, issues);
     }
+    takeStock(db, items);
 
     const { customer } = input;
     const row = db
@@ -195,6 +203,54 @@ export function createOrder(deps: Deps, customerId: number, body: unknown): Orde
   return order;
 }
 
+/**
+ * Списать порции заказа. Условие stock >= qty — вторая линия защиты: проверка выше идёт
+ * в той же транзакции, но списание не должно уводить остаток в минус ни при каких условиях.
+ */
+function takeStock(db: Db, items: OrderItemSnapshot[]): void {
+  for (const item of items) {
+    db.update(productsTable)
+      .set({ stock: sql`${productsTable.stock} - ${item.qty}` })
+      .where(
+        and(
+          eq(productsTable.id, item.productId),
+          isNotNull(productsTable.stock),
+          gte(productsTable.stock, item.qty),
+        ),
+      )
+      .run();
+  }
+}
+
+/**
+ * Отменённый заказ возвращает порции. У блюд без ограничения (или если его сняли) — ничего:
+ * остаток не появляется сам. Удалённое блюдо просто не найдётся.
+ */
+function returnStock(db: Db, items: OrderItemSnapshot[]): void {
+  for (const item of items) {
+    db.update(productsTable)
+      .set({ stock: sql`min(${productsTable.stock} + ${item.qty}, ${MAX_STOCK})` })
+      .where(and(eq(productsTable.id, item.productId), isNotNull(productsTable.stock)))
+      .run();
+  }
+}
+
+/** Отмена заказа и возврат порций — одной транзакцией. */
+function cancelOrder(
+  db: Db,
+  order: OrderRow,
+  now: Date,
+  extra: Partial<typeof orders.$inferInsert>,
+  actorId: number,
+): OrderRow {
+  return db.transaction(() => {
+    const updated = transition(db, order, "cancelled", now, extra);
+    returnStock(db, order.items);
+    addEvent(db, order.id, { type: "status", status: "cancelled", actorId }, now);
+    return updated;
+  });
+}
+
 // ───────────── Покупатель ─────────────
 
 export function customerCancel(deps: Deps, customerId: number, orderId: number): OrderRow {
@@ -209,10 +265,7 @@ export function customerCancel(deps: Deps, customerId: number, orderId: number):
   if (mode === "none") throw new AppError(409, "Заказ уже закрыт");
 
   if (mode === "cancel") {
-    const updated = transition(db, order, "cancelled", now, {
-      cancelReason: "customer",
-    });
-    addEvent(db, order.id, { type: "status", status: "cancelled", actorId: customerId }, now);
+    const updated = cancelOrder(db, order, now, { cancelReason: "customer" }, customerId);
     notifier.notify({ type: "status", orderId: order.id, actorId: null });
     return updated;
   }
@@ -425,11 +478,13 @@ export function staffAction(
 
     case "cancel": {
       requirePermission(actor, "orders.manage");
-      const updated = transition(db, order, "cancelled", now, {
-        cancelReason: action.reason,
-        cancelComment: action.comment ?? null,
-      });
-      addEvent(db, order.id, { type: "status", status: "cancelled", actorId: actor.id }, now);
+      const updated = cancelOrder(
+        db,
+        order,
+        now,
+        { cancelReason: action.reason, cancelComment: action.comment ?? null },
+        actor.id,
+      );
       notifier.notify({ type: "status", orderId: order.id, actorId: actor.id });
       return updated;
     }

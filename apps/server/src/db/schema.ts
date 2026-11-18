@@ -57,6 +57,8 @@ export const products = sqliteTable(
     images: text("images", { mode: "json" }).$type<ImageRef[]>().notNull().default(sql`'[]'`),
     badges: text("badges", { mode: "json" }).$type<string[]>().notNull(),
     available: bool("available").notNull().default(true),
+    /** Остаток порций; null — без ограничения. Заказ списывает, отмена возвращает. */
+    stock: integer("stock"),
     isActive: bool("is_active").notNull().default(true),
     sort: integer("sort").notNull().default(0),
     attributes: text("attributes", { mode: "json" }).$type<Record<string, unknown>>().notNull(),

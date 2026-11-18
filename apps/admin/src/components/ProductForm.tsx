@@ -7,11 +7,13 @@ import {
   type AttributeDefinition,
   currencyDigits,
   type ImageRef,
+  LOW_STOCK,
+  MAX_STOCK,
   productInputSchema,
   toMinor,
 } from "@store/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { X } from "lucide-react";
+import { Minus, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { ApiError, api, type Catalog, type Product } from "../lib/api.ts";
 import { DishLink } from "./DishLink.tsx";
@@ -70,6 +72,10 @@ export function ProductForm({
   const [available, setAvailable] = useState(product?.available ?? true);
   const [hidden, setHidden] = useState(product ? !product.isActive : false);
   const [attrs, setAttrs] = useState<Record<string, unknown>>(product?.attributes ?? {});
+  const [limit, setLimit] = useState(product ? product.stock !== null : false);
+  const [stock, setStock] = useState(product?.stock != null ? String(product.stock) : "");
+  // Остаток уходит на сервер, только если его трогали: пока форма открыта, заказы списывают порции.
+  const [stockTouched, setStockTouched] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -80,6 +86,10 @@ export function ProductForm({
       if (priceMinor === null) errs.price = "Цена — число, например 85 000";
       const oldMinor = oldPrice.trim() ? toMinor(oldPrice, currency) : undefined;
       if (oldMinor === null) errs.compareAtPrice = "Старая цена — число, например 100 000";
+      const stockNum = /^\d+$/.test(stock.trim()) ? Number(stock.trim()) : null;
+      if (limit && stockNum === null)
+        errs.stock = "Сколько порций осталось — целое число, например 12";
+      const sendStock = !product || stockTouched;
       const payload = {
         title,
         description,
@@ -89,6 +99,7 @@ export function ProductForm({
         categoryId,
         badges,
         available,
+        ...(sendStock && { stock: limit ? (stockNum ?? -1) : null }),
         isActive: !hidden,
         sort: product?.sort ?? 0,
         attributes: Object.fromEntries(
@@ -219,6 +230,20 @@ export function ProductForm({
         <FieldError message={errors.categoryId} />
       </label>
 
+      <StockField
+        limit={limit}
+        stock={stock}
+        error={errors.stock}
+        onLimit={(v) => {
+          setLimit(v);
+          setStockTouched(true);
+        }}
+        onStock={(v) => {
+          setStock(v);
+          setStockTouched(true);
+        }}
+      />
+
       {features.badges && (
         <div className="flex flex-col gap-1.5">
           <span className={FIELD_LABEL}>Метки · до трёх</span>
@@ -320,6 +345,81 @@ export function ProductForm({
           </button>
         ))}
     </form>
+  );
+}
+
+/** «Ограничить порции» и сколько осталось: на нуле блюдо в магазине «Закончилось». */
+function StockField({
+  limit,
+  stock,
+  error,
+  onLimit,
+  onStock,
+}: {
+  limit: boolean;
+  stock: string;
+  error: string | undefined;
+  onLimit: (v: boolean) => void;
+  onStock: (v: string) => void;
+}) {
+  const n = /^\d+$/.test(stock.trim()) ? Number(stock.trim()) : null;
+  const step = (d: number) => onStock(String(Math.min(Math.max((n ?? 0) + d, 0), MAX_STOCK)));
+  return (
+    <div className="flex flex-col gap-2.5 rounded-xl bg-page px-3.5 py-3">
+      <div className="flex items-center gap-3">
+        <div className="flex flex-1 flex-col">
+          <span className="font-semibold">Ограничить порции</span>
+          <span className="text-xs text-hint">Сверх остатка заказать нельзя</span>
+        </div>
+        <Toggle checked={limit} onChange={onLimit} label="Ограничить порции" />
+      </div>
+      {limit && (
+        <>
+          <div className="flex items-center justify-between gap-3">
+            <label htmlFor="product-stock" className="font-semibold">
+              Осталось порций
+            </label>
+            <div className="flex h-11 items-center overflow-hidden rounded-xl border border-line bg-card lg:h-[38px] lg:rounded-lg">
+              <button
+                type="button"
+                aria-label="На одну меньше"
+                onClick={() => step(-1)}
+                className="flex h-full w-10 items-center justify-center text-hint"
+              >
+                <Minus size={16} />
+              </button>
+              <input
+                id="product-stock"
+                inputMode="numeric"
+                value={stock}
+                onChange={(e) => onStock(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                placeholder="0"
+                className="h-full w-16 border-x border-line bg-transparent text-center font-semibold tabular-nums outline-none"
+              />
+              <button
+                type="button"
+                aria-label="На одну больше"
+                onClick={() => step(1)}
+                className="flex h-full w-10 items-center justify-center text-hint"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+          </div>
+          <FieldError message={error} />
+          {n === 0 && (
+            <span className="rounded-lg bg-warn-bg px-2.5 py-2 text-xs leading-4 text-warn-ink">
+              Порции закончились — в магазине блюдо «Закончилось». Приготовили ещё — впишите новое
+              число.
+            </span>
+          )}
+          <span className="text-xs leading-4 text-hint">
+            Заказ списывает порции, отмена возвращает. Когда останется {LOW_STOCK} и меньше,
+            покупатели увидят «Осталось 3».
+          </span>
+        </>
+      )}
+    </div>
   );
 }
 

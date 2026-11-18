@@ -3,6 +3,7 @@
  * в середине блюда выбранной категории с переключателем «Есть», справа форма блюда.
  * На телефоне категории — лентой сверху, форма открывается поверх.
  */
+import { inStock } from "@store/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDown,
@@ -48,7 +49,7 @@ export function MenuScreen() {
   const c = catalog.data;
   const current = c.categories.find((x) => x.id === categoryId) ?? c.categories[0] ?? null;
   const products = current ? c.products.filter((p) => p.categoryId === current.id) : [];
-  const soldOut = c.products.filter((p) => !p.available).length;
+  const soldOut = c.products.filter((p) => !inStock(p)).length;
   const bot = shop.data?.bot ?? null;
 
   return (
@@ -367,7 +368,7 @@ function Products({
                   <UtensilsCrossed size={18} />
                 )}
               </span>
-              <span className={`flex min-w-0 flex-col ${p.available ? "" : "opacity-55"}`}>
+              <span className={`flex min-w-0 flex-col ${inStock(p) ? "" : "opacity-55"}`}>
                 <span className="truncate font-semibold">{p.title}</span>
                 <span className="flex items-center gap-1.5 text-[13px] text-hint">
                   <span className="lg:hidden">{money(p.price)}</span>
@@ -379,7 +380,17 @@ function Products({
                       <EyeOff size={11} /> скрыто
                     </span>
                   )}
-                  {!p.available && <span className="text-xs">· закончилось</span>}
+                  {p.stock !== null && (
+                    <span
+                      title="Осталось порций"
+                      className={`rounded px-1.5 text-xs font-semibold whitespace-nowrap ${
+                        p.stock === 0 ? "bg-warn-bg text-warn-ink" : "bg-muted"
+                      }`}
+                    >
+                      {p.stock} порц.
+                    </span>
+                  )}
+                  {!inStock(p) && <span className="text-xs">· закончилось</span>}
                 </span>
                 {p.badges.length > 0 && (
                   <span className="flex flex-wrap gap-1 pt-0.5">
@@ -432,6 +443,7 @@ function Products({
       <span className="flex flex-col px-1 text-xs leading-[17px] text-hint">
         <span>Выключили «Есть» — блюдо остаётся в меню серым с надписью «Закончилось».</span>
         <span>То же переключается с телефона.</span>
+        <span>«12 порц.» — остаток: на нуле блюдо тоже «Закончилось».</span>
       </span>
       <FieldError message={error ?? undefined} />
       {catalog.categories.length === 0 && null}

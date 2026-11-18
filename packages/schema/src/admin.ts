@@ -2,7 +2,13 @@
  * Формы админки: категория, блюдо, быстрые переключатели, порядок, настройки.
  * Те же схемы проверяют запросы на сервере.
  */
-import { CategorySchema, checkCompareAtPrice, IdSchema, ProductBaseSchema } from "./catalog.ts";
+import {
+  CategorySchema,
+  checkCompareAtPrice,
+  IdSchema,
+  ProductBaseSchema,
+  StockSchema,
+} from "./catalog.ts";
 import { DeliveryZoneSchema } from "./delivery.ts";
 import { type AttributeDefinition, buildZodSchema } from "./fields.ts";
 import { WeekHoursSchema } from "./hours.ts";
@@ -48,10 +54,15 @@ export const ReorderSchema = z.strictObject({
 /**
  * Форма блюда. Характеристики проверяются по их описаниям из меню, поэтому схема строится
  * от списка характеристик. id можно не указывать: сервер возьмёт его из названия.
+ * stock не передан — остаток не меняется: пока форма была открыта, заказы могли его списать.
  */
 export function productInputSchema(attributes: readonly AttributeDefinition[]) {
   return ProductBaseSchema.omit({ id: true, createdAt: true, updatedAt: true })
-    .extend({ id: IdSchema.optional(), attributes: buildZodSchema(attributes).prefault({}) })
+    .extend({
+      id: IdSchema.optional(),
+      stock: StockSchema.optional(),
+      attributes: buildZodSchema(attributes).prefault({}),
+    })
     .superRefine(checkCompareAtPrice);
 }
 export type ProductInput = z.output<ReturnType<typeof productInputSchema>>;

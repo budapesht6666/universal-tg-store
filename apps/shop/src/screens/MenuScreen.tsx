@@ -5,8 +5,10 @@
 import {
   deliveryAreaLine,
   discountPercent,
+  inStock,
   isFinalStatus,
-  MAX_QTY_PER_ITEM,
+  lowStockLeft,
+  maxOrderQty,
   ORDER_STATUS_LABELS,
 } from "@store/schema";
 import { useQuery } from "@tanstack/react-query";
@@ -238,10 +240,12 @@ function DishRow({ product: p }: { product: Product }) {
   const add = useCart((s) => s.add);
   const remove = useCart((s) => s.remove);
   const attrs = useCardAttributes(p);
+  const available = inStock(p);
+  const left = lowStockLeft(p);
 
   return (
     <article
-      className={`relative flex gap-3 border-b border-line px-4 py-3 last:border-b-0 ${p.available ? "" : "opacity-55"}`}
+      className={`relative flex gap-3 border-b border-line px-4 py-3 last:border-b-0 ${available ? "" : "opacity-55"}`}
     >
       <div className="relative">
         <DishImage product={p} size={92} />
@@ -275,6 +279,9 @@ function DishRow({ product: p }: { product: Product }) {
         {p.description && (
           <p className="m-0 line-clamp-2 text-[13px] leading-[17px] text-hint">{p.description}</p>
         )}
+        {available && left !== null && (
+          <span className="text-xs leading-4 font-semibold text-warn-ink">Осталось {left}</span>
+        )}
         <div className="mt-auto flex items-center justify-between gap-2 pt-1">
           <div className="flex flex-wrap items-baseline gap-x-1.5">
             <span className="text-[15px] font-bold">{money(p.price)}</span>
@@ -290,7 +297,7 @@ function DishRow({ product: p }: { product: Product }) {
             )}
             {attrs.length > 0 && <span className="text-xs text-hint">{attrs.join(" · ")}</span>}
           </div>
-          {!p.available ? (
+          {!available ? (
             <span className="flex h-8 flex-none items-center rounded-[10px] bg-muted px-2.5 text-[13px] font-semibold text-hint">
               Закончилось
             </span>
@@ -299,7 +306,7 @@ function DishRow({ product: p }: { product: Product }) {
               {qty > 0 ? (
                 <Stepper
                   qty={qty}
-                  max={MAX_QTY_PER_ITEM}
+                  max={maxOrderQty(p)}
                   onAdd={() => add(p.id)}
                   onRemove={() => remove(p.id)}
                 />

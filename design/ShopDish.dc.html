@@ -116,6 +116,9 @@ button{font:inherit;color:inherit}
             <span style="height: 24px; padding: 0 8px; display: inline-flex; align-items: center; align-self: center; border-radius: 7px; background: #EFEFF3; color: #6B6B73; font-size: 13px; font-weight: 600">Закончилось</span>
           </sc-if>
         </div>
+        <sc-if value="{{hasLeft}}" hint-placeholder-val="{{ false }}">
+          <span style="align-self: flex-start; height: 26px; padding: 0 10px; display: inline-flex; align-items: center; border-radius: 8px; background: #FDF1DC; color: #7A4205; font-size: 13px; font-weight: 600">{{leftText}}</span>
+        </sc-if>
         <p style="margin: 0; font-size: 15px; line-height: 21px; color: #3C3C43">Наваристый борщ на говяжьей грудинке: свёкла, капуста, картофель и томаты. Подаём со сметаной и чесночной пампушкой.</p>
         <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding-top: 4px">
           <div style="display: flex; flex-direction: column; padding: 10px 12px; border-radius: 12px; background: #F2F2F7">
@@ -144,7 +147,7 @@ button{font:inherit;color:inherit}
         <div style="height: 52px; flex: none; display: flex; align-items: center; border-radius: 14px; background: #FBE9E2; color: #8F3520; font-size: 17px; font-weight: 700">
           <button aria-label="Убрать одну порцию" onClick="{{remove}}" style="width: 44px; height: 52px; border: 0; background: transparent; color: #8F3520; font-size: 22px; cursor: pointer">−</button>
           <span style="min-width: 20px; text-align: center">{{qty}}</span>
-          <button aria-label="Добавить порцию" onClick="{{add}}" style="width: 44px; height: 52px; border: 0; background: transparent; color: #8F3520; font-size: 22px; cursor: pointer">+</button>
+          <button aria-label="Добавить порцию" onClick="{{add}}" disabled="{{atMax}}" style="width: 44px; height: 52px; border: 0; background: transparent; color: {{plusFg}}; font-size: 22px; cursor: pointer">+</button>
         </div>
         <a href="ShopClosed.dc.html" style="flex: 1; min-width: 0; height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 16px; border-radius: 14px; background: #B5482A; color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none">
           <span>Корзина · {{count}}</span>
@@ -155,7 +158,7 @@ button{font:inherit;color:inherit}
   </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["photos","one","nophoto","soldout","gone"],"default":"photos"},"qty":{"editor":"int","min":0,"max":50,"default":0},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;photos&quot;,&quot;one&quot;,&quot;nophoto&quot;,&quot;low&quot;,&quot;soldout&quot;,&quot;gone&quot;],&quot;default&quot;:&quot;photos&quot;},&quot;qty&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;min&quot;:0,&quot;max&quot;:50,&quot;default&quot;:1},&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844}}">
 class Component extends DCLogic {
   constructor(props) {
     super(props);
@@ -163,10 +166,14 @@ class Component extends DCLogic {
   }
   renderVals() {
     const st = this.props.state ?? 'photos';
-    const n = st === 'photos' || st === 'soldout' ? 3 : st === 'one' ? 1 : 0;
+    const n = st === 'photos' || st === 'soldout' || st === 'low' ? 3 : st === 'one' ? 1 : 0;
     const slide = Math.min(this.state.slide, Math.max(n - 1, 0));
-    const qty = this.state.qty ?? (this.props.qty ?? 0);
+    const left = st === 'low' ? 3 : null;
+    const max = left ?? 50;
+    const qty = Math.min(this.state.qty ?? (this.props.qty ?? 0), max);
     const soldOut = st === 'soldout';
+    const atMax = qty >= max;
+    const word = (k) => (k % 10 === 1 && k % 100 !== 11 ? 'порция' : k % 10 >= 2 && k % 10 <= 4 && (k % 100 < 10 || k % 100 >= 20) ? 'порции' : 'порций');
     const fmt = (v) => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₫';
     const go = (i) => this.setState({ slide: (i + n) % n });
     return {
@@ -181,12 +188,16 @@ class Component extends DCLogic {
       prev: () => go(slide - 1),
       next: () => go(slide + 1),
       soldOut: soldOut,
+      hasLeft: left != null,
+      leftText: left != null && atMax ? 'В корзине все оставшиеся порции' : 'Осталось ' + left + ' ' + word(left || 0),
+      atMax: atMax,
+      plusFg: atMax ? 'rgba(143,53,32,0.35)' : '#8F3520',
       canAdd: !soldOut && qty === 0,
       inCart: !soldOut && qty > 0,
       qty: qty,
       count: 1 + qty,
       total: fmt(160000 + qty * 85000),
-      add: () => this.setState({ qty: Math.min(qty + 1, 50) }),
+      add: () => this.setState({ qty: Math.min(qty + 1, max) }),
       remove: () => this.setState({ qty: Math.max(qty - 1, 0) })
     };
   }

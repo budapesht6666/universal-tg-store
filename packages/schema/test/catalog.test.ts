@@ -4,7 +4,12 @@ import {
   type CatalogIssue,
   canOrderProduct,
   catalogJsonSchema,
+  inStock,
+  lowStockLeft,
+  MAX_QTY_PER_ITEM,
+  maxOrderQty,
   parseCatalog,
+  portionsText,
   serializeCatalog,
 } from "../src/index.ts";
 
@@ -65,6 +70,7 @@ describe("parseCatalog: корректное меню", () => {
       categoryId: "soups",
       badges: [],
       available: true,
+      stock: null,
       isActive: true,
       sort: 0,
       attributes: {},
@@ -217,5 +223,38 @@ describe("JSON Schema", () => {
   it("закоммиченная схема совпадает со сгенерированной — иначе запустите pnpm schema:gen", () => {
     const committed = JSON.parse(readFileSync(new URL("catalog.schema.json", root), "utf8"));
     expect(committed).toEqual(catalogJsonSchema());
+  });
+});
+
+describe("остатки порций", () => {
+  const p = (stock: number | null, available = true) => ({ stock, available, isActive: true });
+
+  it("на нуле блюдо не в наличии, без ограничения — как раньше", () => {
+    expect(inStock(p(null))).toBe(true);
+    expect(inStock(p(2))).toBe(true);
+    expect(inStock(p(0))).toBe(false);
+    expect(inStock(p(5, false))).toBe(false);
+    expect(canOrderProduct(p(0))).toBe(false);
+  });
+
+  it("в корзину — не больше остатка и не больше 50", () => {
+    expect(maxOrderQty(p(null))).toBe(MAX_QTY_PER_ITEM);
+    expect(maxOrderQty(p(3))).toBe(3);
+    expect(maxOrderQty(p(500))).toBe(MAX_QTY_PER_ITEM);
+  });
+
+  it("«Осталось N» — только когда порций 5 и меньше", () => {
+    expect(lowStockLeft(p(null))).toBeNull();
+    expect(lowStockLeft(p(6))).toBeNull();
+    expect(lowStockLeft(p(5))).toBe(5);
+    expect(lowStockLeft(p(0))).toBeNull();
+    expect([1, 2, 5, 11, 21, 22].map(portionsText)).toEqual([
+      "1 порция",
+      "2 порции",
+      "5 порций",
+      "11 порций",
+      "21 порция",
+      "22 порции",
+    ]);
   });
 });

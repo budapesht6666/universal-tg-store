@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Админка — аналитика</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button,input,textarea,select{font:inherit;color:inherit}
+a{color:#8F3520}a:hover{color:#6E2817}
+</style>
+</helmet>
+<div style="min-height: 900px; display: flex; flex-wrap: wrap; background: #F4F4F5; color: #09090B; font-family: Inter, -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 14px; line-height: 20px">
+
+  <nav aria-label="Разделы" style="flex: 1 1 248px; max-width: 100%; display: flex; flex-direction: column; gap: 4px; padding: 16px 12px; background: #FFFFFF; border-right: 1px solid #E4E4E7">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 16px">
+      <svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true">
+        <rect x="38" y="6" width="9" height="16" rx="2" fill="#B5482A"></rect>
+        <rect x="10" y="18" width="44" height="38" rx="7" fill="#B5482A"></rect>
+        <path d="M21 50V40a11 11 0 0 1 22 0v10z" fill="#FFFFFF"></path>
+        <path d="M32 48c-3.6 0-6-2.5-6-5.6 0-3.6 3.4-5.4 3.6-9.4 2.9 1.8 8.4 5.6 8.4 9.6 0 3-2.4 5.4-6 5.4z" fill="#F2A541"></path>
+      </svg>
+      <div style="display: flex; flex-direction: column; line-height: 18px">
+        <span style="font-weight: 700">Печка</span>
+        <span style="font-size: 12px; color: #71717A">Админка</span>
+      </div>
+    </div>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="5">
+      <a href="#{{n.id}}" aria-current="{{n.current}}" style="height: 36px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; background: {{n.bg}}; color: {{n.fg}}; font-weight: {{n.weight}}; text-decoration: none">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg>
+        <span style="flex: 1">{{n.label}}</span>
+        <sc-if value="{{n.hasBadge}}" hint-placeholder-val="{{ false }}">
+          <span style="min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: #B5482A; color: #FFFFFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">{{n.badge}}</span>
+        </sc-if>
+      </a>
+    </sc-for>
+    <div style="margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 8px">
+      <span style="width: 32px; height: 32px; border-radius: 16px; background: #F0F0F2; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px">П</span>
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 17px">
+        <span style="font-weight: 500">Владелец</span>
+        <span style="font-size: 12px; color: #71717A">вход по ссылке от бота</span>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px; padding: 24px 28px 40px; max-width: 1240px">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+      <div style="flex: 1 1 260px; display: flex; flex-direction: column">
+        <h1 style="margin: 0; font-size: 24px; line-height: 30px; font-weight: 700">Аналитика</h1>
+        <span style="color: #71717A">{{rangeText}}</span>
+      </div>
+      <div role="group" aria-label="Период" style="height: 38px; display: flex; padding: 3px; gap: 2px; border-radius: 10px; background: #E9E9EC">
+        <sc-for list="{{periods}}" as="p" hint-placeholder-count="3">
+          <button aria-pressed="{{p.pressed}}" onClick="{{p.pick}}" style="height: 32px; padding: 0 14px; border: 0; border-radius: 8px; background: {{p.bg}}; box-shadow: {{p.shadow}}; color: {{p.fg}}; font-weight: {{p.weight}}; cursor: pointer">{{p.label}}</button>
+        </sc-for>
+      </div>
+    </header>
+
+    <sc-if value="{{fresh}}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="display: flex; gap: 10px; padding: 12px 14px; border-radius: 12px; background: #E8F0FB; color: #1E3A62">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex: none; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg>
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-weight: 600">Посещения, корзины и источники считаем с 18 ноября</span>
+          <span style="font-size: 13px; line-height: 18px">Раньше этих данных нет — первые дни воронка будет неполной. Заказы, выручка и блюда — за всё время.</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <section aria-label="Главные цифры" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px">
+      <sc-for list="{{kpis}}" as="k" hint-placeholder-count="5">
+        <button aria-pressed="{{k.pressed}}" onClick="{{k.pick}}" style="min-height: 112px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px 16px; border: 0; border-radius: 12px; background: #FFFFFF; box-shadow: {{k.ring}}; text-align: left; cursor: pointer">
+          <span style="font-size: 13px; color: #52525B; font-weight: 500">{{k.label}}</span>
+          <span style="font-size: 26px; line-height: 32px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap">{{k.value}}</span>
+          <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; color: #71717A">
+            <span style="color: {{k.deltaFg}}; font-weight: 600">{{k.delta}}</span>{{k.hint}}
+          </span>
+        </button>
+      </sc-for>
+    </section>
+
+    <section aria-label="График по дням" style="display: flex; flex-direction: column; gap: 12px; padding: 16px 20px 18px; border-radius: 12px; background: #FFFFFF; box-shadow: inset 0 0 0 1px #E4E4E7">
+      <div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px">
+        <h2 style="margin: 0; flex: 1 1 200px; font-size: 16px; line-height: 22px; font-weight: 700">{{chartTitle}}</h2>
+        <span style="font-size: 13px; color: #52525B">{{readout}}</span>
+      </div>
+      <div style="display: flex; gap: 8px">
+        <div style="width: 64px; flex: none; position: relative; height: 200px">
+          <sc-for list="{{ticks}}" as="t" hint-placeholder-count="5">
+            <span style="position: absolute; right: 4px; top: {{t.top}}; transform: translateY(-50%); font-size: 12px; line-height: 14px; color: #71717A; white-space: nowrap">{{t.label}}</span>
+          </sc-for>
+        </div>
+        <div style="flex: 1; min-width: 0; position: relative; height: 200px; border-bottom: 1px solid #D4D4D8">
+          <sc-for list="{{ticks}}" as="t" hint-placeholder-count="5">
+            <div style="position: absolute; left: 0; right: 0; top: {{t.top}}; border-top: 1px solid #F0F0F2"></div>
+          </sc-for>
+          <div style="position: absolute; inset: 0; display: flex; align-items: flex-end; gap: {{barGap}}">
+            <sc-for list="{{bars}}" as="b" hint-placeholder-count="7">
+              <button aria-label="{{b.aria}}" onMouseEnter="{{b.hover}}" onFocus="{{b.hover}}" style="flex: 1; min-width: 0; height: 100%; display: flex; align-items: flex-end; padding: 0; border: 0; background: transparent; cursor: default">
+                <span style="width: 100%; height: {{b.h}}; border-radius: 4px 4px 0 0; background: {{b.fill}}"></span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: {{barGap}}; padding-left: 72px">
+        <sc-for list="{{bars}}" as="b" hint-placeholder-count="7">
+          <span style="flex: 1; min-width: 0; text-align: center; font-size: 12px; line-height: 16px; color: #71717A; white-space: nowrap; overflow: visible">{{b.xl}}</span>
+        </sc-for>
+      </div>
+    </section>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; align-items: start">
+
+      <section aria-label="Воронка" style="display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; box-shadow: inset 0 0 0 1px #E4E4E7">
+        <div style="display: flex; flex-direction: column">
+          <h2 style="margin: 0; font-size: 16px; line-height: 22px; font-weight: 700">Воронка</h2>
+          <span style="font-size: 13px; color: #71717A">Уникальные покупатели за период</span>
+        </div>
+        <sc-for list="{{funnel}}" as="f" hint-placeholder-count="5">
+          <div title="{{f.title}}" style="display: flex; flex-direction: column; gap: 4px">
+            <div style="display: flex; align-items: baseline; gap: 8px">
+              <span style="flex: 1; min-width: 0">{{f.label}}</span>
+              <span style="font-weight: 600">{{f.value}}</span>
+              <span style="width: 44px; text-align: right; font-size: 13px; color: #71717A">{{f.pct}}</span>
+            </div>
+            <div style="height: 10px; border-radius: 0 4px 4px 0; background: #F4F4F5">
+              <div style="width: {{f.w}}; height: 10px; border-radius: 0 4px 4px 0; background: #B5482A"></div>
+            </div>
+          </div>
+        </sc-for>
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 4px; padding: 12px 14px; border-radius: 10px; background: #FAFAFA; box-shadow: inset 0 0 0 1px #F0F0F2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><circle cx="9" cy="20" r="1.4"></circle><circle cx="18" cy="20" r="1.4"></circle><path d="M2 3h3l2.6 11.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.5L22 7H6"></path></svg>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+            <span style="font-weight: 600">Бросили корзину: {{abandoned}}</span>
+            <span style="font-size: 13px; color: #71717A">Положили блюда на {{abandonedSum}} и не заказали</span>
+          </div>
+        </div>
+      </section>
+
+      <section aria-label="Популярные блюда" style="display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; box-shadow: inset 0 0 0 1px #E4E4E7">
+        <div style="display: flex; flex-direction: column">
+          <h2 style="margin: 0; font-size: 16px; line-height: 22px; font-weight: 700">Популярные блюда</h2>
+          <span style="font-size: 13px; color: #71717A">Порций в доставленных заказах</span>
+        </div>
+        <sc-for list="{{dishes}}" as="d" hint-placeholder-count="6">
+          <div title="{{d.title}}" style="display: flex; flex-direction: column; gap: 4px">
+            <div style="display: flex; align-items: baseline; gap: 8px">
+              <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{d.name}}</span>
+              <span style="font-weight: 600">{{d.qty}}</span>
+              <span style="width: 96px; text-align: right; font-size: 13px; color: #71717A; white-space: nowrap">{{d.sum}}</span>
+            </div>
+            <div style="height: 10px; border-radius: 0 4px 4px 0; background: #F4F4F5">
+              <div style="width: {{d.w}}; height: 10px; border-radius: 0 4px 4px 0; background: #B5482A"></div>
+            </div>
+          </div>
+        </sc-for>
+      </section>
+
+      <section aria-label="Когда заказывают" style="display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; box-shadow: inset 0 0 0 1px #E4E4E7">
+        <div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px">
+          <div style="flex: 1 1 180px; display: flex; flex-direction: column">
+            <h2 style="margin: 0; font-size: 16px; line-height: 22px; font-weight: 700">Когда заказывают</h2>
+            <span style="font-size: 13px; color: #71717A">Заказы по часу оформления</span>
+          </div>
+          <span style="font-size: 13px; color: #52525B">{{hourReadout}}</span>
+        </div>
+        <div style="height: 140px; display: flex; align-items: flex-end; gap: 4px; border-bottom: 1px solid #D4D4D8">
+          <sc-for list="{{hours}}" as="h" hint-placeholder-count="12">
+            <button aria-label="{{h.aria}}" onMouseEnter="{{h.hover}}" onFocus="{{h.hover}}" style="flex: 1; min-width: 0; height: 100%; display: flex; align-items: flex-end; padding: 0; border: 0; background: transparent; cursor: default">
+              <span style="width: 100%; height: {{h.h}}; border-radius: 4px 4px 0 0; background: {{h.fill}}"></span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 4px">
+          <sc-for list="{{hours}}" as="h" hint-placeholder-count="12">
+            <span style="flex: 1; min-width: 0; text-align: center; font-size: 11px; line-height: 14px; color: #71717A">{{h.xl}}</span>
+          </sc-for>
+        </div>
+      </section>
+
+      <section aria-label="Покупатели" style="display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; box-shadow: inset 0 0 0 1px #E4E4E7">
+        <div style="display: flex; flex-direction: column">
+          <h2 style="margin: 0; font-size: 16px; line-height: 22px; font-weight: 700">Покупатели</h2>
+          <span style="font-size: 13px; color: #71717A">Кто заказал за период</span>
+        </div>
+        <div style="display: flex; height: 14px; gap: 2px">
+          <div title="Первый заказ" style="width: {{newW}}; border-radius: 4px 0 0 4px; background: #E8A48D"></div>
+          <div title="Заказывали раньше" style="flex: 1; border-radius: 0 4px 4px 0; background: #B5482A"></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column">
+            <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #52525B"><span style="width: 10px; height: 10px; border-radius: 3px; background: #E8A48D"></span>Первый заказ</span>
+            <span style="font-size: 22px; line-height: 28px; font-weight: 700">{{newBuyers}}</span>
+          </div>
+          <div style="display: flex; flex-direction: column">
+            <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #52525B"><span style="width: 10px; height: 10px; border-radius: 3px; background: #B5482A"></span>Заказывали раньше</span>
+            <span style="font-size: 22px; line-height: 28px; font-weight: 700">{{oldBuyers}}</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; border-top: 1px solid #F0F0F2">
+          <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #F0F0F2"><span>Заказали 2 раза и больше</span><span style="font-weight: 600">{{repeatShare}}</span></div>
+          <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0"><span>Средний чек у вернувшихся</span><span style="font-weight: 600">{{repeatCheck}}</span></div>
+        </div>
+      </section>
+
+      <section aria-label="Откуда пришли" style="display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; box-shadow: inset 0 0 0 1px #E4E4E7">
+        <div style="display: flex; flex-direction: column">
+          <h2 style="margin: 0; font-size: 16px; line-height: 22px; font-weight: 700">Откуда пришли</h2>
+          <span style="font-size: 13px; color: #71717A">Как открыли магазин в первый раз за период</span>
+        </div>
+        <sc-for list="{{sources}}" as="s" hint-placeholder-count="4">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <div style="display: flex; align-items: baseline; gap: 8px">
+              <span style="flex: 1; min-width: 0">{{s.label}}</span>
+              <span style="font-weight: 600">{{s.value}}</span>
+              <span style="width: 64px; text-align: right; font-size: 13px; color: #71717A">{{s.orders}}</span>
+            </div>
+            <div style="height: 10px; border-radius: 0 4px 4px 0; background: #F4F4F5">
+              <div style="width: {{s.w}}; height: 10px; border-radius: 0 4px 4px 0; background: #B5482A"></div>
+            </div>
+          </div>
+        </sc-for>
+        <span style="font-size: 12px; line-height: 16px; color: #71717A">Справа — сколько из них заказали. Своя метка для поста или рекламы: t.me/pechka_hoian_bot?startapp=src_instagram — появится здесь строкой «instagram».</span>
+      </section>
+
+      <section aria-label="Работа и качество" style="display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; box-shadow: inset 0 0 0 1px #E4E4E7">
+        <h2 style="margin: 0; font-size: 16px; line-height: 22px; font-weight: 700">Работа и качество</h2>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column"><span style="font-size: 13px; color: #52525B">Принимают за</span><span style="font-size: 22px; line-height: 28px; font-weight: 700">{{acceptTime}}</span></div>
+          <div style="display: flex; flex-direction: column"><span style="font-size: 13px; color: #52525B">Привозят за</span><span style="font-size: 22px; line-height: 28px; font-weight: 700">{{deliverTime}}</span></div>
+          <div style="display: flex; flex-direction: column"><span style="font-size: 13px; color: #52525B">Оценка</span><span style="font-size: 22px; line-height: 28px; font-weight: 700">★ {{rating}}</span><span style="font-size: 12px; color: #71717A">{{reviews}}</span></div>
+        </div>
+        <div style="display: flex; flex-direction: column; border-top: 1px solid #F0F0F2">
+          <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; font-weight: 600"><span>Отменено</span><span>{{cancelled}}</span></div>
+          <sc-for list="{{cancelReasons}}" as="c" hint-placeholder-count="3">
+            <div style="display: flex; justify-content: space-between; gap: 12px; padding: 4px 0 4px 12px; color: #52525B"><span>{{c.label}}</span><span>{{c.value}}</span></div>
+          </sc-for>
+        </div>
+        <span style="font-size: 12px; line-height: 16px; color: #71717A">Среднее от оформления до «Готовим» и до «Доставлен».</span>
+      </section>
+
+      <section aria-label="Бот" style="display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; box-shadow: inset 0 0 0 1px #E4E4E7">
+        <h2 style="margin: 0; font-size: 16px; line-height: 22px; font-weight: 700">Бот</h2>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column"><span style="font-size: 13px; color: #52525B">Пользователей всего</span><span style="font-size: 22px; line-height: 28px; font-weight: 700">{{usersTotal}}</span><span style="font-size: 12px; color: #71717A">{{usersNew}}</span></div>
+          <div style="display: flex; flex-direction: column"><span style="font-size: 13px; color: #52525B">Заблокировали бота</span><span style="font-size: 22px; line-height: 28px; font-weight: 700">{{blocked}}</span><span style="font-size: 12px; color: #71717A">{{blockedNew}}</span></div>
+        </div>
+        <span style="font-size: 12px; line-height: 16px; color: #71717A">Заблокировавшим бот больше ничего не отправляет. Разблокировали — снова получают статусы заказов.</span>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["data","fresh"],"default":"data"},"$preview":{"width":1440,"height":1960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { period: '7d', metric: 'visitors', hover: null, hourHover: null };
+  }
+  renderVals() {
+    const period = this.state.period;
+    const metric = this.state.metric;
+    const sp = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    const money = (n) => sp(Math.round(n / 100) * 100) + ' ₫';
+    const short = (n) => n >= 1000000 ? (Math.round(n / 100000) / 10).toString().replace('.', ',') + ' млн' : n >= 1000 ? Math.round(n / 1000) + ' тыс.' : String(n);
+    const pct = (a, b) => b ? Math.round(a / b * 1000) / 10 : 0;
+    const pctText = (v) => String(v).replace('.', ',') + '%';
+    const plural = (k, a, b, c) => (k % 10 === 1 && k % 100 !== 11 ? a : k % 10 >= 2 && k % 10 <= 4 && (k % 100 < 10 || k % 100 >= 20) ? b : c);
+
+    let buckets;
+    if (period === 'today') {
+      const v = [3, 5, 9, 8, 5, 3, 2, 4, 8, 6, 2, 1];
+      const o = [0, 1, 2, 1, 1, 0, 0, 1, 1, 1, 0, 0];
+      buckets = v.map((x, i) => ({ xl: (10 + i) + ':00', full: 'Сегодня, ' + (10 + i) + ':00', visitors: x, orders: o[i], revenue: o[i] * 168000 }));
+    } else if (period === '7d') {
+      const days = ['Чт 12', 'Пт 13', 'Сб 14', 'Вс 15', 'Пн 16', 'Вт 17', 'Ср 18'];
+      const v = [48, 55, 71, 83, 52, 47, 56];
+      const o = [7, 8, 11, 14, 8, 7, 8];
+      const r = [1080000, 1250000, 1740000, 2210000, 1260000, 1070000, 1260000];
+      buckets = days.map((d, i) => ({ xl: d, full: d + ' ноября', visitors: v[i], orders: o[i], revenue: r[i] }));
+    } else {
+      buckets = Array.from({ length: 30 }, (_, i) => {
+        const day = ((i + 19) % 30) + 1;
+        const wd = (i + 1) % 7;
+        const vis = Math.round(42 + 14 * Math.sin(i / 2.3) + (wd === 2 || wd === 3 ? 20 : 0) + i * 0.5);
+        const ord = Math.max(2, Math.round(vis * 0.15 + ((i % 3) - 1)));
+        const month = i < 11 ? 'октября' : 'ноября';
+        return { xl: i % 5 === 4 ? String(day) : '', full: day + ' ' + month, visitors: vis, orders: ord, revenue: ord * (160000 + (i % 4) * 6000) };
+      });
+    }
+    buckets.forEach((b) => { b.avg = b.orders ? b.revenue / b.orders : 0; b.conv = pct(b.orders, b.visitors); });
+    const sum = (k) => buckets.reduce((s, b) => s + b[k], 0);
+    const visitors = Math.round(sum('visitors') * (period === '30d' ? 0.72 : period === '7d' ? 0.9 : 1));
+    const orders = sum('orders');
+    const revenue = sum('revenue');
+    const delivered = Math.max(orders - Math.round(orders * 0.08), 0);
+    const avg = delivered ? revenue / delivered : 0;
+    const conv = pct(orders, visitors);
+
+    const deltas = {
+      today: { visitors: ['−6%', '#B42318'], orders: ['0%', '#71717A'], revenue: ['+4%', '#17753A'], avg: ['+4%', '#17753A'], conv: ['+0,9 п.п.', '#17753A'], cmp: 'к прошлой среде' },
+      '7d': { visitors: ['+18%', '#17753A'], orders: ['+9%', '#17753A'], revenue: ['+12%', '#17753A'], avg: ['+3%', '#17753A'], conv: ['−1,2 п.п.', '#B42318'], cmp: 'к прошлым 7 дням' },
+      '30d': { visitors: ['+41%', '#17753A'], orders: ['+33%', '#17753A'], revenue: ['+36%', '#17753A'], avg: ['+2%', '#17753A'], conv: ['−0,9 п.п.', '#B42318'], cmp: 'к прошлым 30 дням' }
+    }[period];
+
+    const defs = [
+      { id: 'visitors', label: 'Посетители', value: sp(visitors), title: 'Посетители', unit: (n) => sp(n) + ' ' + plural(n, 'посетитель', 'посетителя', 'посетителей'), axis: (n) => sp(n), key: 'visitors' },
+      { id: 'orders', label: 'Заказы', value: sp(orders), title: 'Заказы', unit: (n) => sp(n) + ' ' + plural(n, 'заказ', 'заказа', 'заказов'), axis: (n) => sp(n), key: 'orders' },
+      { id: 'revenue', label: 'Выручка', value: money(revenue), title: 'Выручка, доставленные заказы', unit: (n) => money(n), axis: short, key: 'revenue' },
+      { id: 'avg', label: 'Средний чек', value: money(avg), title: 'Средний чек', unit: (n) => money(n), axis: short, key: 'avg' },
+      { id: 'conv', label: 'Конверсия в заказ', value: pctText(conv), title: 'Конверсия: заказали из зашедших', unit: (n) => pctText(n), axis: (n) => n + '%', key: 'conv' }
+    ];
+    const kpis = defs.map((d) => ({
+      label: d.label,
+      value: d.value,
+      delta: deltas[d.id][0],
+      deltaFg: deltas[d.id][1],
+      hint: deltas.cmp,
+      pressed: metric === d.id ? 'true' : 'false',
+      ring: metric === d.id ? 'inset 0 0 0 2px #B5482A' : 'inset 0 0 0 1px #E4E4E7',
+      pick: () => this.setState({ metric: d.id, hover: null })
+    }));
+    const def = defs.find((d) => d.id === metric) || defs[0];
+
+    const vals = buckets.map((b) => b[def.key]);
+    const rawMax = Math.max.apply(null, vals.concat([1]));
+    const mag = Math.pow(10, Math.floor(Math.log10(rawMax)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * mag / 4).find((s) => s * 4 >= rawMax) || mag;
+    const niceMax = step * 4;
+    const ticks = [0, 1, 2, 3, 4].map((i) => ({ top: (100 - i * 25) + '%', label: def.axis(Math.round(step * i * 10) / 10) }));
+    const hover = this.state.hover != null && this.state.hover < buckets.length ? this.state.hover : buckets.length - 1;
+    const bars = buckets.map((b, i) => ({
+      xl: b.xl,
+      h: Math.max(vals[i] / niceMax * 100, vals[i] > 0 ? 1.5 : 0) + '%',
+      fill: i === hover ? '#8F3520' : '#B5482A',
+      aria: b.full + ': ' + def.unit(vals[i]),
+      hover: () => this.setState({ hover: i })
+    }));
+
+    const f = visitors / 412;
+    const sc = (x) => Math.max(Math.round(x * f), 0);
+    const steps = [['Открыли магазин', visitors], ['Положили в корзину', sc(138)], ['Перешли к оформлению', sc(81)], ['Оформили заказ', orders], ['Получили заказ', delivered]];
+    const funnel = steps.map((s, i) => ({
+      label: s[0],
+      value: sp(s[1]),
+      pct: Math.round(pct(s[1], visitors)) + '%',
+      w: Math.max(pct(s[1], visitors), 1) + '%',
+      title: i === 0 ? s[0] : s[0] + ': ' + Math.round(pct(s[1], steps[i - 1][1])) + '% от прошлого шага'
+    }));
+    const abandoned = Math.max(sc(138) - orders, 0);
+
+    const dishData = [['Комплексный обед', 22, 160000], ['Борщ с говядиной', 18, 85000], ['Сырники со сметаной', 14, 75000], ['Медовик', 11, 60000], ['Куриный суп с лапшой', 9, 70000], ['Солянка мясная', 7, 95000]];
+    const dishMax = Math.max.apply(null, dishData.map((d) => sc(d[1]) || 1));
+    const dishes = dishData.map((d) => {
+      const q = Math.max(sc(d[1]), period === 'today' ? 0 : 1);
+      return { name: d[0], qty: sp(q), sum: short(q * d[2]) + ' ₫', w: Math.max(q / dishMax * 100, 1) + '%', title: d[0] + ': ' + q + ' ' + plural(q, 'порция', 'порции', 'порций') + ' · ' + money(q * d[2]) };
+    });
+
+    const hourVals = period === 'today' ? [0, 1, 2, 1, 1, 0, 0, 1, 1, 1, 0, 0] : [2, 4, 9, 8, 4, 3, 3, 5, 9, 8, 5, 3].map((x) => Math.round(x * orders / 63));
+    const hourMax = Math.max.apply(null, hourVals.concat([1]));
+    const hh = this.state.hourHover;
+    const hours = hourVals.map((x, i) => ({
+      xl: i % 2 === 0 ? String(10 + i) : '',
+      h: Math.max(x / hourMax * 100, x > 0 ? 2 : 0) + '%',
+      fill: i === hh ? '#8F3520' : '#B5482A',
+      aria: (10 + i) + ':00–' + (11 + i) + ':00: ' + x + ' ' + plural(x, 'заказ', 'заказа', 'заказов'),
+      hover: () => this.setState({ hourHover: i })
+    }));
+    const hourReadout = hh != null ? (10 + hh) + ':00–' + (11 + hh) + ':00 · ' + hourVals[hh] + ' ' + plural(hourVals[hh], 'заказ', 'заказа', 'заказов') : 'Пик — 12:00 и 18:00';
+
+    const buyers = Math.max(Math.round(orders * 0.92), 1);
+    const newBuyers = Math.round(buyers * 0.65);
+    const nav = [
+      ['orders', 'Заказы', 'M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1ZM16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8M12 17.5v-11', '2'],
+      ['menu', 'Меню', 'M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7', ''],
+      ['analytics', 'Аналитика', 'M3 3v18h18M8 17v-5M13 17V8M18 17v-8', ''],
+      ['team', 'Команда', 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75', ''],
+      ['settings', 'Настройки', 'M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4', '']
+    ].map((n) => ({ id: n[0], label: n[1], icon: n[2], badge: n[3], hasBadge: !!n[3], current: n[0] === 'analytics' ? 'page' : 'false', bg: n[0] === 'analytics' ? '#F4ECE8' : 'transparent', fg: n[0] === 'analytics' ? '#09090B' : '#52525B', weight: n[0] === 'analytics' ? '600' : '500' }));
+    const periods = [['today', 'Сегодня'], ['7d', '7 дней'], ['30d', '30 дней']].map((p) => ({
+      label: p[1],
+      pressed: period === p[0] ? 'true' : 'false',
+      bg: period === p[0] ? '#FFFFFF' : 'transparent',
+      shadow: period === p[0] ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+      fg: period === p[0] ? '#09090B' : '#52525B',
+      weight: period === p[0] ? '600' : '500',
+      pick: () => this.setState({ period: p[0], hover: null, hourHover: null })
+    }));
+    const hb = buckets[hover];
+    return {
+      nav: nav,
+      periods: periods,
+      fresh: (this.props.state ?? 'data') === 'fresh',
+      rangeText: { today: 'Среда, 18 ноября, до 21:40', '7d': '12–18 ноября · сравнение с прошлыми 7 днями', '30d': '20 октября – 18 ноября · сравнение с прошлыми 30 днями' }[period],
+      kpis: kpis,
+      chartTitle: def.title + (period === 'today' ? ' по часам' : ' по дням'),
+      readout: hb.full + ' · ' + def.unit(vals[hover]),
+      ticks: ticks,
+      bars: bars,
+      barGap: buckets.length > 20 ? '3px' : '10px',
+      funnel: funnel,
+      abandoned: sp(abandoned) + ' ' + plural(abandoned, 'человек', 'человека', 'человек'),
+      abandonedSum: money(abandoned * 148000),
+      dishes: dishes,
+      hours: hours,
+      hourReadout: hourReadout,
+      newW: Math.round(newBuyers / buyers * 100) + '%',
+      newBuyers: sp(newBuyers),
+      oldBuyers: sp(buyers - newBuyers),
+      repeatShare: period === 'today' ? '31%' : period === '7d' ? '35%' : '38%',
+      repeatCheck: money(avg * 1.12),
+      sources: [['Кнопка «Меню» в боте', 0.65, 0.17], ['Ссылки на блюда', 0.23, 0.14], ['instagram', 0.08, 0.09], ['Другое', 0.04, 0.06]].map((s, i, all) => {
+        const v = Math.round(visitors * s[1]);
+        return { label: s[0], value: sp(v), orders: sp(Math.round(v * s[2])) + ' зак.', w: Math.max(s[1] / all[0][1] * 100, 1) + '%' };
+      }),
+      acceptTime: period === 'today' ? '3 мин' : '4 мин',
+      deliverTime: period === 'today' ? '44 мин' : '47 мин',
+      rating: period === 'today' ? '5,0' : '4,8',
+      reviews: period === 'today' ? '2 отзыва' : period === '7d' ? '21 отзыв' : '84 отзыва',
+      cancelled: sp(orders - delivered) + ' · ' + Math.round(pct(orders - delivered, orders)) + '%',
+      cancelReasons: period === 'today' ? [['Покупатель передумал', '1']].map((c) => ({ label: c[0], value: c[1] })) : [['Не дозвонились', String(Math.round((orders - delivered) * 0.4))], ['Закончилось блюдо', String(Math.round((orders - delivered) * 0.4))], ['Покупатель передумал', String((orders - delivered) - 2 * Math.round((orders - delivered) * 0.4))]].map((c) => ({ label: c[0], value: c[1] })),
+      usersTotal: '530',
+      usersNew: period === 'today' ? '+9 сегодня' : period === '7d' ? '+86 за 7 дней' : '+301 за 30 дней',
+      blocked: '12 · 2,3%',
+      blockedNew: period === 'today' ? '+0 сегодня' : period === '7d' ? '+3 за 7 дней' : '+9 за 30 дней'
+    };
+  }
+}
+</script>
+</body>
+</html>

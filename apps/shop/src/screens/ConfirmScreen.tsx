@@ -3,7 +3,7 @@
  * Карта здесь только показывает точку: случайно сдвинуть её нельзя, правят через «Изменить».
  * Заказ уходит только отсюда. Сервер отклонил (закончилось, закрыто, пауза) — плашка здесь же.
  */
-import { formatPhone, inDeliveryZone } from "@store/schema";
+import { formatPhone, inDeliveryZone, inStock } from "@store/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { AlertCircle, Clock, House, Link2, MapPin, Navigation } from "lucide-react";
@@ -13,7 +13,14 @@ import { BottomBar, PrimaryButton, Screen } from "../components/ui.tsx";
 import { ApiError, api } from "../lib/api.ts";
 import { useCart } from "../lib/cart.ts";
 import { type PointSummary, pointSummary } from "../lib/location.ts";
-import { useCartLines, useMoney, useReadyShop } from "../lib/shop.ts";
+import {
+  isShort,
+  shortMessage,
+  shortText,
+  useCartLines,
+  useMoney,
+  useReadyShop,
+} from "../lib/shop.ts";
 import { haptic } from "../lib/telegram.ts";
 import { ClosedNotice } from "./CartScreen.tsx";
 import { orderIssues, useOrderBody } from "./CheckoutScreen.tsx";
@@ -28,7 +35,7 @@ export function ConfirmScreen() {
   const navigate = useNavigate();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { lines, count, total, soldOut } = useCartLines();
+  const { lines, count, total, soldOut, short } = useCartLines();
   const draft = useCart((s) => s.draft);
   const setDraft = useCart((s) => s.setDraft);
   const clearCart = useCart((s) => s.clear);
@@ -62,6 +69,7 @@ export function ConfirmScreen() {
       });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["me"] });
+      queryClient.invalidateQueries({ queryKey: ["shop"] }); // остатки порций изменились
       navigate({ to: "/orders/$id", params: { id: String(order.id) }, replace: true });
     },
     onError: (err) => {
@@ -104,7 +112,12 @@ export function ConfirmScreen() {
 
   const outside = !inDeliveryZone(shop.delivery, location);
   const blocked =
-    soldOut.length > 0 || count === 0 || !shop.status.open || issues.length > 0 || outside;
+    soldOut.length > 0 ||
+    short.length > 0 ||
+    count === 0 ||
+    !shop.status.open ||
+    issues.length > 0 ||
+    outside;
 
   return (
     <Screen>
@@ -118,6 +131,15 @@ export function ConfirmScreen() {
               soldOut.length === 1
                 ? "Уберите его в корзине — остальное сохранится."
                 : "Уберите их в корзине — остальное сохранится.",
+            ]}
+            action={{ label: "В корзину", onClick: toCart }}
+          />
+        ) : short.length > 0 ? (
+          <Alert
+            title={failure ? "Заказ не отправлен" : "Порций меньше, чем в корзине"}
+            lines={[
+              ...short.map(shortMessage),
+              "Уменьшите количество в корзине — остальное сохранится.",
             ]}
             action={{ label: "В корзину", onClick: toCart }}
           />
@@ -184,18 +206,22 @@ export function ConfirmScreen() {
               >
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="font-semibold">{p.title}</span>
-                  {p.available ? (
-                    <span className="text-[13px] leading-[17px] text-hint">
-                      {qty} × {money(p.price)}
-                    </span>
-                  ) : (
+                  {!inStock(p) ? (
                     <span className="text-[13px] leading-[17px] font-semibold text-danger">
                       Закончилось
+                    </span>
+                  ) : isShort({ product: p, qty }) ? (
+                    <span className="text-[13px] leading-[17px] font-semibold text-danger">
+                      {shortText({ product: p, qty })}
+                    </span>
+                  ) : (
+                    <span className="text-[13px] leading-[17px] text-hint">
+                      {qty} × {money(p.price)}
                     </span>
                   )}
                 </div>
                 <span
-                  className={`flex-none font-semibold ${p.available ? "" : "text-hint line-through"}`}
+                  className={`flex-none font-semibold ${inStock(p) ? "" : "text-hint line-through"}`}
                 >
                   {money(p.price * qty)}
                 </span>

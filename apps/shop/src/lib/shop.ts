@@ -1,4 +1,4 @@
-import { type AttributeDefinition, formatMoney } from "@store/schema";
+import { type AttributeDefinition, formatMoney, inStock, portionsText } from "@store/schema";
 import { useQuery } from "@tanstack/react-query";
 import { api, type Product, type ShopData } from "./api.ts";
 import { useCart } from "./cart.ts";
@@ -36,7 +36,10 @@ export function attributeText(def: AttributeDefinition, value: unknown): string 
 
 export type CartLine = { product: Product; qty: number };
 
-/** Корзина, сверенная с актуальным меню: блюда, которых больше нет, не показываем. */
+/**
+ * Корзина, сверенная с актуальным меню: блюда, которых больше нет, не показываем.
+ * soldOut — закончились совсем, short — в корзине больше, чем осталось порций.
+ */
 export function useCartLines() {
   const shop = useReadyShop();
   const items = useCart((s) => s.items);
@@ -46,13 +49,30 @@ export function useCartLines() {
     const product = byId.get(id);
     if (product) lines.push({ product, qty });
   }
-  const available = lines.filter((l) => l.product.available);
+  const available = lines.filter((l) => inStock(l.product));
   return {
     lines,
     count: available.reduce((n, l) => n + l.qty, 0),
     total: available.reduce((sum, l) => sum + l.product.price * l.qty, 0),
-    soldOut: lines.filter((l) => !l.product.available),
+    soldOut: lines.filter((l) => !inStock(l.product)),
+    short: available.filter((l) => isShort(l)),
   };
+}
+
+/** В корзине больше порций, чем осталось. */
+export function isShort({ product, qty }: CartLine): boolean {
+  return product.stock !== null && qty > product.stock;
+}
+
+/** «Осталось 1 · у вас 2» — подпись строки, где порций меньше, чем в корзине. */
+export function shortText({ product, qty }: CartLine): string {
+  return `Осталось ${product.stock ?? 0} · у вас ${qty}`;
+}
+
+/** «Борщ»: осталась 1 порция, а у вас 2. */
+export function shortMessage({ product, qty }: CartLine): string {
+  const n = product.stock ?? 0;
+  return `«${product.title}»: ${n % 10 === 1 && n % 100 !== 11 ? "осталась" : "осталось"} ${portionsText(n)}, а у вас ${qty}.`;
 }
 
 /** «Открыто до 22:00» / «Закрыто · откроемся завтра в 10:00». */

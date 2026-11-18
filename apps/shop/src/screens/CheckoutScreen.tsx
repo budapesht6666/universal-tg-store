@@ -7,6 +7,7 @@ import {
   createOrderInputSchema,
   type DeliveryZone,
   inDeliveryZone,
+  inStock,
   normalizePhone,
   parseLocationText,
   telegramLink,
@@ -39,7 +40,7 @@ export function useOrderBody() {
   const draft = useCart((s) => s.draft);
   return {
     items: lines
-      .filter((l) => l.product.available)
+      .filter((l) => inStock(l.product))
       .map((l) => ({ productId: l.product.id, qty: l.qty })),
     customer: {
       name: draft.name,

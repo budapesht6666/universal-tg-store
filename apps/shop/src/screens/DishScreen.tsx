@@ -3,7 +3,7 @@
  * и нижняя панель «Добавить» / счётчик + корзина. Данные — из уже загруженного меню.
  * Открывается из меню, если включён флаг features.dishPage.
  */
-import { discountPercent, MAX_QTY_PER_ITEM } from "@store/schema";
+import { discountPercent, inStock, lowStockLeft, maxOrderQty, portionsText } from "@store/schema";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Minus, Plus } from "lucide-react";
 import { type ReactNode, useRef, useState, type WheelEvent } from "react";
@@ -59,12 +59,13 @@ function Dish({ product: p }: { product: Product }) {
               </span>
             </>
           )}
-          {!p.available && (
+          {!inStock(p) && (
             <span className="inline-flex h-6 items-center self-center rounded-[7px] bg-muted px-2 text-[13px] font-semibold text-hint">
               Закончилось
             </span>
           )}
         </div>
+        <StockLeft product={p} />
         {p.description && (
           <p className="m-0 text-[15px] leading-[21px] whitespace-pre-line text-ink-soft [overflow-wrap:anywhere]">
             {p.description}
@@ -176,6 +177,20 @@ function Photos({ product: p }: { product: Product }) {
   );
 }
 
+/** «Осталось 3 порции», когда порций мало; весь остаток в корзине — «все оставшиеся». */
+function StockLeft({ product: p }: { product: Product }) {
+  const qty = useCart((s) => s.items[p.id] ?? 0);
+  if (!inStock(p) || p.stock === null) return null;
+  const all = qty >= p.stock;
+  const left = lowStockLeft(p);
+  if (!all && left === null) return null;
+  return (
+    <span className="inline-flex h-[26px] items-center self-start rounded-lg bg-warn-bg px-2.5 text-[13px] font-semibold text-warn-ink">
+      {all ? "В корзине все оставшиеся порции" : `Осталось ${portionsText(left ?? 0)}`}
+    </span>
+  );
+}
+
 /** Нижняя панель: «Добавить · цена» → счётчик и «Корзина · N»; закончилось — неактивная кнопка. */
 function DishBar({ product: p }: { product: Product }) {
   const money = useMoney();
@@ -190,7 +205,7 @@ function DishBar({ product: p }: { product: Product }) {
   };
 
   let content: ReactNode;
-  if (!p.available) {
+  if (!inStock(p)) {
     content = (
       <button
         type="button"
@@ -227,7 +242,7 @@ function DishBar({ product: p }: { product: Product }) {
           <button
             type="button"
             aria-label="Добавить порцию"
-            disabled={qty >= MAX_QTY_PER_ITEM}
+            disabled={qty >= maxOrderQty(p)}
             onClick={tap(() => add(p.id))}
             className="flex h-[52px] w-11 items-center justify-center disabled:opacity-40"
           >

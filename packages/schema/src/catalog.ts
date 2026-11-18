@@ -22,6 +22,12 @@ export const MAX_PRODUCT_IMAGES = 5;
 /** Сколько порций одного блюда можно положить в корзину. */
 export const MAX_QTY_PER_ITEM = 50;
 
+/** Остаток, при котором покупатель видит «Осталось 3». */
+export const LOW_STOCK = 5;
+
+/** Самый большой остаток, который можно ввести в форме блюда. */
+export const MAX_STOCK = 9999;
+
 export const CategorySchema = z.strictObject({
   id: IdSchema,
   title: z.string().trim().min(1).max(60),
@@ -30,6 +36,13 @@ export const CategorySchema = z.strictObject({
 export type Category = z.output<typeof CategorySchema>;
 
 const DateTimeSchema = z.iso.datetime({ offset: true });
+
+/** Остаток порций блюда; null — без ограничения. */
+export const StockSchema = z
+  .int()
+  .min(0, { error: "Остаток не может быть меньше нуля" })
+  .max(MAX_STOCK, { error: `Остаток — не больше ${MAX_STOCK}` })
+  .nullable();
 
 /** Поля блюда без межполевых проверок — основа и для формы админки (productInputSchema). */
 export const ProductBaseSchema = z.strictObject({
@@ -62,6 +75,10 @@ export const ProductBaseSchema = z.strictObject({
     .boolean()
     .default(true)
     .meta({ description: "false — «Закончилось»: блюдо видно в меню, но заказать нельзя" }),
+  stock: StockSchema.default(null).meta({
+    description:
+      "Сколько порций осталось; null — без ограничения. Заказ списывает, отмена возвращает, на нуле — «Закончилось»",
+  }),
   isActive: z.boolean().default(true).meta({ description: "false — блюдо скрыто из меню" }),
   sort: z.int().default(0),
   attributes: z
@@ -102,7 +119,34 @@ export const CatalogSchema = z
 export type Catalog = z.output<typeof CatalogSchema>;
 export type CatalogInput = z.input<typeof CatalogSchema>;
 
+/** Есть ли блюдо в наличии: не в стоп-листе и порции не кончились. */
+export function inStock(product: Pick<Product, "available" | "stock">): boolean {
+  return product.available && (product.stock === null || product.stock > 0);
+}
+
 /** Можно ли заказать блюдо прямо сейчас (часы работы магазина проверяются отдельно). */
-export function canOrderProduct(product: Pick<Product, "isActive" | "available">): boolean {
-  return product.isActive && product.available;
+export function canOrderProduct(
+  product: Pick<Product, "isActive" | "available" | "stock">,
+): boolean {
+  return product.isActive && inStock(product);
+}
+
+/** Сколько порций блюда можно положить в корзину. */
+export function maxOrderQty(product: Pick<Product, "stock">): number {
+  return product.stock === null ? MAX_QTY_PER_ITEM : Math.min(product.stock, MAX_QTY_PER_ITEM);
+}
+
+/** «Осталось 3» для покупателя: число, когда порций мало, иначе null. */
+export function lowStockLeft(product: Pick<Product, "stock">): number | null {
+  const { stock } = product;
+  return stock !== null && stock > 0 && stock <= LOW_STOCK ? stock : null;
+}
+
+/** «1 порция», «3 порции», «5 порций». */
+export function portionsText(n: number): string {
+  const d = n % 10;
+  const h = n % 100;
+  const word =
+    d === 1 && h !== 11 ? "порция" : d >= 2 && d <= 4 && (h < 10 || h >= 20) ? "порции" : "порций";
+  return `${n} ${word}`;
 }

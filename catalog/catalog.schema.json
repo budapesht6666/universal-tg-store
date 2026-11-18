@@ -853,6 +853,20 @@
             "description": "false — «Закончилось»: блюдо видно в меню, но заказать нельзя",
             "type": "boolean"
           },
+          "stock": {
+            "default": null,
+            "description": "Сколько порций осталось; null — без ограничения. Заказ списывает, отмена возвращает, на нуле — «Закончилось»",
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9999
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "isActive": {
             "default": true,
             "description": "false — блюдо скрыто из меню",

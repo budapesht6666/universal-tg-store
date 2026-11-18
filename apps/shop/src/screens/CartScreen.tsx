@@ -1,10 +1,10 @@
 /** Корзина: состав, итого, и — если закрыто или пауза — почему оформить пока нельзя. */
-import { MAX_QTY_PER_ITEM } from "@store/schema";
+import { inStock, maxOrderQty } from "@store/schema";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Clock, Moon, ShoppingBag, X } from "lucide-react";
 import { BottomBar, Notice, PrimaryButton, Screen, Stepper } from "../components/ui.tsx";
 import { useCart } from "../lib/cart.ts";
-import { useCartLines, useMoney, useReadyShop } from "../lib/shop.ts";
+import { isShort, shortText, useCartLines, useMoney, useReadyShop } from "../lib/shop.ts";
 import { DishImage } from "./MenuScreen.tsx";
 
 export function ClosedNotice() {
@@ -35,7 +35,7 @@ export function CartScreen() {
   const { status } = useReadyShop();
   const money = useMoney();
   const navigate = useNavigate();
-  const { lines, count, total, soldOut } = useCartLines();
+  const { lines, count, total, soldOut, short } = useCartLines();
   const add = useCart((s) => s.add);
   const remove = useCart((s) => s.remove);
   const drop = useCart((s) => s.drop);
@@ -54,12 +54,14 @@ export function CartScreen() {
     );
   }
 
-  const blocked = !status.open || soldOut.length > 0 || count === 0;
+  const blocked = !status.open || soldOut.length > 0 || short.length > 0 || count === 0;
   const buttonText = !status.open
     ? `${status.reason === "paused" ? "Пауза" : "Закрыто"}${status.opensAt ? ` · откроемся ${status.opensAt}` : ""}`
     : soldOut.length > 0
       ? "Уберите то, что закончилось"
-      : `Оформить · ${money(total)}`;
+      : short.length > 0
+        ? "Уменьшите количество"
+        : `Оформить · ${money(total)}`;
 
   return (
     <Screen>
@@ -71,17 +73,21 @@ export function CartScreen() {
               <DishImage product={p} size={52} />
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="font-semibold">{p.title}</span>
-                {p.available ? (
-                  <span className="text-[13px] text-hint">{money(p.price * qty)}</span>
-                ) : (
+                {!inStock(p) ? (
                   <span className="text-[13px] font-semibold text-danger">Закончилось</span>
+                ) : isShort({ product: p, qty }) ? (
+                  <span className="text-[13px] font-semibold text-danger">
+                    {shortText({ product: p, qty })}
+                  </span>
+                ) : (
+                  <span className="text-[13px] text-hint">{money(p.price * qty)}</span>
                 )}
               </div>
-              {p.available ? (
+              {inStock(p) ? (
                 <Stepper
                   tone="plain"
                   qty={qty}
-                  max={MAX_QTY_PER_ITEM}
+                  max={maxOrderQty(p)}
                   onAdd={() => add(p.id)}
                   onRemove={() => remove(p.id)}
                 />

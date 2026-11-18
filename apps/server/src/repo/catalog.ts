@@ -29,6 +29,7 @@ function toProduct(row: ProductRow): Product {
     categoryId: row.categoryId,
     badges: row.badges,
     available: row.available,
+    stock: row.stock,
     isActive: row.isActive,
     sort: row.sort,
     attributes: row.attributes,
@@ -207,8 +208,9 @@ function assertCategory(db: Db, id: string): void {
 }
 
 function productValues(input: ProductInput) {
-  const { id: _id, compareAtPrice, ...rest } = input;
-  return { ...rest, compareAtPrice: compareAtPrice ?? null };
+  const { id: _id, compareAtPrice, stock, ...rest } = input;
+  // stock не передан — не трогаем: заказы могли списать порции, пока форма была открыта.
+  return { ...rest, compareAtPrice: compareAtPrice ?? null, ...(stock !== undefined && { stock }) };
 }
 
 export function createProduct(db: Db, input: ProductInput, now: Date): Product {
