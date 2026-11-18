@@ -1,7 +1,7 @@
 /** Покупатель: магазин и меню, профиль, оформление и мои заказы, разбор ссылки на карту. */
-import { parseLocationText } from "@store/schema";
+import { AnalyticsBatchSchema, CartSnapshotSchema, parseLocationText } from "@store/schema";
 import { Hono } from "hono";
-import { AppError } from "../../errors.ts";
+import { AppError, parseInput } from "../../errors.ts";
 import { resolveMapsUrl } from "../../lib/geo-resolve.ts";
 import {
   createOrder,
@@ -12,6 +12,7 @@ import {
   lastCustomerDetails,
   listCustomerOrders,
 } from "../../orders/service.ts";
+import { deleteCart, recordEvents, saveCart } from "../../repo/analytics.ts";
 import { publicCatalog } from "../../repo/catalog.ts";
 import { getShop, statusOf } from "../../repo/settings.ts";
 import { type AppEnv, requireUser } from "../auth.ts";
@@ -74,6 +75,7 @@ export const shopRoutes = new Hono<AppEnv>()
   .post("/orders", async (c) => {
     const user = requireUser(c);
     const order = createOrder(c.var.deps, user.id, await jsonBody(c));
+    deleteCart(c.var.deps.db, user.id);
     return c.json(customerView(c.var.deps.db, order, c.var.deps.now()), 201);
   })
 
@@ -101,4 +103,20 @@ export const shopRoutes = new Hono<AppEnv>()
     const user = requireUser(c);
     const order = customerReview(c.var.deps, user.id, orderIdParam(c), await jsonBody(c));
     return c.json(customerView(c.var.deps.db, order, c.var.deps.now()));
+  })
+
+  /** Аналитика: события Mini App пачкой (заход, страница блюда, в корзину, оформление). */
+  .post("/events", async (c) => {
+    const user = requireUser(c);
+    const batch = parseInput(AnalyticsBatchSchema, await jsonBody(c));
+    recordEvents(c.var.deps.db, user.id, batch, c.var.deps.now());
+    return c.json({ ok: true as const });
+  })
+
+  /** Аналитика: снимок корзины — для суммы брошенных корзин. */
+  .post("/cart", async (c) => {
+    const user = requireUser(c);
+    const snapshot = parseInput(CartSnapshotSchema, await jsonBody(c));
+    saveCart(c.var.deps.db, user.id, snapshot, c.var.deps.now());
+    return c.json({ ok: true as const });
   });

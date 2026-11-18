@@ -3,6 +3,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
+import { startAnalytics } from "./lib/analytics.ts";
 import { initTelegram } from "./lib/telegram.ts";
 import { router } from "./router.tsx";
 
@@ -16,6 +17,7 @@ const root = createRoot(document.getElementById("root") as HTMLElement);
 
 initTelegram()
   .then(() => {
+    startAnalytics(router);
     root.render(
       <StrictMode>
         <QueryClientProvider client={queryClient}>

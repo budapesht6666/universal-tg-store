@@ -10,13 +10,14 @@ import {
   useRouter,
   useRouterState,
 } from "@tanstack/react-router";
-import { ClipboardList, LogOut, Settings, Users, UtensilsCrossed } from "lucide-react";
+import { ChartColumn, ClipboardList, LogOut, Settings, Users, UtensilsCrossed } from "lucide-react";
 import { type ReactNode, useEffect } from "react";
 import { ShopMark } from "./components/ShopMark.tsx";
 import { Spinner } from "./components/ui.tsx";
 import { ApiError, api } from "./lib/api.ts";
 import { useMe, useShopInfo, useStaff } from "./lib/session.ts";
 import { isInTelegram, setBackButton } from "./lib/telegram.ts";
+import { AnalyticsScreen } from "./screens/AnalyticsScreen.tsx";
 import { LoginHint, LoginScreen } from "./screens/LoginScreen.tsx";
 import { MenuScreen } from "./screens/MenuScreen.tsx";
 import { OrderScreen } from "./screens/OrderScreen.tsx";
@@ -37,6 +38,12 @@ const NAV = [
     label: "Меню",
     icon: UtensilsCrossed,
     show: (s: ReturnType<typeof useStaff>) => s.can("catalog.manage"),
+  },
+  {
+    to: "/analytics",
+    label: "Аналитика",
+    icon: ChartColumn,
+    show: (s: ReturnType<typeof useStaff>) => s.can("analytics.view"),
   },
   {
     to: "/team",
@@ -222,6 +229,15 @@ const routeTree = rootRoute.addChildren([
     component: () => (
       <Guard permission="catalog.manage">
         <MenuScreen />
+      </Guard>
+    ),
+  }),
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/analytics",
+    component: () => (
+      <Guard permission="analytics.view">
+        <AnalyticsScreen />
       </Guard>
     ),
   }),

@@ -3,6 +3,7 @@
  * Типы ответов выводятся из маршрутов сервера (hono/client).
  */
 import type {
+  AnalyticsPeriod,
   CatalogIssue,
   CategoryInput,
   PauseOption,
@@ -30,6 +31,7 @@ export type Team = InferResponseType<Client["admin"]["team"]["$get"]>;
 export type Member = Team["members"][number];
 export type Invite = InferResponseType<Client["admin"]["team"]["invites"]["$post"]>;
 export type SetupInfo = InferResponseType<Client["setup"]["$get"]>;
+export type Analytics = InferResponseType<Client["admin"]["analytics"]["$get"]>;
 
 export class ApiError extends Error {
   readonly status: number;
@@ -117,4 +119,7 @@ export const api = {
   invite: (role: "manager" | "courier") => request<Invite>("POST", "/admin/team/invites", { role }),
   updateMember: (id: number, body: StaffUpdate) =>
     request<Member>("PATCH", `/admin/team/${id}`, body),
+
+  analytics: (period: AnalyticsPeriod) =>
+    request<Analytics>("GET", `/admin/analytics?period=${period}`),
 };

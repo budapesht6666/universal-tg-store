@@ -20,6 +20,7 @@ import {
   staffWith,
   upsertUser,
 } from "../repo/team.ts";
+import { blockedGuard, setBotBlocked } from "./blocked.ts";
 import { rememberRelay } from "./notifier.ts";
 import { esc, roleLabel, shopAppUrl, staffAppUrl, webAppButton } from "./texts.ts";
 
@@ -61,6 +62,8 @@ async function setStaffMenuButton(ctx: Context, deps: Deps) {
 export function createBot(deps: Deps): Bot {
   const { db, env } = deps;
   const bot = new Bot(env.BOT_TOKEN);
+  // Заблокировавшим бота не пишем; 403 «bot was blocked» запоминаем (src/bot/blocked.ts).
+  bot.api.config.use(blockedGuard(deps));
   const pm = bot.chatType("private");
   const noOrderRepliedAt = new Map<number, number>();
 
@@ -75,7 +78,16 @@ export function createBot(deps: Deps): Bot {
       },
       deps.now(),
     );
+    // Написал боту — значит, не заблокировал (событие разблокировки могло потеряться).
+    if (ctx.message) setBotBlocked(db, ctx.from.id, null);
     await next();
+  });
+
+  // Заблокировал бота (kicked) или разблокировал / снова запустил (member).
+  pm.on("my_chat_member", (ctx) => {
+    const status = ctx.myChatMember.new_chat_member.status;
+    if (status === "kicked") setBotBlocked(db, ctx.from.id, deps.now());
+    else if (status === "member") setBotBlocked(db, ctx.from.id, null);
   });
 
   pm.command("start", async (ctx) => {

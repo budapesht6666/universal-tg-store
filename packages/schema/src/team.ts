@@ -24,11 +24,19 @@ export type Permission =
   | "catalog.manage"
   | "settings.manage"
   | "team.manage"
+  | "analytics.view"
   | "delivery.work";
 
 const PERMISSIONS: Record<Role, readonly Permission[]> = {
-  owner: ["orders.manage", "catalog.manage", "settings.manage", "team.manage", "delivery.work"],
-  manager: ["orders.manage", "catalog.manage"],
+  owner: [
+    "orders.manage",
+    "catalog.manage",
+    "settings.manage",
+    "team.manage",
+    "analytics.view",
+    "delivery.work",
+  ],
+  manager: ["orders.manage", "catalog.manage", "analytics.view"],
   courier: ["delivery.work"],
 };
 

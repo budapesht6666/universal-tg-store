@@ -4,6 +4,7 @@
  * Деньги — целые числа в минимальных единицах валюты. Время — миллисекунды Unix.
  */
 import type {
+  AnalyticsEventType,
   AttributeDefinition,
   CancelReason,
   DeliveryFailureReason,
@@ -76,6 +77,8 @@ export const users = sqliteTable("users", {
   username: text("username"),
   createdAt: ms("created_at").notNull(),
   lastSeenAt: ms("last_seen_at").notNull(),
+  /** Заблокировал бота (my_chat_member = kicked или 403 при отправке) — ему ничего не шлём. */
+  botBlockedAt: ms("bot_blocked_at"),
 });
 
 /** Команда магазина. Владелец — OWNER_TELEGRAM_ID, строка создаётся при первой настройке. */
@@ -200,3 +203,30 @@ export const botMessages = sqliteTable(
     index("bot_messages_chat").on(t.chatId, t.messageId),
   ],
 );
+
+/** События Mini App для аналитики. Сотрудники отсеиваются при подсчёте, не при записи. */
+export const analyticsEvents = sqliteTable(
+  "analytics_events",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: integer("user_id").notNull(),
+    type: text("type").$type<AnalyticsEventType>().notNull(),
+    productId: text("product_id"),
+    /** Параметр startapp как пришёл (у visit). */
+    source: text("source"),
+    createdAt: ms("created_at").notNull(),
+  },
+  (t) => [
+    index("analytics_events_type").on(t.type, t.createdAt),
+    index("analytics_events_user").on(t.userId, t.createdAt),
+  ],
+);
+
+/** Последний снимок корзины покупателя — для суммы брошенных корзин. Пустая корзина — строки нет. */
+export const carts = sqliteTable("carts", {
+  userId: integer("user_id").primaryKey(),
+  items: text("items", { mode: "json" }).$type<Record<string, number>>().notNull(),
+  /** Сумма по ценам из БД на момент снимка. */
+  total: integer("total").notNull(),
+  updatedAt: ms("updated_at").notNull(),
+});

@@ -27,7 +27,8 @@ const deps: Deps = {
   syncBotProfile: () => {},
 };
 
-const ALLOWED_UPDATES = ["message", "callback_query"] as const;
+/** my_chat_member — узнать, что человек заблокировал бота (ему больше не пишем). */
+const ALLOWED_UPDATES = ["message", "callback_query", "my_chat_member"] as const;
 let webhook: AppOptions["webhook"];
 let stopBot = async () => {};
 

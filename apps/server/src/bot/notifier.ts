@@ -15,6 +15,7 @@ import type { Notifier, OrderNotice } from "../notify.ts";
 import { getOrder, isFirstOrder, type OrderRow } from "../orders/service.ts";
 import { getShop } from "../repo/settings.ts";
 import { staffWith, userName } from "../repo/team.ts";
+import { isBlockedError } from "./blocked.ts";
 import {
   courierMessage,
   customerMessage,
@@ -85,6 +86,8 @@ export function createBotNotifier(api: Api, deps: Deps): Notifier & { idle(): Pr
       });
       return m.message_id;
     } catch (err) {
+      // Заблокировал бота — ожидаемо, не шумим (отметку ставит blockedGuard).
+      if (isBlockedError(err)) return null;
       console.error(`Бот: не отправилось сообщение в чат ${chatId}:`, String(err));
       return null;
     }

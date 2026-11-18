@@ -1,5 +1,6 @@
 /** Админка: меню (категории и блюда), фото, настройки, команда. */
 import {
+  AnalyticsPeriodSchema,
   CategoryInputSchema,
   InviteCreateSchema,
   ProductPatchSchema,
@@ -12,6 +13,7 @@ import {
 import { Hono } from "hono";
 import { AppError, parseInput } from "../../errors.ts";
 import { saveImage } from "../../lib/images.ts";
+import { analyticsReport } from "../../repo/analytics.ts";
 import {
   createCategory,
   createProduct,
@@ -163,4 +165,23 @@ export const adminRoutes = new Hono<AppEnv>()
     const patch = parseInput(StaffUpdateSchema, await jsonBody(c));
     const { db, env } = c.var.deps;
     return c.json(updateStaff(db, env, intParam(c, "userId", "Участник"), patch));
+  })
+
+  // ───────────── Аналитика ─────────────
+  .get("/admin/analytics", (c) => {
+    requirePermission(c, "analytics.view");
+    const period = parseInput(AnalyticsPeriodSchema, c.req.query("period") ?? "7d");
+    const { db, env, now } = c.var.deps;
+    const shop = getShop(db);
+    if (!shop) throw new AppError(409, "Магазин ещё не настроен");
+    return c.json(
+      analyticsReport({
+        db,
+        env,
+        now: now(),
+        period,
+        timeZone: shop.settings.region.timeZone,
+        hours: shop.settings.hours,
+      }),
+    );
   });
